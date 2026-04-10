@@ -3,57 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Katalog Video Fokus</title>
+    <title>Katalog Video Fokus + Notes</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
         .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
         .flex-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 15px; }
-        input { flex: 1; padding: 12px; border: 1px solid #ccd0d5; border-radius: 8px; }
+        input, textarea { flex: 1; padding: 12px; border: 1px solid #ccd0d5; border-radius: 8px; font-family: inherit; }
         button { background-color: #1877f2; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .wadah-kategori { flex: 2; display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid #ccd0d5; padding: 12px; border-radius: 8px; background: #fafafa; }
-        .rak-katalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
-        .kartu-video { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; transition: 0.2s; }
-        .kartu-video:hover { transform: translateY(-5px); }
-        .thumbnail { width: 100%; height: 160px; object-fit: cover; }
-        .konten-kartu { padding: 15px; }
+        .rak-katalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+        
+        /* Kartu Video */
+        .kartu-video { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; display: flex; flex-direction: column; }
+        .thumbnail-container { position: relative; }
+        .thumbnail { width: 100%; height: 170px; object-fit: cover; }
+        .durasi-label { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+        
+        .konten-kartu { padding: 15px; flex-grow: 1; }
         .tag-badge { background: #e7f3ff; color: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 11px; margin-right: 5px; font-weight: bold; }
+        .last-watch { font-size: 12px; color: #65676b; margin-top: 10px; display: block; border-left: 3px solid #1877f2; padding-left: 8px; }
+        
+        /* Fitur Catatan */
+        .area-catatan { margin-top: 15px; background: #fff9c4; padding: 10px; border-radius: 8px; border: 1px dashed #fbc02d; }
+        .area-catatan h4 { margin: 0 0 5px 0; font-size: 13px; color: #856404; }
+        .teks-catatan { width: 100%; border: none; background: transparent; font-size: 13px; resize: vertical; min-height: 50px; outline: none; }
+        
         .btn-hapus-video { position: absolute; top: 10px; right: 10px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; z-index: 10; }
+        .btn-simpan-note { margin-top: 5px; background: #fbc02d; color: #333; padding: 5px 10px; font-size: 11px; border-radius: 5px; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="header" style="text-align: center; margin-bottom: 30px;">
-        <h1>Katalog Video Fokus</h1>
-        <p>Data tersimpan di Cloud (Sinkron HP & Laptop)</p>
+        <h1>Katalog Video Fokus Pro</h1>
+        <p>Catatan, Durasi, & Progress Terakhir (Cloud Sync)</p>
     </div>
 
     <div class="panel">
         <h2>1. Tambah Kategori</h2>
         <div class="flex-group">
-            <input type="text" id="inputKategoriBaru" placeholder="Contoh: Belajar Coding...">
+            <input type="text" id="inputKategoriBaru" placeholder="Contoh: Referensi Skripsi...">
             <button onclick="tambahKategori()">+ Tambah</button>
         </div>
         <div id="listKategoriDikelola" style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;"></div>
     </div>
 
     <div class="panel">
-        <h2>2. Simpan Video</h2>
+        <h2>2. Simpan Video Baru</h2>
         <div class="flex-group">
-            <input type="url" id="linkVideo" placeholder="Tempel link YouTube di sini...">
+            <input type="url" id="linkVideo" placeholder="Link YouTube...">
+            <input type="text" id="durasiVideo" placeholder="Durasi (misal 10:25)" style="flex: 0 1 150px;">
             <div id="wadahPilihKategori" class="wadah-kategori"></div>
-            <button id="tombolSimpan" onclick="simpanVideo()">Simpan ke Rak</button>
+            <button id="tombolSimpan" onclick="simpanVideo()">Simpan</button>
         </div>
     </div>
 
-    <input type="text" id="inputCari" placeholder="🔍 Cari judul, channel, atau kategori..." onkeyup="renderRak()" style="width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 30px; border: 1px solid #ddd; outline: none;">
+    <input type="text" id="inputCari" placeholder="🔍 Cari judul, kategori, atau catatan..." onkeyup="renderRak()" style="width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 30px; border: 1px solid #ddd; outline: none;">
     
     <div class="rak-katalog" id="rakVideo"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // Konfigurasi Firebase kamu
+        // Konfigurasi Firebase (Gunakan milikmu yang sudah ada)
         const firebaseConfig = {
             apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
             authDomain: "katalog-video.firebaseapp.com",
@@ -67,17 +80,13 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let daftarKategori = JSON.parse(localStorage.getItem('katalog_kat')) || ["Belajar Coding", "Nonton Idol"];
+        let daftarKategori = JSON.parse(localStorage.getItem('katalog_kat')) || ["Belajar Coding", "Materi Skripsi", "Nonton Idol"];
         let dataVideo = {};
 
-        // Fungsi Kategori
+        // --- MANAJEMEN KATEGORI ---
         window.tambahKategori = () => {
             const val = document.getElementById('inputKategoriBaru').value;
-            if(val) { 
-                daftarKategori.push(val); 
-                document.getElementById('inputKategoriBaru').value = ""; 
-                updateUIKat(); 
-            }
+            if(val) { daftarKategori.push(val); document.getElementById('inputKategoriBaru').value = ""; updateUIKat(); }
         }
 
         window.updateUIKat = () => {
@@ -85,81 +94,96 @@
             const l = document.getElementById('listKategoriDikelola');
             w.innerHTML = ""; l.innerHTML = "";
             daftarKategori.forEach((k, i) => {
-                w.innerHTML += `<label style="cursor:pointer"><input type="checkbox" value="${k}" class="cek-kat"> ${k}</label> `;
+                w.innerHTML += `<label style="cursor:pointer; font-size:13px"><input type="checkbox" value="${k}" class="cek-kat"> ${k}</label> `;
                 l.innerHTML += `<span class="tag-badge">${k} <b onclick="daftarKategori.splice(${i},1);updateUIKat()" style="cursor:pointer; color:red; margin-left:5px">x</b></span>`;
             });
             localStorage.setItem('katalog_kat', JSON.stringify(daftarKategori));
         }
 
-        // Ambil Data Real-time dari Firebase
+        // --- AMBIL DATA ---
         onValue(ref(db, 'videos'), (snapshot) => {
             dataVideo = snapshot.val() || {};
             renderRak();
         });
 
-        // Simpan Video ke Cloud
+        // --- SIMPAN VIDEO ---
         window.simpanVideo = async () => {
             const url = document.getElementById('linkVideo').value;
+            const durasi = document.getElementById('durasiVideo').value || "--:--";
             const kats = Array.from(document.querySelectorAll('.cek-kat:checked')).map(c => c.value);
             
-            if(!url || kats.length === 0) return alert("Masukkan link YouTube dan pilih minimal satu kategori!");
-
-            const tombol = document.getElementById('tombolSimpan');
-            tombol.innerText = "Proses...";
-            tombol.disabled = true;
+            if(!url || kats.length === 0) return alert("Link dan Kategori wajib diisi!");
 
             try {
                 const idMatch = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^#&?]*)/);
                 const id = idMatch ? idMatch[1] : null;
-                if(!id) throw new Error("Link tidak valid");
-
                 const meta = await fetch(`https://noembed.com/embed?url=${url}`).then(r => r.json());
 
-                // Kirim ke Firebase
                 push(ref(db, 'videos'), {
-                    judul: meta.title || "Judul Video",
-                    channel: meta.author_name || "Channel Unknown",
+                    judul: meta.title || "Video",
+                    channel: meta.author_name || "Unknown",
                     link: url,
                     thumbnail: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
                     kategori: kats,
-                    waktu: Date.now()
+                    durasi: durasi,
+                    lastWatch: "Belum ditonton",
+                    catatan: "",
+                    waktuSimpan: Date.now()
                 });
 
                 document.getElementById('linkVideo').value = "";
+                document.getElementById('durasiVideo').value = "";
                 document.querySelectorAll('.cek-kat').forEach(c => c.checked = false);
-            } catch (e) {
-                alert("Gagal: " + e.message);
-            } finally {
-                tombol.innerText = "Simpan ke Rak";
-                tombol.disabled = false;
-            }
+            } catch (e) { alert("Gagal menyimpan!"); }
         };
 
-        window.hapusVideo = (id) => {
-            if(confirm("Hapus video ini dari rak cloud?")) {
-                remove(ref(db, `videos/${id}`));
-            }
-        }
+        // --- UPDATE CATATAN & LAST WATCH ---
+        window.updateProgress = (id) => {
+            const lastWatch = document.getElementById(`last-${id}`).value;
+            const catatan = document.getElementById(`note-${id}`).value;
+            
+            update(ref(db, `videos/${id}`), {
+                lastWatch: lastWatch,
+                catatan: catatan
+            }).then(() => alert("Catatan disimpan!"));
+        };
 
+        window.hapusVideo = (id) => confirm("Hapus video?") && remove(ref(db, `videos/${id}`));
+
+        // --- RENDER RAK ---
         window.renderRak = () => {
             const cari = document.getElementById('inputCari').value.toLowerCase();
             const rak = document.getElementById('rakVideo');
             rak.innerHTML = "";
 
-            const keys = Object.keys(dataVideo).reverse(); // Video terbaru di atas
+            const keys = Object.keys(dataVideo).reverse();
             keys.forEach(id => {
                 const v = dataVideo[id];
-                const matchKategori = v.kategori.some(k => k.toLowerCase().includes(cari));
-                if(v.judul.toLowerCase().includes(cari) || v.channel.toLowerCase().includes(cari) || matchKategori) {
+                const matchKat = v.kategori.some(k => k.toLowerCase().includes(cari));
+                const matchNote = (v.catatan || "").toLowerCase().includes(cari);
+                
+                if(v.judul.toLowerCase().includes(cari) || matchKat || matchNote) {
                     rak.innerHTML += `
                         <div class="kartu-video">
                             <button class="btn-hapus-video" onclick="hapusVideo('${id}')">✕</button>
-                            <img src="${v.thumbnail}" class="thumbnail">
+                            <div class="thumbnail-container">
+                                <img src="${v.thumbnail}" class="thumbnail">
+                                <span class="durasi-label">${v.durasi || '--:--'}</span>
+                            </div>
                             <div class="konten-kartu">
                                 <div style="margin-bottom:8px">${v.kategori.map(k => `<span class="tag-badge">${k}</span>`).join('')}</div>
-                                <h3 style="font-size:16px; margin:0 0 5px 0; line-height:1.3">${v.judul}</h3>
-                                <p style="font-size:13px; color:#666; margin:0 0 15px 0">👤 ${v.channel}</p>
-                                <a href="${v.link}" target="_blank" style="display:block; text-align:center; background:#f0f2f5; padding:10px; border-radius:8px; text-decoration:none; color:#1c1e21; font-weight:bold; font-size:14px;">Tonton Sekarang</a>
+                                <h3 style="font-size:15px; margin:5px 0">${v.judul}</h3>
+                                
+                                <label style="font-size:11px; color:#666">Terakhir dilihat jam/menit ke:</label>
+                                <input type="text" id="last-${id}" value="${v.lastWatch || ''}" placeholder="Misal: 05:20" style="padding:5px; font-size:12px; margin-bottom:10px; width:90%">
+                                
+                                <div class="area-catatan">
+                                    <h4>📝 Catatan Coret-coret:</h4>
+                                    <textarea id="note-${id}" class="teks-catatan" placeholder="Tulis ringkasan atau poin penting...">${v.catatan || ''}</textarea>
+                                </div>
+                                <button class="btn-simpan-note" onclick="updateProgress('${id}')">💾 Simpan Progress</button>
+                                
+                                <a href="${v.link}" target="_blank" style="display:block; text-align:center; background:#1877f2; color:white; padding:10px; border-radius:8px; text-decoration:none; margin-top:15px; font-weight:bold; font-size:13px;">Tonton Sekarang</a>
                             </div>
                         </div>`;
                 }
