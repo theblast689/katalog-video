@@ -5,248 +5,167 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Katalog Video Fokus</title>
     <style>
-        /* Tampilan Dasar & CSS sama persis seperti sebelumnya */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; color: #1c1e21; max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
-        .header { text-align: center; margin-bottom: 40px; }
-        .header h1 { color: #1877f2; margin-bottom: 5px; }
-        .header p { color: #65676b; margin-top: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
         .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        h2 { font-size: 1.1rem; margin-top: 0; color: #333; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
-        .flex-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 15px; align-items: flex-start; }
-        input[type="url"], input[type="text"], .kotak-cari { padding: 12px 15px; border: 1px solid #ccd0d5; border-radius: 8px; font-size: 14px; outline: none; }
-        input[type="url"]:focus, input[type="text"]:focus, .kotak-cari:focus { border-color: #1877f2; }
-        input[type="url"] { flex: 1; min-width: 250px; }
-        button { background-color: #1877f2; color: white; border: none; font-weight: bold; padding: 12px 24px; border-radius: 8px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
-        button:hover { background-color: #166fe5; }
-        button:disabled { background-color: #9cb4d8; cursor: not-allowed; }
-        button.btn-hapus-kat { background-color: #e4e6eb; color: #000; padding: 5px 12px; font-size: 12px; border-radius: 20px; }
-        #listKategoriDikelola { list-style: none; padding: 0; margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
-        #listKategoriDikelola li { background: #e7f3ff; color: #1877f2; padding: 6px 14px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
-        .wadah-kategori { flex: 2; display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid #ccd0d5; padding: 12px; border-radius: 8px; background: #fafafa; min-width: 250px; }
-        .kategori-checkbox { display: flex; align-items: center; gap: 6px; background: white; padding: 6px 12px; border-radius: 20px; font-size: 13px; border: 1px solid #ddd; cursor: pointer; transition: 0.2s; }
-        .kategori-checkbox:hover { border-color: #1877f2; }
-        input[type="checkbox"] { flex: initial; width: auto; height: auto; margin: 0; cursor: pointer; accent-color: #1877f2; }
-        .area-pencarian { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
-        .area-pencarian h2 { margin: 0; border: none; padding: 0; }
-        .kotak-cari { width: 300px; border-radius: 20px; }
+        .flex-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 15px; }
+        input { flex: 1; padding: 12px; border: 1px solid #ccd0d5; border-radius: 8px; }
+        button { background-color: #1877f2; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .wadah-kategori { flex: 2; display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid #ccd0d5; padding: 12px; border-radius: 8px; background: #fafafa; }
         .rak-katalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
-        .kartu-video { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s; display: flex; flex-direction: column; position: relative; }
-        .kartu-video:hover { transform: translateY(-5px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-        .btn-hapus-video { position: absolute; top: 10px; right: 10px; background-color: rgba(220, 53, 69, 0.9); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
-        .btn-hapus-video:hover { background-color: red; }
-        .thumbnail { width: 100%; height: 160px; object-fit: cover; border-bottom: 1px solid #eee; background-color: #000; }
-        .konten-kartu { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; }
-        .area-tag { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-        .tag-badge { background-color: #e7f3ff; color: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; }
-        .judul-video { font-size: 16px; color: #1c1e21; margin: 0 0 5px 0; font-weight: bold; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .nama-channel { font-size: 13px; color: #65676b; margin: 0 0 15px 0; display: flex; align-items: center; gap: 5px; }
-        .btn-tonton { margin-top: auto; text-align: center; background-color: #f0f2f5; color: #1c1e21; text-decoration: none; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 14px; transition: 0.2s; }
-        .btn-tonton:hover { background-color: #e4e6eb; }
-        .status-kosong { text-align: center; color: #65676b; grid-column: 1 / -1; padding: 40px; font-style: italic; }
+        .kartu-video { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; transition: 0.2s; }
+        .kartu-video:hover { transform: translateY(-5px); }
+        .thumbnail { width: 100%; height: 160px; object-fit: cover; }
+        .konten-kartu { padding: 15px; }
+        .tag-badge { background: #e7f3ff; color: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 11px; margin-right: 5px; font-weight: bold; }
+        .btn-hapus-video { position: absolute; top: 10px; right: 10px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; z-index: 10; }
     </style>
 </head>
 <body>
 
-    <div class="header">
+    <div class="header" style="text-align: center; margin-bottom: 30px;">
         <h1>Katalog Video Fokus</h1>
-        <p>Tersinkronisasi ke Cloud. Buka di HP atau Laptop, datanya sama.</p>
+        <p>Data tersimpan di Cloud (Sinkron HP & Laptop)</p>
     </div>
 
     <div class="panel">
-        <h2>1. Atur Kategori Rak</h2>
-        <div class="flex-group" style="align-items: center;">
-            <input type="text" id="inputKategoriBaru" placeholder="Contoh: Digital Minimalism..." style="flex: 1;">
-            <button id="btnTambahKat">+ Tambah Kategori</button>
-        </div>
-        <ul id="listKategoriDikelola"></ul>
-    </div>
-
-    <div class="panel">
-        <h2>2. Simpan Video Baru</h2>
+        <h2>1. Tambah Kategori</h2>
         <div class="flex-group">
-            <input type="url" id="linkVideo" placeholder="https://www.youtube.com/watch?v=..." required>
+            <input type="text" id="inputKategoriBaru" placeholder="Contoh: Belajar Coding...">
+            <button onclick="tambahKategori()">+ Tambah</button>
+        </div>
+        <div id="listKategoriDikelola" style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;"></div>
+    </div>
+
+    <div class="panel">
+        <h2>2. Simpan Video</h2>
+        <div class="flex-group">
+            <input type="url" id="linkVideo" placeholder="Tempel link YouTube di sini...">
             <div id="wadahPilihKategori" class="wadah-kategori"></div>
-            <button id="tombolSimpan">Simpan ke Rak</button>
+            <button id="tombolSimpan" onclick="simpanVideo()">Simpan ke Rak</button>
         </div>
     </div>
 
-    <div class="area-pencarian">
-        <h2>Koleksi Tersimpan <span id="statusKoneksi" style="font-size: 12px; color: green; font-weight: normal;">(🟢 Online)</span></h2>
-        <input type="text" id="inputCari" class="kotak-cari" placeholder="🔍 Cari judul, channel, atau tag...">
-    </div>
-
+    <input type="text" id="inputCari" placeholder="🔍 Cari judul, channel, atau kategori..." onkeyup="renderRak()" style="width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 30px; border: 1px solid #ddd; outline: none;">
+    
     <div class="rak-katalog" id="rakVideo"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // ==========================================
-        // PASTE CONFIG FIREBASE KAMU DI BAWAH INI
-        // ==========================================
+        // Konfigurasi Firebase kamu
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
+            authDomain: "katalog-video.firebaseapp.com",
+            databaseURL: "https://katalog-video-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "katalog-video",
+            storageBucket: "katalog-video.firebasestorage.app",
+            messagingSenderId: "1035864136490",
+            appId: "1:1035864136490:web:9abe5dbf41e80b11ad5c53"
+        };
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
-  authDomain: "katalog-video.firebaseapp.com",
-  projectId: "katalog-video",
-  storageBucket: "katalog-video.firebasestorage.app",
-  messagingSenderId: "1035864136490",
-  appId: "1:1035864136490:web:9abe5dbf41e80b11ad5c53"
-};
-
-
-        // ==========================================
-
-        // Jalankan Firebase
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = getDatabase(app);
 
-        // Kategori kita simpan di LocalStorage agar tidak terlalu rumit
-        let daftarKategori = JSON.parse(localStorage.getItem('kategori_katalog')) || ["Belajar Coding", "Nonton Idol", "Referensi Skripsi"];
-        let koleksiVideo = []; // Ini sekarang akan diisi dari Firebase!
+        let daftarKategori = JSON.parse(localStorage.getItem('katalog_kat')) || ["Belajar Coding", "Nonton Idol"];
+        let dataVideo = {};
 
-        function updateTampilanKategori() {
-            const wadahPilih = document.getElementById('wadahPilihKategori');
-            const listKelola = document.getElementById('listKategoriDikelola');
-            wadahPilih.innerHTML = ""; listKelola.innerHTML = "";
+        // Fungsi Kategori
+        window.tambahKategori = () => {
+            const val = document.getElementById('inputKategoriBaru').value;
+            if(val) { 
+                daftarKategori.push(val); 
+                document.getElementById('inputKategoriBaru').value = ""; 
+                updateUIKat(); 
+            }
+        }
 
-            daftarKategori.forEach((kat, index) => {
-                wadahPilih.innerHTML += `<label class="kategori-checkbox"><input type="checkbox" value="${kat}" class="cek-kategori"> ${kat}</label>`;
-                listKelola.innerHTML += `<li>${kat} <button class="btn-hapus-kat" data-index="${index}">X</button></li>`;
+        window.updateUIKat = () => {
+            const w = document.getElementById('wadahPilihKategori');
+            const l = document.getElementById('listKategoriDikelola');
+            w.innerHTML = ""; l.innerHTML = "";
+            daftarKategori.forEach((k, i) => {
+                w.innerHTML += `<label style="cursor:pointer"><input type="checkbox" value="${k}" class="cek-kat"> ${k}</label> `;
+                l.innerHTML += `<span class="tag-badge">${k} <b onclick="daftarKategori.splice(${i},1);updateUIKat()" style="cursor:pointer; color:red; margin-left:5px">x</b></span>`;
             });
-            localStorage.setItem('kategori_katalog', JSON.stringify(daftarKategori));
+            localStorage.setItem('katalog_kat', JSON.stringify(daftarKategori));
+        }
+
+        // Ambil Data Real-time dari Firebase
+        onValue(ref(db, 'videos'), (snapshot) => {
+            dataVideo = snapshot.val() || {};
+            renderRak();
+        });
+
+        // Simpan Video ke Cloud
+        window.simpanVideo = async () => {
+            const url = document.getElementById('linkVideo').value;
+            const kats = Array.from(document.querySelectorAll('.cek-kat:checked')).map(c => c.value);
             
-            // Pasang event listener untuk tombol hapus kategori
-            document.querySelectorAll('.btn-hapus-kat').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const idx = e.target.getAttribute('data-index');
-                    daftarKategori.splice(idx, 1);
-                    updateTampilanKategori();
-                });
-            });
-        }
+            if(!url || kats.length === 0) return alert("Masukkan link YouTube dan pilih minimal satu kategori!");
 
-        document.getElementById('btnTambahKat').addEventListener('click', () => {
-            const input = document.getElementById('inputKategoriBaru');
-            if (input.value.trim() !== "") {
-                daftarKategori.push(input.value.trim());
-                input.value = ""; updateTampilanKategori();
-            }
-        });
-
-        function dapatkanIDYouTube(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
-        }
-
-        function renderRak() {
-            const kataKunci = document.getElementById('inputCari').value.toLowerCase();
-            const rak = document.getElementById('rakVideo');
-            rak.innerHTML = ""; 
-
-            const videoDitampilkan = koleksiVideo.filter(v => {
-                const matchJudul = v.judul.toLowerCase().includes(kataKunci);
-                const matchChannel = v.channel.toLowerCase().includes(kataKunci);
-                let matchKategori = Array.isArray(v.kategori) ? v.kategori.some(kat => kat.toLowerCase().includes(kataKunci)) : (v.kategori || "").toLowerCase().includes(kataKunci);
-                return matchJudul || matchChannel || matchKategori;
-            });
-
-            if (videoDitampilkan.length === 0) {
-                rak.innerHTML = `<div class="status-kosong">Belum ada video atau pencarian tidak ditemukan.</div>`;
-                return;
-            }
-
-            videoDitampilkan.forEach((video) => {
-                let htmlTag = Array.isArray(video.kategori) ? video.kategori.map(kat => `<span class="tag-badge">${kat}</span>`).join('') : `<span class="tag-badge">${video.kategori || 'Tanpa Kategori'}</span>`;
-
-                const kartu = document.createElement('div');
-                kartu.className = 'kartu-video';
-                kartu.innerHTML = `
-                    <button class="btn-hapus-video" data-id="${video.id}" title="Hapus Video">✕</button>
-                    <img src="${video.thumbnail}" alt="Thumbnail" class="thumbnail">
-                    <div class="konten-kartu">
-                        <div class="area-tag">${htmlTag}</div>
-                        <h3 class="judul-video">${video.judul}</h3>
-                        <p class="nama-channel">👤 ${video.channel}</p>
-                        <a href="${video.link}" target="_blank" class="btn-tonton">▶ Tonton Sekarang</a>
-                    </div>
-                `;
-                rak.appendChild(kartu);
-            });
-
-            // Pasang event listener untuk tombol hapus video
-            document.querySelectorAll('.btn-hapus-video').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const idVideo = e.target.getAttribute('data-id');
-                    await deleteDoc(doc(db, "videos", idVideo)); // HAPUS DATA DI CLOUD!
-                });
-            });
-        }
-
-        document.getElementById('inputCari').addEventListener('keyup', renderRak);
-
-        // FITUR SINKRONISASI REAL-TIME DARI FIREBASE
-        const q = query(collection(db, "videos"), orderBy("waktu_simpan", "desc"));
-        onSnapshot(q, (snapshot) => {
-            koleksiVideo = []; // Kosongkan array lama
-            snapshot.forEach((doc) => {
-                // Masukkan data baru dari internet beserta ID uniknya
-                koleksiVideo.push({ id: doc.id, ...doc.data() });
-            });
-            renderRak(); // Tampilkan ke layar
-        });
-
-        // SIMPAN VIDEO KE CLOUD FIREBASE
-        document.getElementById('tombolSimpan').addEventListener('click', async () => {
-            const link = document.getElementById('linkVideo').value;
-            const tombolSimpan = document.getElementById('tombolSimpan');
-            const kotakCentang = document.querySelectorAll('.cek-kategori:checked');
-            let arrayKategoriTerpilih = [];
-            kotakCentang.forEach(cb => arrayKategoriTerpilih.push(cb.value));
-
-            if (link === "") return alert("Link belum diisi!");
-            if (arrayKategoriTerpilih.length === 0) return alert("Pilih minimal satu kategori!");
-
-            const videoID = dapatkanIDYouTube(link);
-            if (!videoID) return alert("Link YouTube tidak valid!");
-
-            tombolSimpan.innerText = "Menyimpan ke Cloud...";
-            tombolSimpan.disabled = true;
-
-            let judulVideo = "Judul Tidak Ditemukan";
-            let namaChannel = "Channel Tidak Diketahui";
-            let urlGambar = `https://img.youtube.com/vi/${videoID}/hqdefault.jpg`;
+            const tombol = document.getElementById('tombolSimpan');
+            tombol.innerText = "Proses...";
+            tombol.disabled = true;
 
             try {
-                const respon = await fetch(`https://noembed.com/embed?url=${link}`);
-                const data = await respon.json();
-                if (data.title) judulVideo = data.title;
-                if (data.author_name) namaChannel = data.author_name;
-            } catch (error) {}
+                const idMatch = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^#&?]*)/);
+                const id = idMatch ? idMatch[1] : null;
+                if(!id) throw new Error("Link tidak valid");
 
-            // KIRIM DATA KE DATABASE FIREBASE
-            try {
-                await addDoc(collection(db, "videos"), {
-                    link: link,
-                    kategori: arrayKategoriTerpilih,
-                    judul: judulVideo,
-                    channel: namaChannel,
-                    thumbnail: urlGambar,
-                    waktu_simpan: serverTimestamp() // Biar urut dari yang terbaru
+                const meta = await fetch(`https://noembed.com/embed?url=${url}`).then(r => r.json());
+
+                // Kirim ke Firebase
+                push(ref(db, 'videos'), {
+                    judul: meta.title || "Judul Video",
+                    channel: meta.author_name || "Channel Unknown",
+                    link: url,
+                    thumbnail: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+                    kategori: kats,
+                    waktu: Date.now()
                 });
+
+                document.getElementById('linkVideo').value = "";
+                document.querySelectorAll('.cek-kat').forEach(c => c.checked = false);
             } catch (e) {
-                alert("Gagal menyimpan ke cloud: " + e.message);
+                alert("Gagal: " + e.message);
+            } finally {
+                tombol.innerText = "Simpan ke Rak";
+                tombol.disabled = false;
             }
+        };
 
-            tombolSimpan.innerText = "Simpan ke Rak";
-            tombolSimpan.disabled = false;
-            document.getElementById('linkVideo').value = "";
-            document.querySelectorAll('.cek-kategori').forEach(cb => cb.checked = false);
-        });
+        window.hapusVideo = (id) => {
+            if(confirm("Hapus video ini dari rak cloud?")) {
+                remove(ref(db, `videos/${id}`));
+            }
+        }
 
-        updateTampilanKategori();
+        window.renderRak = () => {
+            const cari = document.getElementById('inputCari').value.toLowerCase();
+            const rak = document.getElementById('rakVideo');
+            rak.innerHTML = "";
+
+            const keys = Object.keys(dataVideo).reverse(); // Video terbaru di atas
+            keys.forEach(id => {
+                const v = dataVideo[id];
+                const matchKategori = v.kategori.some(k => k.toLowerCase().includes(cari));
+                if(v.judul.toLowerCase().includes(cari) || v.channel.toLowerCase().includes(cari) || matchKategori) {
+                    rak.innerHTML += `
+                        <div class="kartu-video">
+                            <button class="btn-hapus-video" onclick="hapusVideo('${id}')">✕</button>
+                            <img src="${v.thumbnail}" class="thumbnail">
+                            <div class="konten-kartu">
+                                <div style="margin-bottom:8px">${v.kategori.map(k => `<span class="tag-badge">${k}</span>`).join('')}</div>
+                                <h3 style="font-size:16px; margin:0 0 5px 0; line-height:1.3">${v.judul}</h3>
+                                <p style="font-size:13px; color:#666; margin:0 0 15px 0">👤 ${v.channel}</p>
+                                <a href="${v.link}" target="_blank" style="display:block; text-align:center; background:#f0f2f5; padding:10px; border-radius:8px; text-decoration:none; color:#1c1e21; font-weight:bold; font-size:14px;">Tonton Sekarang</a>
+                            </div>
+                        </div>`;
+                }
+            });
+        }
+        updateUIKat();
     </script>
 </body>
 </html>
