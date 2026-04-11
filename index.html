@@ -30,7 +30,6 @@
         .btn-hapus-video { position: absolute; top: 10px; right: 10px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; z-index: 10; display:flex; justify-content:center; align-items:center; }
         .btn-simpan-note { margin-top: 5px; background: #fbc02d; color: #333; padding: 5px 10px; font-size: 11px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold;}
         
-        /* Indikator Resume */
         .resume-badge { background: #4caf50; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 5px;}
     </style>
 </head>
@@ -38,7 +37,7 @@
 
     <div class="header" style="text-align: center; margin-bottom: 30px;">
         <h1>Katalog Video Fokus Pro</h1>
-        <p>Auto-Tagging, Auto-Duration & Auto-Resume Playback</p>
+        <p>Auto-Magic & Auto-Resume Playback</p>
     </div>
 
     <div class="panel">
@@ -87,9 +86,9 @@
         let daftarKategori = JSON.parse(localStorage.getItem('katalog_kat')) || ["Materi Skripsi", "Belajar Coding", "Nonton Idol", "Belajar Bahasa"];
         let dataVideo = {};
         
-        // Objek untuk menyimpan instance pemutar video dan interval auto-save
         window.ytPlayers = {};
         window.saveIntervals = {};
+        window.sedangNonton = false; // Gembok agar rak tidak refresh saat menonton
 
         const kamusKategori = {
             "Materi Skripsi": ["skripsi", "kualitatif", "perpustakaan", "penelitian", "inlis", "inlislite", "jurnal", "metode"],
@@ -120,7 +119,6 @@
             return (jam === 0 && menit === 0) ? `0:${detik < 10 ? '0' : ''}${detik}` : hasil;
         };
 
-        // Mengubah detik (angka) menjadi format MM:SS untuk tampilan
         window.formatDetikKeMenit = (totalDetik) => {
             if(!totalDetik || totalDetik === 0) return "00:00";
             const d = Math.floor(totalDetik);
@@ -146,7 +144,10 @@
         }
 
         const videoQuery = query(ref(db, 'videos'), limitToLast(50));
-        onValue(videoQuery, (snapshot) => { dataVideo = snapshot.val() || {}; renderRak(); });
+        onValue(videoQuery, (snapshot) => { 
+            dataVideo = snapshot.val() || {}; 
+            if (!window.sedangNonton) renderRak(); 
+        });
 
         window.simpanVideo = async () => {
             const url = document.getElementById('linkVideo').value;
@@ -155,7 +156,6 @@
 
             try {
                 document.getElementById('tombolSimpan').innerText = "Membaca API...";
-                // Regex baru mendukung link Shorts
                 const idMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/))([^#&?]*)/);
                 const id = idMatch ? idMatch[1] : null;
                 if (!id) throw new Error("ID Video Invalid");
@@ -183,7 +183,7 @@
                     thumbnail: `https://img.youtube.com/vi/${id}/mqdefault.jpg`,
                     kategori: kats,
                     durasi: durasiOtomatis,
-                    lastWatch: 0, // Sekarang disimpan sebagai angka (detik), bukan string teks
+                    lastWatch: 0, 
                     catatan: "",
                     waktuSimpan: Date.now()
                 });
@@ -197,7 +197,6 @@
             }
         };
 
-        // Fungsi manual untuk simpan catatan (Progress Waktu kini otomatis)
         window.simpanCatatanAja = (id) => {
             const catatan = document.getElementById(`note-${id}`).value;
             update(ref(db, `videos/${id}`), { catatan: catatan }).then(() => alert("Catatan disimpan!"));
@@ -205,55 +204,50 @@
 
         window.hapusVideo = (id) => confirm("Hapus video?") && remove(ref(db, `videos/${id}`));
 
-        // --- SISTEM PEMUTAR YOUTUBE API ---
         window.putarVideo = (idContainer, urlVideo, idVideoDB, lastWatchTime) => {
+            window.sedangNonton = true; 
             const idMatch = urlVideo.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/))([^#&?]*)/);
             const ytId = idMatch ? idMatch[1] : null;
             
             if (ytId) {
-                // Hapus thumbnail dan ganti dengan div kosong untuk player
                 const container = document.getElementById(idContainer);
-                container.innerHTML = `<div id="iframe-${idVideoDB}"></div>`;
+                container.innerHTML = `
+                    <div style="background:#000; text-align:right; padding:4px 8px;">
+                        <button onclick="tutupVideo('${idContainer}', '${idVideoDB}')" style="background:#e41e3f; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:bold;">✖ Tutup Video</button>
+                    </div>
+                    <div id="iframe-${idVideoDB}"></div>`;
 
-                let startTime = parseInt(lastWatchTime) || 0;
-
-                // Inisialisasi Player API
                 window.ytPlayers[idVideoDB] = new YT.Player(`iframe-${idVideoDB}`, {
-                    height: '170',
+                    height: '146',
                     width: '100%',
                     videoId: ytId,
-                    playerVars: {
-                        'autoplay': 1,
-                        'start': startTime, // Mulai dari detik terakhir!
-                        'modestbranding': 1,
-                        'rel': 0
-                    },
-                    events: {
-                        'onStateChange': (event) => onPlayerStateChange(event, idVideoDB)
-                    }
+                    playerVars: { 'autoplay': 1, 'start': Math.floor(lastWatchTime), 'modestbranding': 1, 'rel': 0 },
+                    events: { 'onStateChange': (event) => onPlayerStateChange(event, idVideoDB) }
                 });
             }
         };
 
-        // Memantau perubahan status (Play/Pause)
+        window.tutupVideo = (idContainer, idVideoDB) => {
+            window.sedangNonton = false;
+            clearInterval(window.saveIntervals[idVideoDB]);
+            if(window.ytPlayers[idVideoDB] && window.ytPlayers[idVideoDB].getCurrentTime) {
+                let finalTime = window.ytPlayers[idVideoDB].getCurrentTime();
+                update(ref(db, `videos/${idVideoDB}`), { lastWatch: finalTime });
+            }
+            renderRak();
+        };
+
         function onPlayerStateChange(event, idVideoDB) {
-            // Jika Video Sedang Diputar (PLAYING = 1)
             if (event.data == YT.PlayerState.PLAYING) {
-                // Auto-save tiap 5 detik untuk menghemat request database
                 window.saveIntervals[idVideoDB] = setInterval(() => {
                     let currentTime = window.ytPlayers[idVideoDB].getCurrentTime();
-                    
-                    // Update tampilan UI menit secara realtime
                     let textInfo = document.getElementById(`info-waktu-${idVideoDB}`);
                     if(textInfo) textInfo.innerText = window.formatDetikKeMenit(currentTime);
-                    
-                    // Update ke Firebase secara diam-diam
                     if(Math.floor(currentTime) % 5 === 0) {
                          update(ref(db, `videos/${idVideoDB}`), { lastWatch: currentTime });
                     }
                 }, 1000);
             } 
-            // Jika Video Dipause (2) atau Selesai (0)
             else if (event.data == YT.PlayerState.PAUSED || event.data == YT.PlayerState.ENDED) {
                 clearInterval(window.saveIntervals[idVideoDB]);
                 let currentTime = window.ytPlayers[idVideoDB].getCurrentTime();
@@ -268,32 +262,21 @@
             Object.keys(dataVideo).reverse().forEach(id => {
                 const v = dataVideo[id];
                 if(v.judul.toLowerCase().includes(cari) || v.kategori.some(k => k.toLowerCase().includes(cari)) || (v.catatan || "").toLowerCase().includes(cari)) {
-                    
-                    // Format tampilan resume
-                    let resumeText = "";
                     let lastWatchNumber = parseFloat(v.lastWatch) || 0;
-                    if(lastWatchNumber > 0) {
-                        resumeText = `<span class="resume-badge">Melanjutkan di ${window.formatDetikKeMenit(lastWatchNumber)}</span>`;
-                    }
-
                     rak.innerHTML += `
                         <div class="kartu-video">
                             <button class="btn-hapus-video" onclick="hapusVideo('${id}')">❌</button>
-                            
                             <div class="thumbnail-container" id="player-${id}" onclick="putarVideo('player-${id}', '${v.link}', '${id}', '${lastWatchNumber}')" style="cursor:pointer">
                                 <img src="${v.thumbnail}" class="thumbnail" loading="lazy">
                                 <span class="durasi-label">${v.durasi}</span>
                                 <div style="position: absolute; background: rgba(24, 119, 242, 0.9); color: white; padding: 8px 16px; border-radius: 6px; font-weight: bold; z-index: 5;">▶ Play</div>
                             </div>
-
                             <div class="konten-kartu">
                                 <div style="margin-bottom:8px">${v.kategori.map(k => `<span class="tag-badge">${k}</span>`).join('')}</div>
                                 <h3 style="font-size:14px; margin:5px 0">${v.judul}</h3>
-                                
-                                <div style="font-size:12px; color:#666; margin-top:10px; display:flex; align-items:center;">
-                                    Terakhir dilihat: <strong style="margin-left:5px; color:#1877f2;" id="info-waktu-${id}">${window.formatDetikKeMenit(lastWatchNumber)}</strong> ${resumeText}
+                                <div style="font-size:12px; color:#666; margin-top:10px;">
+                                    Terakhir dilihat: <strong style="color:#1877f2;" id="info-waktu-${id}">${window.formatDetikKeMenit(lastWatchNumber)}</strong>
                                 </div>
-                                
                                 <div class="area-catatan">
                                     <h4>📝 Catatan:</h4>
                                     <textarea id="note-${id}" class="teks-catatan">${v.catatan || ''}</textarea>
