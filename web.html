@@ -13,10 +13,15 @@
         .wadah-kategori { flex: 2; display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid #ccd0d5; padding: 12px; border-radius: 8px; background: #fafafa; }
         .rak-katalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
         
-        /* Kartu Web */
+        /* Kartu Web Diperbarui */
         .kartu-web { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; display: flex; flex-direction: column; border-top: 4px solid #28a745; }
-        .konten-kartu { padding: 20px; flex-grow: 1; }
-        .tag-badge { background: #e6f4ea; color: #1e8e3e; padding: 4px 10px; border-radius: 6px; font-size: 11px; margin-right: 5px; font-weight: bold; display: inline-block; margin-bottom: 5px;}
+        .konten-kartu { padding: 20px; flex-grow: 1; display: flex; flex-direction: column;}
+        .tag-badge { background: #e6f4ea; color: #1e8e3e; padding: 4px 10px; border-radius: 6px; font-size: 11px; margin-right: 5px; font-weight: bold; display: inline-block; margin-bottom: 10px;}
+        
+        .web-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+        .web-image { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; background: #f0f2f5; flex-shrink: 0;}
+        .web-meta { flex-grow: 1; overflow: hidden; }
+        .web-desc { font-size: 12px; color: #65676b; margin-top: 5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         
         .area-catatan { margin-top: 15px; background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #ddd; }
         .area-catatan h4 { margin: 0 0 5px 0; font-size: 13px; color: #333; }
@@ -25,16 +30,13 @@
         .btn-hapus-web { position: absolute; top: 10px; right: 10px; background: rgba(255,0,0,0.1); color: red; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; z-index: 10; font-weight: bold;}
         .btn-hapus-web:hover { background: red; color: white; }
         .btn-simpan-note { margin-top: 5px; background: #e0e0e0; color: #333; padding: 5px 10px; font-size: 11px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; }
-        
-        .web-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .web-icon { width: 24px; height: 24px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
     <div class="header" style="text-align: center; margin-bottom: 30px;">
         <h1>Rak Website & Artikel</h1>
-        <p>Arsip Jurnal, Blog, dan Referensi Teks</p>
+        <p>Arsip Jurnal, Blog, dan Referensi Teks (Auto-Metadata)</p>
         
         <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
             <a href="index.html" style="background: #e4e6eb; color: #050505; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🎬 Rak Video</a>
@@ -52,16 +54,15 @@
     </div>
 
     <div class="panel">
-        <h2>2. Simpan Bookmark Web</h2>
+        <h2>2. Simpan Bookmark Web (Otomatis Tarik Data)</h2>
         <div class="flex-group">
-            <input type="url" id="linkWeb" placeholder="https://..." style="flex: 2;">
-            <input type="text" id="judulWeb" placeholder="Judul Halaman (Opsional)" style="flex: 1;">
+            <input type="url" id="linkWeb" placeholder="Paste link artikel atau jurnal di sini..." style="flex: 2;">
             <div id="wadahPilihKategori" class="wadah-kategori"></div>
-            <button id="tombolSimpan" onclick="simpanWeb()">Simpan Web</button>
+            <button id="tombolSimpan" onclick="simpanWeb()">Tarik & Simpan</button>
         </div>
     </div>
 
-    <input type="text" id="inputCari" placeholder="🔍 Cari judul artikel atau catatan..." onkeyup="renderRak()" style="width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 30px; border: 1px solid #ddd; outline: none;">
+    <input type="text" id="inputCari" placeholder="🔍 Cari judul artikel, deskripsi, atau catatan..." onkeyup="renderRak()" style="width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 30px; border: 1px solid #ddd; outline: none;">
     
     <div class="rak-katalog" id="rakWeb"></div>
 
@@ -69,7 +70,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove, update, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // Konfigurasi Firebase yang SAMA dengan index.html
+        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
             authDomain: "katalog-video.firebaseapp.com",
@@ -83,7 +84,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Menggunakan LocalStorage yang berbeda khusus untuk Kategori Web
         let daftarKategori = JSON.parse(localStorage.getItem('katalog_kat_web')) || ["Jurnal Skripsi", "Artikel INLISLite", "Berita"];
         let dataWeb = {};
 
@@ -111,46 +111,61 @@
             localStorage.setItem('katalog_kat_web', JSON.stringify(daftarKategori));
         }
 
-        // PERHATIKAN: Sekarang kita menyimpan ke folder 'websites', bukan 'videos'
         const webQuery = query(ref(db, 'websites'), limitToLast(50));
         onValue(webQuery, (snapshot) => {
             dataWeb = snapshot.val() || {};
             renderRak();
         });
 
+        // FUNGSI BARU: Menarik Metadata Otomatis
         window.simpanWeb = async () => {
             const url = document.getElementById('linkWeb').value;
-            let judul = document.getElementById('judulWeb').value;
             const kats = Array.from(document.querySelectorAll('.cek-kat:checked')).map(c => c.value);
             
             if(!url || kats.length === 0) return alert("Link dan Kategori wajib diisi!");
 
-            // Jika judul kosong, gunakan nama domain situsnya
-            if(!judul) {
-                try {
-                    judul = new URL(url).hostname;
-                } catch(e) {
-                    judul = "Halaman Web";
-                }
-            }
-
-            // Mendapatkan ikon website (favicon) secara otomatis dari Google API
-            const iconUrl = `https://www.google.com/s2/favicons?domain=${url}&sz=64`;
+            const tombol = document.getElementById('tombolSimpan');
+            tombol.innerText = "Membaca Metadata...";
+            tombol.disabled = true;
 
             try {
+                // Menggunakan Microlink API untuk mengekstrak data halaman
+                const response = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+                
+                // Cek apakah API berhasil mengambil data
+                const meta = data.status === 'success' ? data.data : {};
+                
+                // Menentukan Judul (Fallback ke nama domain jika web pelit data)
+                let judul = meta.title || new URL(url).hostname;
+                
+                // Mengambil deskripsi singkat (snippet)
+                let deskripsi = meta.description || "Tidak ada deskripsi tersedia.";
+                
+                // Mengambil gambar (Bisa gambar artikel, atau logo website, atau favicon)
+                let imgUrl = (meta.image && meta.image.url) ? meta.image.url : 
+                             (meta.logo && meta.logo.url) ? meta.logo.url : 
+                             `https://www.google.com/s2/favicons?domain=${url}&sz=128`;
+
+                // Kirim data lengkap ke Firebase
                 push(ref(db, 'websites'), {
                     judul: judul,
                     link: url,
-                    icon: iconUrl,
+                    icon: imgUrl,
+                    deskripsi: deskripsi,
                     kategori: kats,
                     catatan: "",
                     waktuSimpan: Date.now()
                 });
 
                 document.getElementById('linkWeb').value = "";
-                document.getElementById('judulWeb').value = "";
                 document.querySelectorAll('.cek-kat').forEach(c => c.checked = false);
-            } catch (e) { alert("Gagal menyimpan website!"); }
+            } catch (e) { 
+                alert("Gagal menarik data. Pastikan link valid dan dapat diakses publik."); 
+            } finally {
+                tombol.innerText = "Tarik & Simpan";
+                tombol.disabled = false;
+            }
         };
 
         window.updateProgress = (id) => {
@@ -168,30 +183,34 @@
             const keys = Object.keys(dataWeb).reverse();
             keys.forEach(id => {
                 const w = dataWeb[id];
-                const matchKat = w.kategori.some(k => k.toLowerCase().includes(cari));
+                const matchKat = (w.kategori || []).some(k => k.toLowerCase().includes(cari));
                 const matchNote = (w.catatan || "").toLowerCase().includes(cari);
+                const matchDesc = (w.deskripsi || "").toLowerCase().includes(cari);
                 
-                if(w.judul.toLowerCase().includes(cari) || matchKat || matchNote) {
+                if((w.judul || "").toLowerCase().includes(cari) || matchKat || matchNote || matchDesc) {
                     rak.innerHTML += `
                         <div class="kartu-web">
                             <button class="btn-hapus-web" onclick="hapusWeb('${id}')">✕</button>
                             <div class="konten-kartu">
-                                <div style="margin-bottom:8px">${w.kategori.map(k => `<span class="tag-badge">${k}</span>`).join('')}</div>
+                                <div>${(w.kategori || []).map(k => `<span class="tag-badge">${k}</span>`).join('')}</div>
                                 
                                 <div class="web-header">
-                                    <img src="${w.icon}" class="web-icon" loading="lazy" onerror="this.style.display='none'">
-                                    <h3 style="font-size:16px; margin:0;">${w.judul}</h3>
+                                    <img src="${w.icon}" class="web-image" loading="lazy" onerror="this.src='https://www.google.com/s2/favicons?domain=${w.link}&sz=128'">
+                                    <div class="web-meta">
+                                        <h3 style="font-size:15px; margin:0; line-height:1.3">${w.judul}</h3>
+                                        <p class="web-desc">${w.deskripsi}</p>
+                                    </div>
                                 </div>
                                 
-                                <a href="${w.link}" target="_blank" style="font-size:12px; color:#28a745; text-decoration:none; word-break: break-all;">${w.link.length > 50 ? w.link.substring(0,50)+'...' : w.link}</a>
+                                <a href="${w.link}" target="_blank" style="font-size:11px; color:#28a745; text-decoration:none; word-break: break-all; margin-bottom: 10px; display: block;">${w.link.length > 50 ? w.link.substring(0,50)+'...' : w.link}</a>
                                 
-                                <div class="area-catatan">
+                                <div class="area-catatan" style="flex-grow: 1;">
                                     <h4>📝 Ringkasan / Poin Penting:</h4>
-                                    <textarea id="note-${id}" class="teks-catatan" placeholder="Tulis ringkasan artikel di sini...">${w.catatan || ''}</textarea>
+                                    <textarea id="note-${id}" class="teks-catatan" placeholder="Tulis catatan skripsimu di sini...">${w.catatan || ''}</textarea>
                                 </div>
                                 <button class="btn-simpan-note" onclick="updateProgress('${id}')">💾 Simpan Catatan</button>
                                 
-                                <a href="${w.link}" target="_blank" style="display:block; text-align:center; border: 1px solid #28a745; color:#28a745; padding:10px; border-radius:8px; text-decoration:none; margin-top:15px; font-weight:bold; font-size:13px; transition:0.2s;">Buka Website ➔</a>
+                                <a href="${w.link}" target="_blank" style="display:block; text-align:center; border: 1px solid #28a745; background: #f0fff4; color:#28a745; padding:10px; border-radius:8px; text-decoration:none; margin-top:15px; font-weight:bold; font-size:13px; transition:0.2s;">Buka Artikel ➔</a>
                             </div>
                         </div>`;
                 }
