@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Katalog Website & Artikel</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1877f2">
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
         .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
@@ -35,42 +33,54 @@
     </style>
 </head>
 <body>
+    <div id="layarLogin" style="text-align: center; margin-top: 100px;">
+        <h2>Kunci Akses Katalog</h2>
+        <p>Silakan login menggunakan akun Google untuk mengakses arsip.</p>
+        <button id="tombolLogin" style="background: #db4437; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">
+            Login dengan Google
+        </button>
+    </div>
 
-    <div class="header" style="text-align: center; margin-bottom: 30px;">
-        <h1>Rak Website & Artikel</h1>
-        <p>Arsip Jurnal, Blog, dan Referensi Teks (Auto-Metadata)</p>
+    <div id="kontenAplikasi" style="display: none;">
         
-        <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
-            <a href="index.html" style="background: #e4e6eb; color: #050505; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🎬 Rak Video</a>
-            <a href="web.html" style="background: #28a745; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">📝 Rak Website</a>
+        <div class="header" style="text-align: center; margin-bottom: 30px; position: relative;">
+            <button id="tombolLogout" style="background: #333; color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; position: absolute; top: 0; right: 0;">Logout</button>
+            <h1>Rak Website & Artikel</h1>
+            <p>Arsip Jurnal, Blog, dan Referensi Teks (Auto-Metadata)</p>
+            
+            <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
+                <a href="index.html" style="background: #e4e6eb; color: #050505; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🎬 Rak Video</a>
+                <a href="web.html" style="background: #28a745; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">📝 Rak Website</a>
+            </div>
         </div>
-    </div>
 
-    <div class="panel">
-        <h2>1. Kategori Artikel</h2>
-        <div class="flex-group">
-            <input type="text" id="inputKategoriBaru" placeholder="Contoh: Jurnal Perpustakaan...">
-            <button onclick="tambahKategori()">+ Tambah</button>
+        <div class="panel">
+            <h2>1. Kategori Artikel</h2>
+            <div class="flex-group">
+                <input type="text" id="inputKategoriBaru" placeholder="Contoh: Jurnal Perpustakaan...">
+                <button onclick="tambahKategori()">+ Tambah</button>
+            </div>
+            <div id="listKategoriDikelola" style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;"></div>
         </div>
-        <div id="listKategoriDikelola" style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;"></div>
-    </div>
 
-    <div class="panel">
-        <h2>2. Simpan Bookmark Web (Otomatis Tarik Data)</h2>
-        <div class="flex-group">
-            <input type="url" id="linkWeb" placeholder="Paste link artikel atau jurnal di sini..." style="flex: 2;">
-            <div id="wadahPilihKategori" class="wadah-kategori"></div>
-            <button id="tombolSimpan" onclick="simpanWeb()">Tarik & Simpan</button>
+        <div class="panel">
+            <h2>2. Simpan Bookmark Web (Otomatis Tarik Data)</h2>
+            <div class="flex-group">
+                <input type="url" id="linkWeb" placeholder="Paste link artikel atau jurnal di sini..." style="flex: 2;">
+                <div id="wadahPilihKategori" class="wadah-kategori"></div>
+                <button id="tombolSimpan" onclick="simpanWeb()">Tarik & Simpan</button>
+            </div>
         </div>
-    </div>
 
-    <input type="text" id="inputCari" placeholder="🔍 Cari judul artikel, deskripsi, atau catatan..." onkeyup="renderRak()" style="width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 30px; border: 1px solid #ddd; outline: none;">
-    
-    <div class="rak-katalog" id="rakWeb"></div>
+        <input type="text" id="inputCari" placeholder="🔍 Cari judul artikel, deskripsi, atau catatan..." onkeyup="renderRak()" style="width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 30px; border: 1px solid #ddd; outline: none;">
+        
+        <div class="rak-katalog" id="rakWeb"></div>
 
-    <script type="module">
+    </div> <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove, update, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        // IMPORT AUTHENTICATION
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         // Konfigurasi Firebase
         const firebaseConfig = {
@@ -86,8 +96,49 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // INISIALISASI AUTHENTICATION
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        const layarLogin = document.getElementById('layarLogin');
+        const kontenAplikasi = document.getElementById('kontenAplikasi');
+
+        // FUNGSI LOGIN & LOGOUT
+        document.getElementById('tombolLogin').addEventListener('click', () => {
+            signInWithPopup(auth, provider).catch((error) => {
+                alert("Gagal Login: " + error.message);
+            });
+        });
+
+        document.getElementById('tombolLogout').addEventListener('click', () => {
+            signOut(auth);
+        });
+
+        // PANTAU STATUS LOGIN
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // JIKA LOGIN BERHASIL
+                layarLogin.style.display = "none";
+                kontenAplikasi.style.display = "block";
+                muatDataDatabase(); // Panggil data dari Firebase HANYA setelah login
+            } else {
+                // JIKA BELUM LOGIN / LOGOUT
+                layarLogin.style.display = "block";
+                kontenAplikasi.style.display = "none";
+            }
+        });
+
         let daftarKategori = JSON.parse(localStorage.getItem('katalog_kat_web')) || ["Jurnal Skripsi", "Artikel INLISLite", "Berita"];
         let dataWeb = {};
+
+        // BUNGKUS LOGIKA DATABASE DALAM FUNGSI INI
+        function muatDataDatabase() {
+            const webQuery = query(ref(db, 'websites'), limitToLast(50));
+            onValue(webQuery, (snapshot) => {
+                dataWeb = snapshot.val() || {};
+                renderRak();
+            });
+        }
 
         window.tambahKategori = () => {
             const val = document.getElementById('inputKategoriBaru').value;
@@ -112,12 +163,6 @@
             });
             localStorage.setItem('katalog_kat_web', JSON.stringify(daftarKategori));
         }
-
-        const webQuery = query(ref(db, 'websites'), limitToLast(50));
-        onValue(webQuery, (snapshot) => {
-            dataWeb = snapshot.val() || {};
-            renderRak();
-        });
 
         // FUNGSI BARU: Menarik Metadata Otomatis
         window.simpanWeb = async () => {
@@ -208,7 +253,7 @@
                                 
                                 <div class="area-catatan" style="flex-grow: 1;">
                                     <h4>📝 Ringkasan / Poin Penting:</h4>
-                                    <textarea id="note-${id}" class="teks-catatan" placeholder="Tulis catatan skripsimu di sini...">${w.catatan || ''}</textarea>
+                                    <textarea id="note-${id}" class="teks-catatan" placeholder="Tulis catatan di sini...">${w.catatan || ''}</textarea>
                                 </div>
                                 <button class="btn-simpan-note" onclick="updateProgress('${id}')">💾 Simpan Catatan</button>
                                 
@@ -220,11 +265,5 @@
         }
         updateUIKat();
     </script>
-<script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-    </script>
-</body>
 </body>
 </html>
