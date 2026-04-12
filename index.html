@@ -10,7 +10,7 @@
         .flex-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 15px; }
         input, textarea { flex: 1; padding: 12px; border: 1px solid #ccd0d5; border-radius: 8px; font-family: inherit; }
         button { background-color: #1877f2; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .wadah-kategori { flex: 2; display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid #ccd0d5; padding: 12px; border-radius: 8px; background: #fafafa; }
+        .wadah-kategori { display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid #ccd0d5; padding: 12px; border-radius: 8px; background: #fafafa; margin-top: 15px; }
         .rak-katalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
         
         /* Kartu Video */
@@ -35,7 +35,7 @@
 
     <div class="header" style="text-align: center; margin-bottom: 30px;">
         <h1>Katalog Video Fokus Pro</h1>
-        <p>Otomatis Kategori & Durasi (Super Hemat Data)</p>
+        <p>Otomatis Kategori & Manual Durasi</p>
         
         <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
             <a href="index.html" style="background: #1877f2; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🎥 Rak Video</a>
@@ -53,13 +53,14 @@
     </div>
 
     <div class="panel">
-        <h2>2. Simpan Video Baru (Otomatis)</h2>
+        <h2>2. Simpan Video Baru</h2>
         <div class="flex-group">
-            <input type="url" id="linkVideo" placeholder="Paste link YouTube di sini...">
-            <div id="wadahPilihKategori" class="wadah-kategori"></div>
+            <input type="url" id="linkVideo" placeholder="Paste link YouTube..." style="flex: 2;">
+            <input type="text" id="inputDurasi" placeholder="Durasi (cth: 15:30)" style="flex: 1; min-width: 120px;">
             <button id="tombolSimpan" onclick="simpanVideo()">Simpan Video</button>
         </div>
-        <p style="font-size: 11px; color: #666; margin-top: 10px;">*Kategori & Durasi akan terdeteksi otomatis jika tidak dipilih manual.</p>
+        <div id="wadahPilihKategori" class="wadah-kategori"></div>
+        <p style="font-size: 11px; color: #666; margin-top: 10px;">*Kategori akan terdeteksi otomatis jika tidak dipilih manual.</p>
     </div>
 
     <input type="text" id="inputCari" placeholder="🔍 Cari judul, kategori, atau catatan..." onkeyup="renderRak()" style="width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 30px; border: 1px solid #ddd; outline: none; box-sizing: border-box;">
@@ -70,6 +71,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove, update, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
+        // Konfigurasi Firebase kamu tetap aman di sini
         const firebaseConfig = {
             apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
             authDomain: "katalog-video.firebaseapp.com",
@@ -82,8 +84,6 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-
-        const YOUTUBE_API_KEY = "AIzaSyCcnopmy6YRCsC8y39V2G2ZwXSMRQYe4fo";
 
         let daftarKategori = JSON.parse(localStorage.getItem('katalog_kat')) || ["Materi Skripsi", "Belajar Coding", "Nonton Idol", "Belajar Bahasa"];
         let dataVideo = {};
@@ -105,17 +105,6 @@
                 if (daftarKata.some(kata => judul.includes(kata))) kategoriOtomatis.push(kategori);
             }
             return kategoriOtomatis.length > 0 ? kategoriOtomatis : ["Belum Dikategorikan"];
-        };
-
-        const formatDurasiYT = (isoDuration) => {
-            const match = isoDuration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
-            const jam = (parseInt(match[1]) || 0);
-            const menit = (parseInt(match[2]) || 0);
-            const detik = (parseInt(match[3]) || 0);
-            let hasil = jam > 0 ? jam + ":" : "";
-            hasil += (jam > 0 && menit < 10 ? "0" : "") + menit + ":";
-            hasil += (detik < 10 ? "0" : "") + detik;
-            return (jam === 0 && menit === 0) ? `0:${detik < 10 ? '0' : ''}${detik}` : hasil;
         };
 
         // --- UI KATEGORI ---
@@ -141,25 +130,20 @@
 
         window.simpanVideo = async () => {
             const url = document.getElementById('linkVideo').value;
+            const durasiManual = document.getElementById('inputDurasi').value || "--:--"; // Ambil input durasi
             let kats = Array.from(document.querySelectorAll('.cek-kat:checked')).map(c => c.value);
+            
             if(!url) return alert("Link wajib diisi!");
 
             try {
-                document.getElementById('tombolSimpan').innerText = "Membaca API...";
+                document.getElementById('tombolSimpan').innerText = "Mengambil Data...";
                 const idMatch = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^#&?]*)/);
                 const id = idMatch ? idMatch[1] : null;
                 if (!id) throw new Error("ID Video Invalid");
 
+                // Hanya fetch title menggunakan Noembed (tanpa API Key)
                 const meta = await fetch(`https://noembed.com/embed?url=${url}`).then(r => r.json());
                 const judulAsli = meta.title || "Video";
-
-                // Ambil Durasi Otomatis
-                let durasiOtomatis = "--:--";
-                const ytRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?id=${id}&part=contentDetails&key=${YOUTUBE_API_KEY}`);
-                const ytData = await ytRes.json();
-                if(ytData.items && ytData.items.length > 0) {
-                    durasiOtomatis = formatDurasiYT(ytData.items[0].contentDetails.duration);
-                }
 
                 // Auto-Tagging
                 if (kats.length === 0) {
@@ -168,23 +152,26 @@
                     updateUIKat();
                 }
 
+                // Push ke Firebase
                 push(ref(db, 'videos'), {
                     judul: judulAsli,
                     channel: meta.author_name || "Unknown",
                     link: url,
                     thumbnail: `https://img.youtube.com/vi/${id}/mqdefault.jpg`,
                     kategori: kats,
-                    durasi: durasiOtomatis,
+                    durasi: durasiManual, // Simpan durasi manual ke database
                     lastWatch: "Belum ditonton",
                     catatan: "",
                     waktuSimpan: Date.now()
                 });
 
+                // Reset Form
                 document.getElementById('linkVideo').value = "";
+                document.getElementById('inputDurasi').value = "";
                 document.querySelectorAll('.cek-kat').forEach(c => c.checked = false);
                 document.getElementById('tombolSimpan').innerText = "Simpan Video";
             } catch (e) { 
-                alert("Gagal! Cek Link atau API Key."); 
+                alert("Gagal menyimpan video. Cek koneksi atau link!"); 
                 document.getElementById('tombolSimpan').innerText = "Simpan Video";
             }
         };
