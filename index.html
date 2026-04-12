@@ -9,18 +9,31 @@
         .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
         .flex-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 15px; }
         input, textarea { flex: 1; padding: 12px; border: 1px solid #ccd0d5; border-radius: 8px; font-family: inherit; }
-        button { background-color: #1877f2; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        button { background-color: #1877f2; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: #166fe5; }
         .wadah-kategori { display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid #ccd0d5; padding: 12px; border-radius: 8px; background: #fafafa; margin-top: 15px; }
-        .rak-katalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+        .rak-katalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; margin-bottom: 30px; }
         
         /* Kartu Video */
-        .kartu-video { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; display: flex; flex-direction: column; }
+        .kartu-video { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; display: flex; flex-direction: column; transition: 0.2s;}
+        .kartu-video:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
         .thumbnail-container { position: relative; background: #ddd; height: 170px; }
         .thumbnail { width: 100%; height: 100%; object-fit: cover; }
         .durasi-label { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
         
         .konten-kartu { padding: 15px; flex-grow: 1; }
-        .tag-badge { background: #e7f3ff; color: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 11px; margin-right: 5px; font-weight: bold; }
+        .tag-badge { background: #e7f3ff; color: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 11px; margin-right: 5px; font-weight: bold; display: inline-block; margin-bottom: 5px;}
+        
+        /* Filter Dinamis */
+        .filter-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .filter-btn { background: #e4e6eb; color: #050505; border: none; padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .filter-btn.aktif { background: #1877f2; color: white; }
+
+        /* Paginasi */
+        .paginasi { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 40px; }
+        .page-btn { background: white; border: 1px solid #ccd0d5; color: #333; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .page-btn.aktif { background: #1877f2; color: white; border-color: #1877f2; }
+        .page-btn:disabled { background: #f0f2f5; color: #aaa; cursor: not-allowed; }
         
         /* Fitur Catatan */
         .area-catatan { margin-top: 15px; background: #fff9c4; padding: 10px; border-radius: 8px; border: 1px dashed #fbc02d; }
@@ -35,7 +48,7 @@
 
     <div class="header" style="text-align: center; margin-bottom: 30px;">
         <h1>Katalog Video Fokus Pro</h1>
-        <p>Otomatis Kategori & Manual Durasi</p>
+        <p>Anti-Redundansi, Paginasi & Filter Dinamis</p>
         
         <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
             <a href="index.html" style="background: #1877f2; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🎥 Rak Video</a>
@@ -60,18 +73,22 @@
             <button id="tombolSimpan" onclick="simpanVideo()">Simpan Video</button>
         </div>
         <div id="wadahPilihKategori" class="wadah-kategori"></div>
-        <p style="font-size: 11px; color: #666; margin-top: 10px;">*Kategori akan terdeteksi otomatis jika tidak dipilih manual.</p>
     </div>
 
-    <input type="text" id="inputCari" placeholder="🔍 Cari judul, kategori, atau catatan..." onkeyup="renderRak()" style="width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 30px; border: 1px solid #ddd; outline: none; box-sizing: border-box;">
+    <input type="text" id="inputCari" placeholder="🔍 Cari judul, kategori, atau catatan..." onkeyup="resetKeHalamanSatu()" style="width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 30px; border: 1px solid #ddd; outline: none; box-sizing: border-box;">
+    
+    <div id="filterKategori" class="filter-container">
+        </div>
     
     <div class="rak-katalog" id="rakVideo"></div>
+    
+    <div id="paginasiKontainer" class="paginasi"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, push, onValue, remove, update, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        // limitToLast dihapus agar bisa memuat semua halaman
+        import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // Konfigurasi Firebase kamu tetap aman di sini
         const firebaseConfig = {
             apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
             authDomain: "katalog-video.firebaseapp.com",
@@ -87,8 +104,12 @@
 
         let daftarKategori = JSON.parse(localStorage.getItem('katalog_kat')) || ["Materi Skripsi", "Belajar Coding", "Nonton Idol", "Belajar Bahasa"];
         let dataVideo = {};
+        
+        // --- VARIABEL HALAMAN & FILTER ---
+        let halamanSaatIni = 1;
+        const itemPerHalaman = 12; // Jumlah video per halaman
+        let filterAktif = []; // Kategori yang sedang di-klik
 
-        // --- KAMUS AUTO-KATEGORI ---
         const kamusKategori = {
             "Materi Skripsi": ["skripsi", "kualitatif", "perpustakaan", "penelitian", "inlis", "inlislite", "jurnal", "metode"],
             "Belajar Coding": ["coding", "html", "css", "javascript", "js", "tutorial", "firebase", "web", "app"],
@@ -107,10 +128,9 @@
             return kategoriOtomatis.length > 0 ? kategoriOtomatis : ["Belum Dikategorikan"];
         };
 
-        // --- UI KATEGORI ---
         window.tambahKategori = () => {
             const val = document.getElementById('inputKategoriBaru').value;
-            if(val) { daftarKategori.push(val); document.getElementById('inputKategoriBaru').value = ""; updateUIKat(); }
+            if(val) { daftarKategori.push(val); document.getElementById('inputKategoriBaru').value = ""; updateUIKat(); renderFilter(); }
         }
 
         window.updateUIKat = () => {
@@ -119,21 +139,56 @@
             w.innerHTML = ""; l.innerHTML = "";
             daftarKategori.forEach((k, i) => {
                 w.innerHTML += `<label style="cursor:pointer; font-size:13px"><input type="checkbox" value="${k}" class="cek-kat"> ${k}</label> `;
-                l.innerHTML += `<span class="tag-badge">${k} <b onclick="daftarKategori.splice(${i},1);updateUIKat()" style="cursor:pointer; color:red; margin-left:5px">x</b></span>`;
+                l.innerHTML += `<span class="tag-badge">${k} <b onclick="daftarKategori.splice(${i},1);updateUIKat();renderFilter()" style="cursor:pointer; color:red; margin-left:5px">x</b></span>`;
             });
             localStorage.setItem('katalog_kat', JSON.stringify(daftarKategori));
         }
 
-        // --- DATABASE OPS ---
-        const videoQuery = query(ref(db, 'videos'), limitToLast(50));
-        onValue(videoQuery, (snapshot) => { dataVideo = snapshot.val() || {}; renderRak(); });
+        // --- SISTEM FILTER DINAMIS ---
+        window.renderFilter = () => {
+            const kontainer = document.getElementById('filterKategori');
+            kontainer.innerHTML = "";
+            daftarKategori.forEach(k => {
+                const isActive = filterAktif.includes(k) ? 'aktif' : '';
+                kontainer.innerHTML += `<button class="filter-btn ${isActive}" onclick="toggleFilter('${k}')">${k}</button>`;
+            });
+        }
 
+        window.toggleFilter = (kategori) => {
+            const index = filterAktif.indexOf(kategori);
+            if (index > -1) filterAktif.splice(index, 1); // Matikan filter
+            else filterAktif.push(kategori); // Nyalakan filter
+            halamanSaatIni = 1; // Reset ke halaman 1 setiap ganti filter
+            renderFilter();
+            renderRak();
+        }
+
+        window.resetKeHalamanSatu = () => {
+            halamanSaatIni = 1;
+            renderRak();
+        }
+
+        // Mengambil semua data (Limit dihapus)
+        onValue(ref(db, 'videos'), (snapshot) => { 
+            dataVideo = snapshot.val() || {}; 
+            renderRak(); 
+        });
+
+        // --- CEK REDUNDANSI SAAT SIMPAN ---
         window.simpanVideo = async () => {
             const url = document.getElementById('linkVideo').value;
-            const durasiManual = document.getElementById('inputDurasi').value || "--:--"; // Ambil input durasi
+            const durasiManual = document.getElementById('inputDurasi').value || "--:--";
             let kats = Array.from(document.querySelectorAll('.cek-kat:checked')).map(c => c.value);
             
             if(!url) return alert("Link wajib diisi!");
+
+            // 1. CEK REDUNDANSI: Pastikan link belum pernah disimpan
+            const isDuplicate = Object.values(dataVideo).some(v => v.link === url);
+            if(isDuplicate) {
+                alert("Gagal: Video ini sudah ada di dalam arsip Anda!");
+                document.getElementById('linkVideo').value = "";
+                return;
+            }
 
             try {
                 document.getElementById('tombolSimpan').innerText = "Mengambil Data...";
@@ -141,35 +196,33 @@
                 const id = idMatch ? idMatch[1] : null;
                 if (!id) throw new Error("ID Video Invalid");
 
-                // Hanya fetch title menggunakan Noembed (tanpa API Key)
                 const meta = await fetch(`https://noembed.com/embed?url=${url}`).then(r => r.json());
                 const judulAsli = meta.title || "Video";
 
-                // Auto-Tagging
                 if (kats.length === 0) {
                     kats = tebakKategori(judulAsli);
                     kats.forEach(k => { if (!daftarKategori.includes(k) && k !== "Belum Dikategorikan") daftarKategori.push(k); });
                     updateUIKat();
+                    renderFilter();
                 }
 
-                // Push ke Firebase
                 push(ref(db, 'videos'), {
                     judul: judulAsli,
                     channel: meta.author_name || "Unknown",
                     link: url,
                     thumbnail: `https://img.youtube.com/vi/${id}/mqdefault.jpg`,
                     kategori: kats,
-                    durasi: durasiManual, // Simpan durasi manual ke database
+                    durasi: durasiManual,
                     lastWatch: "Belum ditonton",
                     catatan: "",
                     waktuSimpan: Date.now()
                 });
 
-                // Reset Form
                 document.getElementById('linkVideo').value = "";
                 document.getElementById('inputDurasi').value = "";
                 document.querySelectorAll('.cek-kat').forEach(c => c.checked = false);
                 document.getElementById('tombolSimpan').innerText = "Simpan Video";
+                alert("Video berhasil ditambahkan ke rak!");
             } catch (e) { 
                 alert("Gagal menyimpan video. Cek koneksi atau link!"); 
                 document.getElementById('tombolSimpan').innerText = "Simpan Video";
@@ -195,17 +248,48 @@
             }
         };
 
+        // --- RENDER DENGAN FILTER DAN PAGINASI ---
         window.renderRak = () => {
             const cari = document.getElementById('inputCari').value.toLowerCase();
             const rak = document.getElementById('rakVideo');
             rak.innerHTML = "";
-            Object.keys(dataVideo).reverse().forEach(id => {
-                const v = dataVideo[id];
-                if(v.judul.toLowerCase().includes(cari) || v.kategori.some(k => k.toLowerCase().includes(cari)) || (v.catatan || "").toLowerCase().includes(cari)) {
+
+            // 1. Ubah objek Firebase menjadi Array & urutkan dari terbaru
+            let semuaVideo = Object.entries(dataVideo).reverse().map(([id, v]) => ({ id, ...v }));
+
+            // 2. Terapkan Pencarian Teks
+            if (cari) {
+                semuaVideo = semuaVideo.filter(v => 
+                    v.judul.toLowerCase().includes(cari) || 
+                    v.kategori.some(k => k.toLowerCase().includes(cari)) || 
+                    (v.catatan || "").toLowerCase().includes(cari)
+                );
+            }
+
+            // 3. Terapkan Filter Kategori (Jika ada yang di-klik)
+            if (filterAktif.length > 0) {
+                semuaVideo = semuaVideo.filter(v => 
+                    v.kategori.some(k => filterAktif.includes(k))
+                );
+            }
+
+            // 4. Kalkulasi Paginasi
+            const totalHalaman = Math.ceil(semuaVideo.length / itemPerHalaman);
+            if (halamanSaatIni > totalHalaman && totalHalaman > 0) halamanSaatIni = totalHalaman;
+            
+            const start = (halamanSaatIni - 1) * itemPerHalaman;
+            const end = start + itemPerHalaman;
+            const videoDitampilkan = semuaVideo.slice(start, end);
+
+            // 5. Render Video ke Layar
+            if (videoDitampilkan.length === 0) {
+                rak.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; color:#666;">Tidak ada video yang ditemukan.</div>`;
+            } else {
+                videoDitampilkan.forEach(v => {
                     rak.innerHTML += `
                         <div class="kartu-video">
-                            <button class="btn-hapus-video" onclick="hapusVideo('${id}')">❌</button>
-                            <div class="thumbnail-container" id="player-${id}" onclick="putarVideo('player-${id}', '${v.link}')" style="cursor:pointer">
+                            <button class="btn-hapus-video" onclick="hapusVideo('${v.id}')">❌</button>
+                            <div class="thumbnail-container" id="player-${v.id}" onclick="putarVideo('player-${v.id}', '${v.link}')" style="cursor:pointer">
                                 <img src="${v.thumbnail}" class="thumbnail" loading="lazy">
                                 <span class="durasi-label">${v.durasi}</span>
                                 <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(24, 119, 242, 0.9); color: white; padding: 8px 16px; border-radius: 6px; font-weight: bold;">▶ Play</div>
@@ -213,18 +297,46 @@
                             <div class="konten-kartu">
                                 <div style="margin-bottom:8px">${v.kategori.map(k => `<span class="tag-badge">${k}</span>`).join('')}</div>
                                 <h3 style="font-size:14px; margin:5px 0">${v.judul}</h3>
-                                <input type="text" id="last-${id}" value="${v.lastWatch || ''}" placeholder="Menit ke..." style="font-size:12px; margin-top:10px; width:100%; box-sizing:border-box">
+                                <input type="text" id="last-${v.id}" value="${v.lastWatch || ''}" placeholder="Menit ke..." style="font-size:12px; margin-top:10px; width:100%; box-sizing:border-box">
                                 <div class="area-catatan">
                                     <h4>Catatan:</h4>
-                                    <textarea id="note-${id}" class="teks-catatan">${v.catatan || ''}</textarea>
+                                    <textarea id="note-${v.id}" class="teks-catatan">${v.catatan || ''}</textarea>
                                 </div>
-                                <button class="btn-simpan-note" onclick="updateProgress('${id}')" style="width:100%; margin-top:10px">💾 Simpan Progress</button>
+                                <button class="btn-simpan-note" onclick="updateProgress('${v.id}')" style="width:100%; margin-top:10px">💾 Simpan Progress</button>
                             </div>
                         </div>`;
-                }
-            });
+                });
+            }
+
+            // 6. Render Tombol Paginasi
+            renderPaginasi(totalHalaman);
         }
+
+        window.gantiHalaman = (nomor) => {
+            halamanSaatIni = nomor;
+            renderRak();
+            // Scroll otomatis ke atas rak video
+            document.getElementById('inputCari').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        window.renderPaginasi = (total) => {
+            const kontainer = document.getElementById('paginasiKontainer');
+            kontainer.innerHTML = "";
+            if (total <= 1) return; // Sembunyikan jika hanya 1 halaman
+
+            kontainer.innerHTML += `<button class="page-btn" onclick="gantiHalaman(${halamanSaatIni - 1})" ${halamanSaatIni === 1 ? 'disabled' : ''}>« Prev</button>`;
+            
+            for (let i = 1; i <= total; i++) {
+                const aktif = i === halamanSaatIni ? 'aktif' : '';
+                kontainer.innerHTML += `<button class="page-btn ${aktif}" onclick="gantiHalaman(${i})">${i}</button>`;
+            }
+            
+            kontainer.innerHTML += `<button class="page-btn" onclick="gantiHalaman(${halamanSaatIni + 1})" ${halamanSaatIni === total ? 'disabled' : ''}>Next »</button>`;
+        }
+
+        // Inisialisasi awal
         updateUIKat();
+        renderFilter();
     </script>
 </body>
 </html>
