@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeOS Habit Tracker & RPG</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6f42c1">
+    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Blue_question_mark_icon.svg/192px-Blue_question_mark_icon.svg.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
+        .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .flex-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 15px; }
+        input { flex: 1; padding: 12px; border: 1px solid #ccd0d5; border-radius: 8px; font-family: inherit; }
+        button { background-color: #6f42c1; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: #5a32a3; }
+        
+        .rak-habit { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .kartu-habit { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #6f42c1; display: flex; flex-direction: column; justify-content: space-between;}
+        
+        .rpg-panel { border-top: 4px solid #f6c23e; text-align: center; background: linear-gradient(135deg, #fff, #fdfbf1); }
+        .exp-bar-container { background:#e9ecef; border-radius:10px; height:24px; width:100%; overflow:hidden; margin-top: 10px; border: 1px solid #ddd;}
+        .exp-bar { background: linear-gradient(90deg, #f6c23e, #f4a200); height:100%; width:0%; transition: width 0.8s ease-in-out; }
+        
+        /* Deep Work Modal (Full Screen Overlay) */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 15, 20, 0.98); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; color: white; }
+        .timer-text { font-size: 80px; font-weight: bold; font-family: monospace; letter-spacing: 5px; color: #f6c23e; margin: 20px 0;}
+        .btn-stop { background-color: #e74a3b; font-size: 18px; padding: 15px 40px; border-radius: 30px; }
+        .btn-stop:hover { background-color: #c0392b; }
+    </style>
+</head>
+<body>
+
+    <div class="header" style="text-align: center; margin-bottom: 30px;">
+        <h1>Deep Work Tracker</h1>
+        <p>Sistem Fokus dengan Elemen RPG & Visualisasi Data</p>
+        
+        <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
+            <a href="index.html" style="background: #e4e6eb; color: #050505; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🎬 Rak Video</a>
+            <a href="web.html" style="background: #e4e6eb; color: #050505; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">📝 Rak Website</a>
+            <a href="habit.html" style="background: #6f42c1; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">⏳ Deep Work</a>
+        </div>
+    </div>
+
+    <div class="panel rpg-panel">
+        <h2 style="margin-top: 0; color: #333;">👤 Character Status</h2>
+        <div style="font-size: 18px; color: #555;">Level <span id="rpgLevel" style="font-size: 36px; font-weight: bold; color: #f4a200;">1</span></div>
+        <div class="exp-bar-container">
+            <div id="rpgExpBar" class="exp-bar"></div>
+        </div>
+        <p style="font-size: 14px; color: #666; margin-top: 8px; font-weight: bold;">Focus EXP: <span id="rpgExpText">0</span> / <span id="rpgNextLevel">100</span></p>
+    </div>
+
+    <div class="panel">
+        <h2>1. Tambah Misi (Habit) Baru</h2>
+        <div class="flex-group">
+            <input type="text" id="inputHabit" placeholder="Contoh: Latihan Kanji JLPT N4...">
+            <button onclick="tambahHabit()">+ Buat Misi</button>
+        </div>
+    </div>
+
+    <div class="rak-habit" id="rakHabit" style="margin-bottom: 30px;"></div>
+
+    <div class="panel">
+        <h2>📊 Grafik Fokus 7 Hari Terakhir</h2>
+        <canvas id="habitChart" width="400" height="150"></canvas>
+    </div>
+
+    <div id="timerModal" class="modal-overlay">
+        <h2 id="modalTaskName" style="font-size: 24px; font-weight: normal; color: #aaa;">Misi Aktif...</h2>
+        <div id="timerDisplay" class="timer-text">00:00:00</div>
+        <button class="btn-stop" onclick="stopTimer()">Selesai & Simpan EXP</button>
+        <p style="margin-top: 20px; color: #777; font-size: 14px;">Hindari distraksi. Tetap di halaman ini.</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, push, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
+            authDomain: "katalog-video.firebaseapp.com",
+            databaseURL: "https://katalog-video-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "katalog-video",
+            storageBucket: "katalog-video.firebasestorage.app",
+            messagingSenderId: "1035864136490",
+            appId: "1:1035864136490:web:9abe5dbf41e80b11ad5c53"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // State Aplikasi
+        let daftarHabit = [];
+        let totalExp = 0;
+        let chartInstance = null;
+
+        // State Timer
+        let intervalId = null;
+        let waktuMulai = null;
+        let idHabitAktif = null;
+
+        // 1. Mengambil & Update Data RPG (Total EXP)
+        onValue(ref(db, 'rpgStats/totalExp'), (snapshot) => {
+            totalExp = snapshot.val() || 0;
+            updateRPGUI();
+        });
+
+        function updateRPGUI() {
+            // Rumus Level: Setiap kelipatan EXP yang makin berat (Level = akar pangkat dari (EXP/60))
+            // Anggap 1 Menit = 10 EXP.
+            let level = Math.floor(Math.sqrt(totalExp / 100)) + 1;
+            let nextLevelExp = Math.pow(level, 2) * 100;
+            let prevLevelExp = Math.pow(level - 1, 2) * 100;
+            
+            let expInCurrentLevel = totalExp - prevLevelExp;
+            let expNeededForLevel = nextLevelExp - prevLevelExp;
+            let persentase = (expInCurrentLevel / expNeededForLevel) * 100;
+
+            document.getElementById('rpgLevel').innerText = level;
+            document.getElementById('rpgExpText').innerText = totalExp;
+            document.getElementById('rpgNextLevel').innerText = nextLevelExp;
+            document.getElementById('rpgExpBar').style.width = persentase + '%';
+        }
+
+        // 2. Mengelola Habit
+        onValue(ref(db, 'habits'), (snapshot) => {
+            if (snapshot.exists()) {
+                daftarHabit = snapshot.val();
+            } else {
+                // Default Data awal yang relevan dengan rutinitas
+                daftarHabit = [
+                    { id: "h1", nama: "Skripsi Ilmu Perpustakaan Bab 4" },
+                    { id: "h2", nama: "Coding Project LifeOS (HTML/JS)" },
+                    { id: "h3", nama: "Belajar Pola Kalimat JLPT N4" }
+                ];
+                set(ref(db, 'habits'), daftarHabit);
+            }
+            renderHabit();
+        });
+
+        window.tambahHabit = () => {
+            const nama = document.getElementById('inputHabit').value;
+            if (nama) {
+                daftarHabit.push({ id: Date.now().toString(), nama: nama });
+                set(ref(db, 'habits'), daftarHabit);
+                document.getElementById('inputHabit').value = "";
+            }
+        };
+
+        window.renderHabit = () => {
+            const rak = document.getElementById('rakHabit');
+            rak.innerHTML = "";
+            daftarHabit.forEach(h => {
+                rak.innerHTML += `
+                    <div class="kartu-habit">
+                        <h3 style="margin-top:0; color:#333; font-size:16px;">${h.nama}</h3>
+                        <button onclick="mulaiTimer('${h.id}', '${h.nama}')" style="margin-top:15px; width:100%;">▶ Mulai Deep Work</button>
+                    </div>
+                `;
+            });
+        };
+
+        // 3. Logika Timer Deep Work
+        window.mulaiTimer = (id, nama) => {
+            idHabitAktif = id;
+            waktuMulai = Date.now();
+            document.getElementById('modalTaskName').innerText = `Mengerjakan: ${nama}`;
+            document.getElementById('timerModal').style.display = "flex";
+            
+            intervalId = setInterval(updateDisplayTimer, 1000);
+        };
+
+        function updateDisplayTimer() {
+            let sekarang = Date.now();
+            let selisihDetik = Math.floor((sekarang - waktuMulai) / 1000);
+            
+            let jam = String(Math.floor(selisihDetik / 3600)).padStart(2, '0');
+            let menit = String(Math.floor((selisihDetik % 3600) / 60)).padStart(2, '0');
+            let detik = String(selisihDetik % 60).padStart(2, '0');
+            
+            document.getElementById('timerDisplay').innerText = `${jam}:${menit}:${detik}`;
+        }
+
+        window.stopTimer = async () => {
+            clearInterval(intervalId);
+            let waktuSelesai = Date.now();
+            let selisihDetik = Math.floor((waktuSelesai - waktuMulai) / 1000);
+            let durasiMenit = Math.floor(selisihDetik / 60);
+
+            // Simpan log ke database walau hanya 1 menit (atau ubah jika ingin minimal 5 menit)
+            if (durasiMenit >= 1 || selisihDetik >= 10) { 
+                // Untuk test, dihitung dalam detik, pada kenyataan pakai menit
+                let menitTersimpan = durasiMenit > 0 ? durasiMenit : 1; 
+                let gainedExp = menitTersimpan * 10;
+
+                // 1. Catat Sesi
+                let tgl = new Date();
+                let dateString = tgl.toISOString().split('T')[0]; // Format YYYY-MM-DD
+                
+                push(ref(db, 'habitLogs'), {
+                    habitId: idHabitAktif,
+                    durasiMenit: menitTersimpan,
+                    dateString: dateString,
+                    timestamp: Date.now()
+                });
+
+                // 2. Tambah EXP RPG
+                set(ref(db, 'rpgStats/totalExp'), totalExp + gainedExp);
+
+                alert(`Sesi Selesai! Kamu fokus selama ${menitTersimpan} menit dan mendapat +${gainedExp} EXP.`);
+            } else {
+                alert("Sesi terlalu singkat untuk mendapatkan EXP.");
+            }
+
+            document.getElementById('timerModal').style.display = "none";
+            document.getElementById('timerDisplay').innerText = "00:00:00";
+        };
+
+        // 4. Render Grafik (Chart.js)
+        onValue(ref(db, 'habitLogs'), (snapshot) => {
+            const logs = snapshot.val() || {};
+            renderGrafik(logs);
+        });
+
+        function renderGrafik(logs) {
+            // Mengambil tanggal 7 hari terakhir
+            const labels = [];
+            const dataDurasi = [];
+            let logArray = Object.values(logs);
+
+            for (let i = 6; i >= 0; i--) {
+                let d = new Date();
+                d.setDate(d.getDate() - i);
+                let dateStr = d.toISOString().split('T')[0];
+                let displayDate = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                
+                labels.push(displayDate);
+                
+                // Hitung total menit per hari
+                let totalHariIni = logArray
+                    .filter(log => log.dateString === dateStr)
+                    .reduce((sum, log) => sum + log.durasiMenit, 0);
+                
+                dataDurasi.push(totalHariIni);
+            }
+
+            const ctx = document.getElementById('habitChart').getContext('2d');
+            
+            // Hapus grafik lama jika ada (agar tidak tertumpuk)
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Durasi Fokus (Menit)',
+                        data: dataDurasi,
+                        backgroundColor: '#6f42c1',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Menit' } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
