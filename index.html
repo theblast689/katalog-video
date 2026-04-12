@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Katalog Video Fokus Pro + Auto-Magic</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1877f2">
+    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Blue_question_mark_icon.svg/192px-Blue_question_mark_icon.svg.png">
+
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
         .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
@@ -14,7 +19,6 @@
         .wadah-kategori { display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid #ccd0d5; padding: 12px; border-radius: 8px; background: #fafafa; margin-top: 15px; }
         .rak-katalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; margin-bottom: 30px; }
         
-        /* Kartu Video */
         .kartu-video { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; display: flex; flex-direction: column; transition: 0.2s;}
         .kartu-video:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
         .thumbnail-container { position: relative; background: #ddd; height: 170px; }
@@ -24,18 +28,15 @@
         .konten-kartu { padding: 15px; flex-grow: 1; }
         .tag-badge { background: #e7f3ff; color: #1877f2; padding: 4px 10px; border-radius: 6px; font-size: 11px; margin-right: 5px; font-weight: bold; display: inline-block; margin-bottom: 5px;}
         
-        /* Filter Dinamis */
         .filter-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
         .filter-btn { background: #e4e6eb; color: #050505; border: none; padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .filter-btn.aktif { background: #1877f2; color: white; }
 
-        /* Paginasi */
         .paginasi { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 40px; }
         .page-btn { background: white; border: 1px solid #ccd0d5; color: #333; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .page-btn.aktif { background: #1877f2; color: white; border-color: #1877f2; }
         .page-btn:disabled { background: #f0f2f5; color: #aaa; cursor: not-allowed; }
         
-        /* Fitur Catatan */
         .area-catatan { margin-top: 15px; background: #fff9c4; padding: 10px; border-radius: 8px; border: 1px dashed #fbc02d; }
         .area-catatan h4 { margin: 0 0 5px 0; font-size: 13px; color: #856404; }
         .teks-catatan { width: 100%; border: none; background: transparent; font-size: 13px; resize: vertical; min-height: 50px; outline: none; }
@@ -129,7 +130,6 @@
             return kategoriOtomatis.length > 0 ? kategoriOtomatis : ["Belum Dikategorikan"];
         };
 
-        // Fungsi sinkronisasi data langsung tanpa login
         function muatDataDatabase() {
             onValue(ref(db, 'kategori'), (snapshot) => {
                 if (snapshot.exists()) {
@@ -148,7 +148,6 @@
             });
         }
 
-        // Jalankan pemuatan data saat script dimuat
         muatDataDatabase();
 
         const simpanKategoriKeDB = () => {
@@ -361,6 +360,16 @@
             }
             
             kontainer.innerHTML += `<button class="page-btn" onclick="gantiHalaman(${halamanSaatIni + 1})" ${halamanSaatIni === total ? 'disabled' : ''}>Next »</button>`;
+        }
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => console.log('Service Worker berhasil didaftarkan!', reg.scope))
+                    .catch((err) => console.log('Service Worker gagal didaftarkan', err));
+            });
         }
     </script>
 </body>
