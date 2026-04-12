@@ -36,6 +36,10 @@
         .hapus-btn { cursor: pointer; color: red; font-weight: bold; }
         .btn-export { background-color: #2ecc71; padding: 8px 16px; font-size: 13px; }
         .btn-export:hover { background-color: #27ae60; }
+        
+        /* Tambahan untuk Filter Bulan */
+        .header-histori { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #eee; padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;}
+        .input-bulan { padding: 8px 15px; border-radius: 8px; border: 1px solid #ccd0d5; font-weight: bold; color: #333; font-family: inherit; }
     </style>
 </head>
 <body>
@@ -65,13 +69,6 @@
         </div>
     </div>
 
-    <div class="panel" style="display: flex; flex-wrap: wrap; gap: 20px;">
-        <div style="flex: 1; min-width: 300px;">
-            <h2>📊 Pengeluaran Bulan Ini</h2>
-            <canvas id="grafikKategori"></canvas>
-        </div>
-    </div>
-
     <div class="panel">
         <h2>📝 Catat Transaksi Baru</h2>
         <div class="flex-group">
@@ -95,10 +92,19 @@
     </div>
 
     <div class="panel">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #eee; padding-bottom: 10px; margin-bottom: 15px;">
-            <h2 style="margin: 0;">🗓️ Histori Bulan Ini</h2>
-            <button onclick="exportCSV()" class="btn-export">📥 Export CSV (Excel)</button>
+        <div class="header-histori">
+            <h2 style="margin: 0;">🗓️ Histori Transaksi</h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <label for="filterBulan" style="font-size: 14px; font-weight: bold; color: #555;">Pilih Bulan:</label>
+                <input type="month" id="filterBulan" class="input-bulan" onchange="gantiBulanView()">
+                <button onclick="exportCSV()" class="btn-export">📥 Export CSV</button>
+            </div>
         </div>
+        
+        <div style="flex: 1; min-width: 300px; margin-bottom: 20px;">
+            <canvas id="grafikKategori" style="max-height: 250px;"></canvas>
+        </div>
+        
         <div class="list-transaksi" id="rakTransaksi"></div>
     </div>
 
@@ -122,7 +128,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, push, onValue, set, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        // Menambahkan fungsi 'off' untuk mencegah penumpukan data saat ganti bulan
+        import { getDatabase, ref, push, onValue, set, remove, update, get, off } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
@@ -139,12 +146,20 @@
             pemasukan: ["Uang Saku", "Freelance", "Lainnya"],
             pengeluaran: ["Food & Beverage", "Education", "Transport", "Clothes"]
         };
-        let transaksiBulanIni = {};
+        let transaksiTampil = {};
         let chartInstance = null;
 
+        // Mendapatkan bulan ini (YYYY-MM)
         const d = new Date();
-        const idBulanIni = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
+        const bulanIni = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
+        
+        // Variabel untuk menyimpan bulan apa yang sedang dilihat di layar
+        let bulanAktif = bulanIni; 
+        
         const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+
+        // Set default value di kalender HTML
+        document.getElementById('filterBulan').value = bulanAktif;
 
         // --- Firebase Listeners ---
         onValue(ref(db, 'finance/saldo'), (snapshot) => {
@@ -159,11 +174,27 @@
             updateDropdownKategori();
         });
 
-        onValue(ref(db, `finance/transaksi/${idBulanIni}`), (snapshot) => {
-            transaksiBulanIni = snapshot.val() || {};
-            renderHistori();
-            renderChart();
-        });
+        // --- FUNGSI BARU: Memuat Data Berdasarkan Pilihan Bulan ---
+        function muatDataHistori(bulanPilihan) {
+            // Putuskan koneksi dari bulan sebelumnya agar data tidak bercampur
+            off(ref(db, `finance/transaksi`));
+            
+            // Sambungkan ke laci bulan yang baru dipilih
+            onValue(ref(db, `finance/transaksi/${bulanPilihan}`), (snapshot) => {
+                transaksiTampil = snapshot.val() || {};
+                renderHistori();
+                renderChart();
+            });
+        }
+        
+        // Panggil fungsi pertama kali dengan bulan ini
+        muatDataHistori(bulanAktif);
+
+        // Fungsi saat kamu mengganti bulan di kalender UI
+        window.gantiBulanView = () => {
+            bulanAktif = document.getElementById('filterBulan').value;
+            muatDataHistori(bulanAktif);
+        };
 
         // --- Core Functions ---
         window.editSaldo = (jenis) => {
@@ -186,7 +217,8 @@
             if(jenis === 'pengeluaran') saldo[sumber] -= harga;
             else saldo[sumber] += harga;
 
-            push(ref(db, `finance/transaksi/${idBulanIni}`), {
+            // Transaksi selalu disimpan ke folder bulan yang SEDANG DIBUKA di layar
+            push(ref(db, `finance/transaksi/${bulanAktif}`), {
                 jenis, sumber, nama, harga, kategori: kat, 
                 tanggal: new Date().toISOString().split('T')[0],
                 timestamp: Date.now()
@@ -198,9 +230,9 @@
         };
 
         // --- Export & Auto-Reminder Logic ---
-        window.exportCSV = (dataTransaksi = transaksiBulanIni, namaBulan = idBulanIni) => {
-            const dataArr = Object.values(dataTransaksi);
-            if (dataArr.length === 0) return alert("Tidak ada data.");
+        window.exportCSV = () => {
+            const dataArr = Object.values(transaksiTampil);
+            if (dataArr.length === 0) return alert(`Tidak ada data transaksi untuk bulan ${bulanAktif}.`);
 
             let csvContent = "Tanggal,Nama,Kategori,Sumber,Jenis,Nominal\n";
             dataArr.sort((a,b) => a.timestamp - b.timestamp).forEach(t => {
@@ -210,7 +242,7 @@
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.setAttribute("href", URL.createObjectURL(blob));
-            link.setAttribute("download", `Laporan_Keuangan_${namaBulan}.csv`);
+            link.setAttribute("download", `Laporan_Keuangan_${bulanAktif}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -219,15 +251,27 @@
         async function cekGantiBulan() {
             let bulanTerakhir = localStorage.getItem("lastFinanceMonth");
             if (!bulanTerakhir) {
-                localStorage.setItem("lastFinanceMonth", idBulanIni);
+                localStorage.setItem("lastFinanceMonth", bulanIni);
                 return;
             }
-            if (bulanTerakhir !== idBulanIni) {
+            if (bulanTerakhir !== bulanIni) {
                 if (confirm(`Bulan baru terdeteksi! Download rekapan bulan lalu (${bulanTerakhir})?`)) {
                     const snapshot = await get(ref(db, `finance/transaksi/${bulanTerakhir}`));
-                    if (snapshot.exists()) exportCSV(snapshot.val(), bulanTerakhir);
+                    if (snapshot.exists()) {
+                        // Jalankan export manual untuk bulan lalu
+                        const dataArr = Object.values(snapshot.val());
+                        let csv = "Tanggal,Nama,Kategori,Sumber,Jenis,Nominal\n";
+                        dataArr.sort((a,b) => a.timestamp - b.timestamp).forEach(t => {
+                            csv += `${t.tanggal},"${t.nama}","${t.kategori}",${t.sumber},${t.jenis},${t.harga}\n`;
+                        });
+                        const b = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                        const l = document.createElement("a");
+                        l.href = URL.createObjectURL(b);
+                        l.download = `Laporan_Keuangan_${bulanTerakhir}.csv`;
+                        l.click();
+                    }
                 }
-                localStorage.setItem("lastFinanceMonth", idBulanIni);
+                localStorage.setItem("lastFinanceMonth", bulanIni);
             }
         }
         cekGantiBulan();
@@ -236,11 +280,19 @@
         function renderHistori() {
             const rak = document.getElementById('rakTransaksi');
             rak.innerHTML = "";
-            Object.entries(transaksiBulanIni).sort((a,b) => b[1].timestamp - a[1].timestamp).forEach(([id, t]) => {
+            
+            const arrayTransaksi = Object.entries(transaksiTampil).sort((a,b) => b[1].timestamp - a[1].timestamp);
+            
+            if(arrayTransaksi.length === 0) {
+                rak.innerHTML = `<div style="text-align:center; padding:20px; color:#999;">Belum ada transaksi di bulan ini.</div>`;
+                return;
+            }
+
+            arrayTransaksi.forEach(([id, t]) => {
                 const isPeng = t.jenis === 'pengeluaran';
                 rak.innerHTML += `
                     <div class="item-transaksi ${t.jenis}">
-                        <div><strong>${t.nama}</strong><br><span class="badge-kategori">${t.kategori}</span></div>
+                        <div><strong>${t.nama}</strong><br><span class="badge-kategori">${t.kategori}</span> <span style="font-size:10px; color:#888;">${t.tanggal}</span></div>
                         <div style="text-align:right">
                             <strong style="color:${isPeng?'#e74c3c':'#2ecc71'}">${isPeng?'-':'+'} ${formatRupiah(t.harga)}</strong>
                             <br><span onclick="hapusTransaksi('${id}','${t.jenis}','${t.sumber}',${t.harga})" class="hapus-btn" style="font-size:11px">Hapus</span>
@@ -254,19 +306,25 @@
             if(jenis === 'pengeluaran') saldo[sumber] += harga;
             else saldo[sumber] -= harga;
             update(ref(db, 'finance/saldo'), saldo);
-            remove(ref(db, `finance/transaksi/${idBulanIni}/${id}`));
+            // Menghapus data di bulan yang sedang aktif dilihat
+            remove(ref(db, `finance/transaksi/${bulanAktif}/${id}`));
         };
 
         function renderChart() {
             let rekap = {};
-            Object.values(transaksiBulanIni).forEach(t => {
+            Object.values(transaksiTampil).forEach(t => {
                 if(t.jenis === 'pengeluaran') rekap[t.kategori] = (rekap[t.kategori] || 0) + t.harga;
             });
             const ctx = document.getElementById('grafikKategori').getContext('2d');
             if(chartInstance) chartInstance.destroy();
+            
+            // Jika tidak ada data pengeluaran, jangan render grafik kosong
+            if(Object.keys(rekap).length === 0) return;
+
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
-                data: { labels: Object.keys(rekap), datasets: [{ data: Object.values(rekap), backgroundColor: ['#f5b041', '#e74c3c', '#3498db', '#9b59b6'] }] }
+                data: { labels: Object.keys(rekap), datasets: [{ data: Object.values(rekap), backgroundColor: ['#f5b041', '#e74c3c', '#3498db', '#9b59b6', '#1abc9c', '#34495e'] }] },
+                options: { maintainAspectRatio: false }
             });
         }
 
