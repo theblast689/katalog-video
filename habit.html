@@ -32,11 +32,20 @@
         .btn-hapus-misi { position: absolute; top: 10px; right: 10px; background: rgba(220,53,69,0.1); color: #dc3545; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-weight: bold; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
         .btn-hapus-misi:hover { background: #dc3545; color: white; }
 
+        /* Tabel Riwayat */
+        .tabel-riwayat { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        .tabel-riwayat th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #ddd; color: #555;}
+        .tabel-riwayat td { padding: 12px; border-bottom: 1px solid #eee; }
+        .tabel-riwayat tr:hover { background-color: #fdfdfd; }
+
         /* Deep Work Overlay */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 15, 20, 0.98); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; color: white; }
         .timer-text { font-size: 80px; font-weight: bold; font-family: monospace; letter-spacing: 5px; color: #f6c23e; margin: 20px 0;}
         .btn-stop { background-color: #e74a3b; font-size: 18px; padding: 15px 40px; border-radius: 30px; }
         .btn-stop:hover { background-color: #c0392b; }
+        
+        /* Responsive Table Scroll */
+        .table-responsive { overflow-x: auto; }
     </style>
 </head>
 <body>
@@ -45,7 +54,7 @@
         <h1>Deep Work Tracker</h1>
         <p>Sistem Fokus dengan Elemen RPG & Visualisasi Data</p>
         
-        <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
+        <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
             <a href="index.html" style="background: #e4e6eb; color: #050505; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🎬 Rak Video</a>
             <a href="web.html" style="background: #e4e6eb; color: #050505; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🌐 Rak Website</a>
             <a href="habit.html" style="background: #6f42c1; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">⏳ Deep Work</a>
@@ -73,8 +82,29 @@
     <div class="rak-habit" id="rakHabit" style="margin-bottom: 30px;"></div>
 
     <div class="panel">
-        <h2>📊 Grafik Fokus 7 Hari Terakhir</h2>
+        <h2>📊 Grafik Fokus 30 Hari Terakhir</h2>
         <canvas id="habitChart" width="400" height="150"></canvas>
+    </div>
+
+    <div class="panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h2 style="margin: 0;">📜 Riwayat Aktivitas</h2>
+            <button onclick="exportKeExcel()" style="background-color: #28a745; font-size: 13px; padding: 10px 20px;">📥 Export Excel (CSV)</button>
+        </div>
+        <div class="table-responsive">
+            <table class="tabel-riwayat">
+                <thead>
+                    <tr>
+                        <th>Waktu Selesai</th>
+                        <th>Nama Misi</th>
+                        <th>Durasi</th>
+                        <th>EXP Didapat</th>
+                    </tr>
+                </thead>
+                <tbody id="riwayatBody">
+                    </tbody>
+            </table>
+        </div>
     </div>
 
     <div id="timerModal" class="modal-overlay">
@@ -88,7 +118,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, push, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        // Konfigurasi Firebase Anda
         const firebaseConfig = {
             apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
             authDomain: "katalog-video.firebaseapp.com",
@@ -106,11 +135,13 @@
         let daftarHabit = [];
         let totalExp = 0;
         let chartInstance = null;
+        window.dataRiwayatGlobal = {}; // Untuk kebutuhan Export Excel
 
         // State Timer
         let intervalId = null;
         let waktuMulai = null;
         let idHabitAktif = null;
+        let namaHabitAktif = ""; // Menyimpan nama misi agar riwayat tetap utuh saat misi dihapus
 
         // 1. Sync Data RPG
         onValue(ref(db, 'rpgStats/totalExp'), (snapshot) => {
@@ -119,7 +150,6 @@
         });
 
         function updateRPGUI() {
-            // Kalkulasi Level RPG
             let level = Math.floor(Math.sqrt(totalExp / 100)) + 1;
             let nextLevelExp = Math.pow(level, 2) * 100;
             let prevLevelExp = Math.pow(level - 1, 2) * 100;
@@ -131,7 +161,7 @@
             document.getElementById('rpgLevel').innerText = level;
             document.getElementById('rpgExpText').innerText = totalExp;
             document.getElementById('rpgNextLevel').innerText = nextLevelExp;
-            document.getElementById('rpgExpBar').style.width = persentase + '%';
+            document.getElementById('rpgExpBar').style.width = Math.min(persentase, 100) + '%';
         }
 
         // 2. Sync Daftar Habit
@@ -155,7 +185,7 @@
         };
 
         window.hapusHabit = (id) => {
-            if (confirm("Hapus misi ini? EXP yang sudah terkumpul tidak akan berkurang.")) {
+            if (confirm("Hapus misi ini dari papan? Riwayat pengerjaannya tidak akan hilang.")) {
                 const updateHabit = daftarHabit.filter(h => h.id !== id);
                 set(ref(db, 'habits'), updateHabit);
             }
@@ -169,7 +199,7 @@
                     <div class="kartu-habit">
                         <button class="btn-hapus-misi" onclick="hapusHabit('${h.id}')" title="Hapus Misi">✕</button>
                         <h3 style="margin-top:0; margin-right:25px; color:#333; font-size:16px;">${h.nama}</h3>
-                        <button onclick="mulaiTimer('${h.id}', '${h.nama}')" style="margin-top:15px; width:100%;">▶ Mulai Deep Work</button>
+                        <button onclick="mulaiTimer('${h.id}', '${h.nama.replace(/'/g, "\\'")}')" style="margin-top:15px; width:100%;">▶ Mulai Deep Work</button>
                     </div>
                 `;
             });
@@ -178,6 +208,7 @@
         // 3. Sistem Timer
         window.mulaiTimer = (id, nama) => {
             idHabitAktif = id;
+            namaHabitAktif = nama; // Simpan nama misi ke memori
             waktuMulai = Date.now();
             document.getElementById('modalTaskName').innerText = `Fokus: ${nama}`;
             document.getElementById('timerModal').style.display = "flex";
@@ -197,39 +228,50 @@
             let selisihDetik = Math.floor((Date.now() - waktuMulai) / 1000);
             let durasiMenit = Math.floor(selisihDetik / 60);
 
-            if (selisihDetik >= 10) { // Minimal 10 detik untuk testing, ubah ke menit untuk asli
-                let gainedExp = (durasiMenit > 0 ? durasiMenit : 1) * 10;
+            if (selisihDetik >= 10) { // Minimal 10 detik (Testing). Idealnya ubah ke "durasiMenit >= 1" untuk versi asli
+                let menitTersimpan = durasiMenit > 0 ? durasiMenit : 1;
+                let gainedExp = menitTersimpan * 10;
                 let dateStr = new Date().toISOString().split('T')[0];
 
                 push(ref(db, 'habitLogs'), {
                     habitId: idHabitAktif,
-                    durasiMenit: durasiMenit > 0 ? durasiMenit : 1,
+                    habitNama: namaHabitAktif, // Nama disimpan, sehingga aman jika Misi dihapus
+                    durasiMenit: menitTersimpan,
                     dateString: dateStr,
                     timestamp: Date.now()
                 });
 
                 set(ref(db, 'rpgStats/totalExp'), totalExp + gainedExp);
-                alert(`Bagus! +${gainedExp} EXP didapatkan.`);
+                alert(`Bagus! Kamu fokus selama ${menitTersimpan} menit. +${gainedExp} EXP didapatkan.`);
+            } else {
+                alert("Sesi terlalu singkat (Di bawah 10 detik). EXP batal diberikan.");
             }
 
             document.getElementById('timerModal').style.display = "none";
             document.getElementById('timerDisplay').innerText = "00:00:00";
         };
 
-        // 4. Visualisasi Grafik
+        // 4. Data Logs (Menangani Grafik & Riwayat)
         onValue(ref(db, 'habitLogs'), (snapshot) => {
-            renderGrafik(snapshot.val() || {});
+            const logs = snapshot.val() || {};
+            window.dataRiwayatGlobal = logs; // Simpan untuk export
+            renderGrafik(logs);
+            renderRiwayat(logs);
         });
 
+        // GRAFIK 30 HARI
         function renderGrafik(logs) {
             const labels = [];
             const dataDurasi = [];
             const logArray = Object.values(logs);
 
-            for (let i = 6; i >= 0; i--) {
+            // Ubah dari 7 hari (i=6) menjadi 30 hari (i=29)
+            for (let i = 29; i >= 0; i--) {
                 let d = new Date();
                 d.setDate(d.getDate() - i);
                 let dateStr = d.toISOString().split('T')[0];
+                
+                // Menampilkan tanggal yang ringkas agar tidak menumpuk di sumbu X
                 labels.push(d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }));
                 
                 let totalHarian = logArray
@@ -248,12 +290,87 @@
                         label: 'Fokus (Menit)',
                         data: dataDurasi,
                         backgroundColor: '#6f42c1',
-                        borderRadius: 5
+                        borderRadius: 3 // Sedikit dikecilkan radiusnya karena barnya lebih banyak
                     }]
                 },
-                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+                options: { 
+                    responsive: true, 
+                    scales: { 
+                        x: { ticks: { maxTicksLimit: 10 } }, // Mencegah tulisan tanggal bertumpukan di HP
+                        y: { beginAtZero: true } 
+                    } 
+                }
             });
         }
+
+        // FUNGSI BARU: RENDER TABEL RIWAYAT
+        function renderRiwayat(logs) {
+            const tbody = document.getElementById('riwayatBody');
+            tbody.innerHTML = "";
+            
+            // Urutkan dari yang paling baru
+            const logArray = Object.values(logs).sort((a, b) => b.timestamp - a.timestamp);
+            
+            if(logArray.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888;">Belum ada riwayat aktivitas.</td></tr>`;
+                return;
+            }
+
+            // Batasi tampilan maksimal 50 log terbaru di layar agar web tidak berat
+            const recentLogs = logArray.slice(0, 50);
+
+            recentLogs.forEach(log => {
+                let tgl = new Date(log.timestamp);
+                let wktSelesai = tgl.toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}) + " - " + 
+                                 tgl.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+                let nama = log.habitNama || "Misi Telah Dihapus";
+                let exp = log.durasiMenit * 10;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:bold; color:#555;">${wktSelesai}</td>
+                        <td>${nama}</td>
+                        <td>${log.durasiMenit} menit</td>
+                        <td style="color:#28a745; font-weight:bold;">+${exp}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // FUNGSI BARU: EXPORT EXCEL (CSV)
+        window.exportKeExcel = () => {
+            if(!window.dataRiwayatGlobal || Object.keys(window.dataRiwayatGlobal).length === 0) {
+                return alert("Belum ada data untuk diexport!");
+            }
+
+            // Membuat Header Kolom Excel
+            let csvContent = "data:text/csv;charset=utf-8,Tanggal,Jam,Nama Misi,Durasi (Menit),EXP Didapat\n";
+            
+            const logArray = Object.values(window.dataRiwayatGlobal).sort((a, b) => b.timestamp - a.timestamp);
+            
+            logArray.forEach(log => {
+                let d = new Date(log.timestamp);
+                let tgl = d.toLocaleDateString('id-ID'); // Format: DD/MM/YYYY
+                let jam = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+                
+                // Membersihkan koma dari nama misi agar tidak merusak kolom CSV
+                let nama = (log.habitNama || "Misi Telah Dihapus").replace(/,/g, " "); 
+                let exp = log.durasiMenit * 10;
+                
+                // Memasukkan data ke baris CSV
+                csvContent += `${tgl},${jam},${nama},${log.durasiMenit},${exp}\n`;
+            });
+
+            // Memicu Download File
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "Riwayat_Fokus_LifeOS.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
     </script>
 </body>
 </html>
