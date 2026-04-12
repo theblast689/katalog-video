@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifeOS Finance Tracker - Update</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#f5b041">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
+        .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .flex-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 15px; }
+        input, select { flex: 1; padding: 12px; border: 1px solid #ccd0d5; border-radius: 8px; font-family: inherit; }
+        button { background-color: #f5b041; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: #d68910; }
+        
+        .grid-saldo { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+        .kartu-saldo { background: linear-gradient(135deg, #fdfbf1, #fff); border-top: 4px solid #f5b041; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
+        .angka-saldo { font-size: 28px; font-weight: bold; color: #333; margin: 10px 0; }
+        .btn-edit-saldo { background: #e4e6eb; color: #333; padding: 6px 12px; font-size: 12px; margin-top: 10px; }
+        
+        .nav-links { margin-top: 15px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .nav-links a { padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        
+        .list-transaksi { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .item-transaksi { display: flex; justify-content: space-between; align-items: center; background: #fafafa; padding: 15px; border-radius: 8px; border-left: 4px solid #ccc; }
+        .item-transaksi.pengeluaran { border-left-color: #e74c3c; }
+        .item-transaksi.pemasukan { border-left-color: #2ecc71; }
+        .badge-kategori { font-size: 11px; padding: 3px 8px; border-radius: 4px; background: #e4e6eb; }
+
+        .tag-kategori { background: #fdf2e9; color: #d35400; padding: 4px 10px; border-radius: 6px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; margin: 5px;}
+        .hapus-btn { cursor: pointer; color: red; font-weight: bold; }
+        .btn-export { background-color: #2ecc71; padding: 8px 16px; font-size: 13px; }
+        .btn-export:hover { background-color: #27ae60; }
+    </style>
+</head>
+<body>
+
+    <div class="header" style="text-align: center; margin-bottom: 30px;">
+        <h1>Finance Dashboard</h1>
+        <p>Catat Arus Kas & Pantau Saldo Secara Realtime</p>
+        
+        <div class="nav-links">
+            <a href="index.html" style="background: #e4e6eb; color: #050505;">🎥 Rak Video</a>
+            <a href="web.html" style="background: #e4e6eb; color: #050505;">🌐 Rak Website</a>
+            <a href="habit.html" style="background: #e4e6eb; color: #050505;">⏳ Deep Work</a>
+            <a href="keuangan.html" style="background: #f5b041; color: white;">💰 Keuangan</a>
+        </div>
+    </div>
+
+    <div class="grid-saldo">
+        <div class="kartu-saldo">
+            <h3 style="margin: 0; color: #777; font-size: 16px;">💳 Saldo Bank</h3>
+            <div class="angka-saldo" id="teksSaldoBank">Rp 0</div>
+            <button class="btn-edit-saldo" onclick="editSaldo('bank')">✏️ Sesuaikan Manual</button>
+        </div>
+        <div class="kartu-saldo">
+            <h3 style="margin: 0; color: #777; font-size: 16px;">👛 Saldo Dompet</h3>
+            <div class="angka-saldo" id="teksSaldoDompet">Rp 0</div>
+            <button class="btn-edit-saldo" onclick="editSaldo('dompet')">✏️ Sesuaikan Manual</button>
+        </div>
+    </div>
+
+    <div class="panel" style="display: flex; flex-wrap: wrap; gap: 20px;">
+        <div style="flex: 1; min-width: 300px;">
+            <h2>📊 Pengeluaran Bulan Ini</h2>
+            <canvas id="grafikKategori"></canvas>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>📝 Catat Transaksi Baru</h2>
+        <div class="flex-group">
+            <select id="inputJenis" onchange="updateDropdownKategori()">
+                <option value="pengeluaran">📉 Pengeluaran</option>
+                <option value="pemasukan">📈 Pemasukan</option>
+            </select>
+            <select id="inputSumber">
+                <option value="bank">💳 Bank</option>
+                <option value="dompet">👛 Dompet</option>
+            </select>
+        </div>
+        <div class="flex-group">
+            <input type="text" id="inputNama" placeholder="Contoh: Print Skripsi / Beli Kopi...">
+            <input type="number" id="inputHarga" placeholder="Nominal (Rp)">
+        </div>
+        <div class="flex-group">
+            <select id="inputKategori"></select>
+            <button onclick="simpanTransaksi()">Catat!</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #eee; padding-bottom: 10px; margin-bottom: 15px;">
+            <h2 style="margin: 0;">🗓️ Histori Bulan Ini</h2>
+            <button onclick="exportCSV()" class="btn-export">📥 Export CSV (Excel)</button>
+        </div>
+        <div class="list-transaksi" id="rakTransaksi"></div>
+    </div>
+
+    <div class="panel">
+        <h2>⚙️ Kelola Kategori</h2>
+        <div class="flex-group">
+            <select id="jenisKategoriBaru">
+                <option value="pengeluaran">Kategori Pengeluaran</option>
+                <option value="pemasukan">Kategori Pemasukan</option>
+            </select>
+            <input type="text" id="inputNamaKategori" placeholder="Contoh: Bensin, Uang Jajan...">
+            <button onclick="tambahKategori()">+ Tambah</button>
+        </div>
+        <div style="margin-top: 15px;">
+            <h4>Kategori Pengeluaran:</h4>
+            <div id="listKatPengeluaran"></div>
+            <h4 style="margin-top: 10px;">Kategori Pemasukan:</h4>
+            <div id="listKatPemasukan"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, push, onValue, set, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
+            authDomain: "katalog-video.firebaseapp.com",
+            databaseURL: "https://katalog-video-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "katalog-video"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let saldo = { bank: 0, dompet: 0 };
+        let kategori = {
+            pemasukan: ["Uang Saku", "Freelance", "Lainnya"],
+            pengeluaran: ["Food & Beverage", "Education", "Transport", "Clothes"]
+        };
+        let transaksiBulanIni = {};
+        let chartInstance = null;
+
+        const d = new Date();
+        const idBulanIni = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
+        const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+
+        // --- Firebase Listeners ---
+        onValue(ref(db, 'finance/saldo'), (snapshot) => {
+            if(snapshot.exists()) saldo = snapshot.val();
+            document.getElementById('teksSaldoBank').innerText = formatRupiah(saldo.bank);
+            document.getElementById('teksSaldoDompet').innerText = formatRupiah(saldo.dompet);
+        });
+
+        onValue(ref(db, 'finance/kategori'), (snapshot) => {
+            if(snapshot.exists()) kategori = snapshot.val();
+            renderKategoriUI();
+            updateDropdownKategori();
+        });
+
+        onValue(ref(db, `finance/transaksi/${idBulanIni}`), (snapshot) => {
+            transaksiBulanIni = snapshot.val() || {};
+            renderHistori();
+            renderChart();
+        });
+
+        // --- Core Functions ---
+        window.editSaldo = (jenis) => {
+            let nominalBaru = prompt(`Masukkan jumlah saldo aktual ${jenis}:`, saldo[jenis]);
+            if(nominalBaru && !isNaN(nominalBaru)) {
+                saldo[jenis] = parseInt(nominalBaru);
+                update(ref(db, 'finance/saldo'), saldo);
+            }
+        };
+
+        window.simpanTransaksi = () => {
+            const jenis = document.getElementById('inputJenis').value;
+            const sumber = document.getElementById('inputSumber').value;
+            const nama = document.getElementById('inputNama').value;
+            const harga = parseInt(document.getElementById('inputHarga').value);
+            const kat = document.getElementById('inputKategori').value;
+
+            if(!nama || isNaN(harga)) return alert("Data tidak lengkap!");
+
+            if(jenis === 'pengeluaran') saldo[sumber] -= harga;
+            else saldo[sumber] += harga;
+
+            push(ref(db, `finance/transaksi/${idBulanIni}`), {
+                jenis, sumber, nama, harga, kategori: kat, 
+                tanggal: new Date().toISOString().split('T')[0],
+                timestamp: Date.now()
+            });
+
+            update(ref(db, 'finance/saldo'), saldo);
+            document.getElementById('inputNama').value = "";
+            document.getElementById('inputHarga').value = "";
+        };
+
+        // --- Export & Auto-Reminder Logic ---
+        window.exportCSV = (dataTransaksi = transaksiBulanIni, namaBulan = idBulanIni) => {
+            const dataArr = Object.values(dataTransaksi);
+            if (dataArr.length === 0) return alert("Tidak ada data.");
+
+            let csvContent = "Tanggal,Nama,Kategori,Sumber,Jenis,Nominal\n";
+            dataArr.sort((a,b) => a.timestamp - b.timestamp).forEach(t => {
+                csvContent += `${t.tanggal},"${t.nama}","${t.kategori}",${t.sumber},${t.jenis},${t.harga}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.setAttribute("href", URL.createObjectURL(blob));
+            link.setAttribute("download", `Laporan_Keuangan_${namaBulan}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        async function cekGantiBulan() {
+            let bulanTerakhir = localStorage.getItem("lastFinanceMonth");
+            if (!bulanTerakhir) {
+                localStorage.setItem("lastFinanceMonth", idBulanIni);
+                return;
+            }
+            if (bulanTerakhir !== idBulanIni) {
+                if (confirm(`Bulan baru terdeteksi! Download rekapan bulan lalu (${bulanTerakhir})?`)) {
+                    const snapshot = await get(ref(db, `finance/transaksi/${bulanTerakhir}`));
+                    if (snapshot.exists()) exportCSV(snapshot.val(), bulanTerakhir);
+                }
+                localStorage.setItem("lastFinanceMonth", idBulanIni);
+            }
+        }
+        cekGantiBulan();
+
+        // --- UI Rendering ---
+        function renderHistori() {
+            const rak = document.getElementById('rakTransaksi');
+            rak.innerHTML = "";
+            Object.entries(transaksiBulanIni).sort((a,b) => b[1].timestamp - a[1].timestamp).forEach(([id, t]) => {
+                const isPeng = t.jenis === 'pengeluaran';
+                rak.innerHTML += `
+                    <div class="item-transaksi ${t.jenis}">
+                        <div><strong>${t.nama}</strong><br><span class="badge-kategori">${t.kategori}</span></div>
+                        <div style="text-align:right">
+                            <strong style="color:${isPeng?'#e74c3c':'#2ecc71'}">${isPeng?'-':'+'} ${formatRupiah(t.harga)}</strong>
+                            <br><span onclick="hapusTransaksi('${id}','${t.jenis}','${t.sumber}',${t.harga})" class="hapus-btn" style="font-size:11px">Hapus</span>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        window.hapusTransaksi = (id, jenis, sumber, harga) => {
+            if(!confirm("Hapus?")) return;
+            if(jenis === 'pengeluaran') saldo[sumber] += harga;
+            else saldo[sumber] -= harga;
+            update(ref(db, 'finance/saldo'), saldo);
+            remove(ref(db, `finance/transaksi/${idBulanIni}/${id}`));
+        };
+
+        function renderChart() {
+            let rekap = {};
+            Object.values(transaksiBulanIni).forEach(t => {
+                if(t.jenis === 'pengeluaran') rekap[t.kategori] = (rekap[t.kategori] || 0) + t.harga;
+            });
+            const ctx = document.getElementById('grafikKategori').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: Object.keys(rekap), datasets: [{ data: Object.values(rekap), backgroundColor: ['#f5b041', '#e74c3c', '#3498db', '#9b59b6'] }] }
+            });
+        }
+
+        window.updateDropdownKategori = () => {
+            const jenis = document.getElementById('inputJenis').value;
+            document.getElementById('inputKategori').innerHTML = kategori[jenis].map(k => `<option value="${k}">${k}</option>`).join('');
+        };
+
+        window.tambahKategori = () => {
+            const jenis = document.getElementById('jenisKategoriBaru').value;
+            const nama = document.getElementById('inputNamaKategori').value;
+            if(nama && !kategori[jenis].includes(nama)) {
+                kategori[jenis].push(nama);
+                set(ref(db, 'finance/kategori'), kategori);
+                document.getElementById('inputNamaKategori').value = "";
+            }
+        };
+
+        window.hapusKategori = (jenis, i) => {
+            if(confirm("Hapus kategori?")) {
+                kategori[jenis].splice(i, 1);
+                set(ref(db, 'finance/kategori'), kategori);
+            }
+        };
+
+        function renderKategoriUI() {
+            ['pengeluaran', 'pemasukan'].forEach(j => {
+                const el = document.getElementById(j === 'pengeluaran' ? 'listKatPengeluaran' : 'listKatPemasukan');
+                el.innerHTML = kategori[j].map((k, i) => `<div class="tag-kategori">${k} <span class="hapus-btn" onclick="hapusKategori('${j}', ${i})">✕</span></div>`).join('');
+            });
+        }
+    </script>
+</body>
+</html>
