@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Katalog Video Fokus Pro</title>
+    <title>Katalog Video Fokus Pro + Auto-Magic</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
         .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
@@ -45,47 +45,59 @@
     </style>
 </head>
 <body>
+    <div id="layarLogin" style="text-align: center; margin-top: 100px;">
+        <h2>Kunci Akses Katalog</h2>
+        <p>Silakan login menggunakan akun Google untuk mengakses arsip.</p>
+        <button id="tombolLogin" style="background: #db4437; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">
+            Login dengan Google
+        </button>
+    </div>
 
-    <div class="header" style="text-align: center; margin-bottom: 30px;">
-        <h1>Katalog Video Fokus Pro</h1>
-        <p>Anti-Redundansi, Paginasi & Filter Dinamis</p>
+    <div id="kontenAplikasi" style="display: none;">
         
-        <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
-            <a href="index.html" style="background: #1877f2; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🎥 Rak Video</a>
-            <a href="web.html" style="background: #e4e6eb; color: #050505; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🌐 Rak Website</a>
+        <div class="header" style="text-align: center; margin-bottom: 30px; position: relative;">
+            <button id="tombolLogout" style="background: #333; color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; position: absolute; top: 0; right: 0;">Logout</button>
+            <h1>Katalog Video Fokus Pro</h1>
+            <p>Anti-Redundansi, Paginasi & Filter Dinamis</p>
+            
+            <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
+                <a href="index.html" style="background: #1877f2; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🎥 Rak Video</a>
+                <a href="web.html" style="background: #e4e6eb; color: #050505; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🌐 Rak Website</a>
+            </div>
         </div>
-    </div>
 
-    <div class="panel">
-        <h2>1. Kelola Kategori</h2>
-        <div class="flex-group">
-            <input type="text" id="inputKategoriBaru" placeholder="Tambah kategori manual...">
-            <button onclick="tambahKategori()">+ Tambah</button>
+        <div class="panel">
+            <h2>1. Kelola Kategori</h2>
+            <div class="flex-group">
+                <input type="text" id="inputKategoriBaru" placeholder="Tambah kategori manual...">
+                <button onclick="tambahKategori()">+ Tambah</button>
+            </div>
+            <div id="listKategoriDikelola" style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;"></div>
         </div>
-        <div id="listKategoriDikelola" style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;"></div>
-    </div>
 
-    <div class="panel">
-        <h2>2. Simpan Video Baru</h2>
-        <div class="flex-group">
-            <input type="url" id="linkVideo" placeholder="Paste link YouTube..." style="flex: 2;">
-            <input type="text" id="inputDurasi" placeholder="Durasi (cth: 15:30)" style="flex: 1; min-width: 120px;">
-            <button id="tombolSimpan" onclick="simpanVideo()">Simpan Video</button>
+        <div class="panel">
+            <h2>2. Simpan Video Baru</h2>
+            <div class="flex-group">
+                <input type="url" id="linkVideo" placeholder="Paste link YouTube..." style="flex: 2;">
+                <input type="text" id="inputDurasi" placeholder="Durasi (cth: 15:30)" style="flex: 1; min-width: 120px;">
+                <button id="tombolSimpan" onclick="simpanVideo()">Simpan Video</button>
+            </div>
+            <div id="wadahPilihKategori" class="wadah-kategori"></div>
         </div>
-        <div id="wadahPilihKategori" class="wadah-kategori"></div>
-    </div>
 
-    <input type="text" id="inputCari" placeholder="🔍 Cari judul, kategori, atau catatan..." onkeyup="resetKeHalamanSatu()" style="width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 30px; border: 1px solid #ddd; outline: none; box-sizing: border-box;">
-    
-    <div id="filterKategori" class="filter-container"></div>
-    
-    <div class="rak-katalog" id="rakVideo"></div>
-    
-    <div id="paginasiKontainer" class="paginasi"></div>
+        <input type="text" id="inputCari" placeholder="🔍 Cari judul, kategori, atau catatan..." onkeyup="resetKeHalamanSatu()" style="width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 30px; border: 1px solid #ddd; outline: none; box-sizing: border-box;">
+        
+        <div id="filterKategori" class="filter-container"></div>
+        
+        <div class="rak-katalog" id="rakVideo"></div>
+        
+        <div id="paginasiKontainer" class="paginasi"></div>
 
-    <script type="module">
+    </div> <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        // IMPORT AUTHENTICATION
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
@@ -99,6 +111,38 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        
+        // INISIALISASI AUTHENTICATION
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        const layarLogin = document.getElementById('layarLogin');
+        const kontenAplikasi = document.getElementById('kontenAplikasi');
+
+        // FUNGSI LOGIN & LOGOUT
+        document.getElementById('tombolLogin').addEventListener('click', () => {
+            signInWithPopup(auth, provider).catch((error) => {
+                alert("Gagal Login: " + error.message);
+            });
+        });
+
+        document.getElementById('tombolLogout').addEventListener('click', () => {
+            signOut(auth);
+        });
+
+        // PANTAU STATUS LOGIN
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // JIKA LOGIN BERHASIL
+                layarLogin.style.display = "none";
+                kontenAplikasi.style.display = "block";
+                muatDataDatabase(); // Panggil data dari Firebase HANYA setelah login
+            } else {
+                // JIKA BELUM LOGIN / LOGOUT
+                layarLogin.style.display = "block";
+                kontenAplikasi.style.display = "none";
+            }
+        });
 
         let daftarKategori = [];
         let dataVideo = {};
@@ -125,18 +169,30 @@
             return kategoriOtomatis.length > 0 ? kategoriOtomatis : ["Belum Dikategorikan"];
         };
 
-        onValue(ref(db, 'kategori'), (snapshot) => {
-            if (snapshot.exists()) {
-                daftarKategori = snapshot.val();
-            } else {
-                daftarKategori = ["Materi Skripsi", "Belajar Coding", "Nonton Idol", "Belajar Bahasa"];
-                set(ref(db, 'kategori'), daftarKategori);
-            }
-            updateUIKat();
-            renderFilter();
-        });
+        // BUNGKUS LOGIKA DATABASE DALAM FUNGSI INI
+        function muatDataDatabase() {
+            // Sinkronisasi Kategori dari Firebase
+            onValue(ref(db, 'kategori'), (snapshot) => {
+                if (snapshot.exists()) {
+                    daftarKategori = snapshot.val();
+                } else {
+                    daftarKategori = ["Materi Skripsi", "Belajar Coding", "Nonton Idol", "Belajar Bahasa"];
+                    set(ref(db, 'kategori'), daftarKategori);
+                }
+                updateUIKat();
+                renderFilter();
+            });
 
-        const simpanKategoriKeDB = () => set(ref(db, 'kategori'), daftarKategori);
+            // Sinkronisasi Video dari Firebase
+            onValue(ref(db, 'videos'), (snapshot) => { 
+                dataVideo = snapshot.val() || {}; 
+                renderRak(); 
+            });
+        }
+
+        const simpanKategoriKeDB = () => {
+            set(ref(db, 'kategori'), daftarKategori);
+        };
 
         window.tambahKategori = () => {
             const val = document.getElementById('inputKategoriBaru').value;
@@ -186,11 +242,6 @@
             halamanSaatIni = 1;
             renderRak();
         }
-
-        onValue(ref(db, 'videos'), (snapshot) => { 
-            dataVideo = snapshot.val() || {}; 
-            renderRak(); 
-        });
 
         window.simpanVideo = async () => {
             const url = document.getElementById('linkVideo').value;
@@ -318,6 +369,10 @@
                                     <textarea id="note-${v.id}" class="teks-catatan">${v.catatan || ''}</textarea>
                                 </div>
                                 <button class="btn-simpan-note" onclick="updateProgress('${v.id}')" style="width:100%; margin-top:10px">💾 Simpan Progress</button>
+                                
+                                <a href="${v.link}" target="_blank" rel="noopener noreferrer" style="display:block; width:100%; text-align:center; background:#e4e6eb; color:#050505; padding:8px 0; border-radius:5px; margin-top:8px; text-decoration:none; font-size:12px; font-weight:bold; box-sizing:border-box; transition: background 0.2s;">
+                                    📺 Tonton Sekarang
+                                </a>
                             </div>
                         </div>`;
                 });
