@@ -45,18 +45,10 @@
     </style>
 </head>
 <body>
-    <div id="layarLogin" style="text-align: center; margin-top: 100px;">
-        <h2>Kunci Akses Katalog</h2>
-        <p>Silakan login menggunakan akun Google untuk mengakses arsip.</p>
-        <button id="tombolLogin" style="background: #db4437; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">
-            Login dengan Google
-        </button>
-    </div>
 
-    <div id="kontenAplikasi" style="display: none;">
+    <div id="kontenAplikasi">
         
         <div class="header" style="text-align: center; margin-bottom: 30px; position: relative;">
-            <button id="tombolLogout" style="background: #333; color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; position: absolute; top: 0; right: 0;">Logout</button>
             <h1>Katalog Video Fokus Pro</h1>
             <p>Anti-Redundansi, Paginasi & Filter Dinamis</p>
             
@@ -93,11 +85,11 @@
         
         <div id="paginasiKontainer" class="paginasi"></div>
 
-    </div> <script type="module">
+    </div> 
+
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-        // IMPORT AUTHENTICATION
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
@@ -111,38 +103,6 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        
-        // INISIALISASI AUTHENTICATION
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-
-        const layarLogin = document.getElementById('layarLogin');
-        const kontenAplikasi = document.getElementById('kontenAplikasi');
-
-        // FUNGSI LOGIN & LOGOUT
-        document.getElementById('tombolLogin').addEventListener('click', () => {
-            signInWithPopup(auth, provider).catch((error) => {
-                alert("Gagal Login: " + error.message);
-            });
-        });
-
-        document.getElementById('tombolLogout').addEventListener('click', () => {
-            signOut(auth);
-        });
-
-        // PANTAU STATUS LOGIN
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // JIKA LOGIN BERHASIL
-                layarLogin.style.display = "none";
-                kontenAplikasi.style.display = "block";
-                muatDataDatabase(); // Panggil data dari Firebase HANYA setelah login
-            } else {
-                // JIKA BELUM LOGIN / LOGOUT
-                layarLogin.style.display = "block";
-                kontenAplikasi.style.display = "none";
-            }
-        });
 
         let daftarKategori = [];
         let dataVideo = {};
@@ -169,9 +129,8 @@
             return kategoriOtomatis.length > 0 ? kategoriOtomatis : ["Belum Dikategorikan"];
         };
 
-        // BUNGKUS LOGIKA DATABASE DALAM FUNGSI INI
+        // Fungsi sinkronisasi data langsung tanpa login
         function muatDataDatabase() {
-            // Sinkronisasi Kategori dari Firebase
             onValue(ref(db, 'kategori'), (snapshot) => {
                 if (snapshot.exists()) {
                     daftarKategori = snapshot.val();
@@ -183,12 +142,14 @@
                 renderFilter();
             });
 
-            // Sinkronisasi Video dari Firebase
             onValue(ref(db, 'videos'), (snapshot) => { 
                 dataVideo = snapshot.val() || {}; 
                 renderRak(); 
             });
         }
+
+        // Jalankan pemuatan data saat script dimuat
+        muatDataDatabase();
 
         const simpanKategoriKeDB = () => {
             set(ref(db, 'kategori'), daftarKategori);
