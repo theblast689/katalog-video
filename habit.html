@@ -38,6 +38,12 @@
         .tabel-riwayat td { padding: 12px; border-bottom: 1px solid #eee; }
         .tabel-riwayat tr:hover { background-color: #fdfdfd; }
 
+        /* Paginasi Tabel */
+        .paginasi { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+        .page-btn { background: white; border: 1px solid #ccd0d5; color: #333; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
+        .page-btn.aktif { background: #6f42c1; color: white; border-color: #6f42c1; }
+        .page-btn:disabled { background: #f0f2f5; color: #aaa; cursor: not-allowed; }
+
         /* Deep Work Overlay */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 15, 20, 0.98); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; color: white; }
         .timer-text { font-size: 80px; font-weight: bold; font-family: monospace; letter-spacing: 5px; color: #f6c23e; margin: 20px 0;}
@@ -86,9 +92,9 @@
         <canvas id="habitChart" width="400" height="150"></canvas>
     </div>
 
-    <div class="panel">
+    <div class="panel" id="panelRiwayat">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-            <h2 style="margin: 0;">📜 Riwayat Aktivitas</h2>
+            <h2 style="margin: 0;">📜 Riwayat Aktivitas (1 Tahun)</h2>
             <button onclick="exportKeExcel()" style="background-color: #28a745; font-size: 13px; padding: 10px 20px;">📥 Export Excel (CSV)</button>
         </div>
         <div class="table-responsive">
@@ -105,6 +111,8 @@
                     </tbody>
             </table>
         </div>
+        
+        <div id="paginasiRiwayat" class="paginasi"></div>
     </div>
 
     <div id="timerModal" class="modal-overlay">
@@ -135,13 +143,17 @@
         let daftarHabit = [];
         let totalExp = 0;
         let chartInstance = null;
-        window.dataRiwayatGlobal = {}; // Untuk kebutuhan Export Excel
+        window.dataRiwayatGlobal = {}; 
+
+        // State Paginasi Riwayat
+        let riwayatHalamanSaatIni = 1;
+        const riwayatPerHalaman = 50;
 
         // State Timer
         let intervalId = null;
         let waktuMulai = null;
         let idHabitAktif = null;
-        let namaHabitAktif = ""; // Menyimpan nama misi agar riwayat tetap utuh saat misi dihapus
+        let namaHabitAktif = ""; 
 
         // 1. Sync Data RPG
         onValue(ref(db, 'rpgStats/totalExp'), (snapshot) => {
@@ -208,7 +220,7 @@
         // 3. Sistem Timer
         window.mulaiTimer = (id, nama) => {
             idHabitAktif = id;
-            namaHabitAktif = nama; // Simpan nama misi ke memori
+            namaHabitAktif = nama; 
             waktuMulai = Date.now();
             document.getElementById('modalTaskName').innerText = `Fokus: ${nama}`;
             document.getElementById('timerModal').style.display = "flex";
@@ -228,14 +240,14 @@
             let selisihDetik = Math.floor((Date.now() - waktuMulai) / 1000);
             let durasiMenit = Math.floor(selisihDetik / 60);
 
-            if (selisihDetik >= 10) { // Minimal 10 detik (Testing). Idealnya ubah ke "durasiMenit >= 1" untuk versi asli
+            if (selisihDetik >= 10) { 
                 let menitTersimpan = durasiMenit > 0 ? durasiMenit : 1;
                 let gainedExp = menitTersimpan * 10;
                 let dateStr = new Date().toISOString().split('T')[0];
 
                 push(ref(db, 'habitLogs'), {
                     habitId: idHabitAktif,
-                    habitNama: namaHabitAktif, // Nama disimpan, sehingga aman jika Misi dihapus
+                    habitNama: namaHabitAktif, 
                     durasiMenit: menitTersimpan,
                     dateString: dateStr,
                     timestamp: Date.now()
@@ -254,7 +266,7 @@
         // 4. Data Logs (Menangani Grafik & Riwayat)
         onValue(ref(db, 'habitLogs'), (snapshot) => {
             const logs = snapshot.val() || {};
-            window.dataRiwayatGlobal = logs; // Simpan untuk export
+            window.dataRiwayatGlobal = logs; 
             renderGrafik(logs);
             renderRiwayat(logs);
         });
@@ -265,13 +277,11 @@
             const dataDurasi = [];
             const logArray = Object.values(logs);
 
-            // Ubah dari 7 hari (i=6) menjadi 30 hari (i=29)
             for (let i = 29; i >= 0; i--) {
                 let d = new Date();
                 d.setDate(d.getDate() - i);
                 let dateStr = d.toISOString().split('T')[0];
                 
-                // Menampilkan tanggal yang ringkas agar tidak menumpuk di sumbu X
                 labels.push(d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }));
                 
                 let totalHarian = logArray
@@ -290,38 +300,59 @@
                         label: 'Fokus (Menit)',
                         data: dataDurasi,
                         backgroundColor: '#6f42c1',
-                        borderRadius: 3 // Sedikit dikecilkan radiusnya karena barnya lebih banyak
+                        borderRadius: 3 
                     }]
                 },
                 options: { 
                     responsive: true, 
                     scales: { 
-                        x: { ticks: { maxTicksLimit: 10 } }, // Mencegah tulisan tanggal bertumpukan di HP
+                        x: { ticks: { maxTicksLimit: 10 } }, 
                         y: { beginAtZero: true } 
                     } 
                 }
             });
         }
 
-        // FUNGSI BARU: RENDER TABEL RIWAYAT
+        // FUNGSI NAVIGASI HALAMAN RIWAYAT
+        window.gantiHalamanRiwayat = (nomor) => {
+            riwayatHalamanSaatIni = nomor;
+            renderRiwayat(window.dataRiwayatGlobal);
+            document.getElementById('panelRiwayat').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // RENDER TABEL RIWAYAT DENGAN FILTER 1 TAHUN & PAGINASI
         function renderRiwayat(logs) {
             const tbody = document.getElementById('riwayatBody');
             tbody.innerHTML = "";
             
-            // Urutkan dari yang paling baru
-            const logArray = Object.values(logs).sort((a, b) => b.timestamp - a.timestamp);
+            if(!logs) return;
+
+            // 1. Ambil data & urutkan dari yang terbaru
+            let logArray = Object.values(logs).sort((a, b) => b.timestamp - a.timestamp);
             
+            // 2. Filter hanya data 1 tahun terakhir (365 hari)
+            const satuTahunLalu = Date.now() - (365 * 24 * 60 * 60 * 1000);
+            logArray = logArray.filter(log => log.timestamp >= satuTahunLalu);
+
             if(logArray.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888;">Belum ada riwayat aktivitas.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888;">Belum ada riwayat aktivitas dalam 1 tahun terakhir.</td></tr>`;
+                document.getElementById('paginasiRiwayat').innerHTML = "";
                 return;
             }
 
-            // Batasi tampilan maksimal 50 log terbaru di layar agar web tidak berat
-            const recentLogs = logArray.slice(0, 50);
+            // 3. Kalkulasi Paginasi
+            const totalHalaman = Math.ceil(logArray.length / riwayatPerHalaman);
+            if (riwayatHalamanSaatIni > totalHalaman && totalHalaman > 0) riwayatHalamanSaatIni = totalHalaman;
+            
+            const start = (riwayatHalamanSaatIni - 1) * riwayatPerHalaman;
+            const end = start + riwayatPerHalaman;
+            const logDitampilkan = logArray.slice(start, end);
 
-            recentLogs.forEach(log => {
+            // 4. Masukkan ke Tabel
+            logDitampilkan.forEach(log => {
                 let tgl = new Date(log.timestamp);
-                let wktSelesai = tgl.toLocaleDateString('id-ID', {day: 'numeric', month: 'short'}) + " - " + 
+                // Tambahkan tahun (numeric) agar jelas untuk tampilan data 1 tahun
+                let wktSelesai = tgl.toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'}) + " - " + 
                                  tgl.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
                 let nama = log.habitNama || "Misi Telah Dihapus";
                 let exp = log.durasiMenit * 10;
@@ -335,37 +366,55 @@
                     </tr>
                 `;
             });
+
+            // 5. Cetak Tombol Halaman
+            renderPaginasiRiwayat(totalHalaman);
         }
 
-        // FUNGSI BARU: EXPORT EXCEL (CSV)
+        function renderPaginasiRiwayat(total) {
+            const kontainer = document.getElementById('paginasiRiwayat');
+            kontainer.innerHTML = "";
+            if (total <= 1) return; 
+
+            kontainer.innerHTML += `<button class="page-btn" onclick="gantiHalamanRiwayat(${riwayatHalamanSaatIni - 1})" ${riwayatHalamanSaatIni === 1 ? 'disabled' : ''}>« Prev</button>`;
+            
+            for (let i = 1; i <= total; i++) {
+                const aktif = i === riwayatHalamanSaatIni ? 'aktif' : '';
+                kontainer.innerHTML += `<button class="page-btn ${aktif}" onclick="gantiHalamanRiwayat(${i})">${i}</button>`;
+            }
+            
+            kontainer.innerHTML += `<button class="page-btn" onclick="gantiHalamanRiwayat(${riwayatHalamanSaatIni + 1})" ${riwayatHalamanSaatIni === total ? 'disabled' : ''}>Next »</button>`;
+        }
+
+        // EXPORT EXCEL (CSV)
         window.exportKeExcel = () => {
             if(!window.dataRiwayatGlobal || Object.keys(window.dataRiwayatGlobal).length === 0) {
                 return alert("Belum ada data untuk diexport!");
             }
 
-            // Membuat Header Kolom Excel
             let csvContent = "data:text/csv;charset=utf-8,Tanggal,Jam,Nama Misi,Durasi (Menit),EXP Didapat\n";
             
-            const logArray = Object.values(window.dataRiwayatGlobal).sort((a, b) => b.timestamp - a.timestamp);
+            // Ambil semua data global, filter 1 tahun terakhir untuk diexport
+            const satuTahunLalu = Date.now() - (365 * 24 * 60 * 60 * 1000);
+            let logArray = Object.values(window.dataRiwayatGlobal)
+                                 .sort((a, b) => b.timestamp - a.timestamp)
+                                 .filter(log => log.timestamp >= satuTahunLalu);
             
             logArray.forEach(log => {
                 let d = new Date(log.timestamp);
-                let tgl = d.toLocaleDateString('id-ID'); // Format: DD/MM/YYYY
+                let tgl = d.toLocaleDateString('id-ID'); 
                 let jam = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
                 
-                // Membersihkan koma dari nama misi agar tidak merusak kolom CSV
                 let nama = (log.habitNama || "Misi Telah Dihapus").replace(/,/g, " "); 
                 let exp = log.durasiMenit * 10;
                 
-                // Memasukkan data ke baris CSV
                 csvContent += `${tgl},${jam},${nama},${log.durasiMenit},${exp}\n`;
             });
 
-            // Memicu Download File
             var encodedUri = encodeURI(csvContent);
             var link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Riwayat_Fokus_LifeOS.csv");
+            link.setAttribute("download", "Riwayat_Fokus_1_Tahun_LifeOS.csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
