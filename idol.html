@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Katalog Video Idol (Multi-Platform)</title>
+    
+    <meta name="theme-color" content="#ec407a">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #fce4ec; max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
+        .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; border-top: 4px solid #ec407a; }
+        .flex-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 15px; }
+        input, textarea { flex: 1; padding: 12px; border: 1px solid #ccd0d5; border-radius: 8px; font-family: inherit; }
+        button { background-color: #ec407a; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: #d81b60; }
+        .wadah-kategori { display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid #ccd0d5; padding: 12px; border-radius: 8px; background: #fafafa; margin-top: 15px; }
+        .rak-katalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; margin-bottom: 30px; }
+        
+        .kartu-video { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; display: flex; flex-direction: column; transition: 0.2s;}
+        .kartu-video:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+        .thumbnail-container { position: relative; background: #ddd; height: 170px; cursor: pointer; }
+        .thumbnail { width: 100%; height: 100%; object-fit: cover; }
+        .durasi-label { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.8); color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; z-index: 2; }
+        .platform-badge { position: absolute; top: 8px; left: 8px; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; z-index: 2; text-transform: uppercase; }
+        
+        .konten-kartu { padding: 15px; flex-grow: 1; }
+        .tag-badge { background: #f8bbd0; color: #c2185b; padding: 4px 10px; border-radius: 6px; font-size: 11px; margin-right: 5px; font-weight: bold; display: inline-block; margin-bottom: 5px;}
+        
+        .filter-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .filter-btn { background: #f48fb1; color: white; border: none; padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .filter-btn.aktif { background: #c2185b; }
+
+        .paginasi { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 40px; }
+        .page-btn { background: white; border: 1px solid #f48fb1; color: #333; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .page-btn.aktif { background: #ec407a; color: white; }
+        .page-btn:disabled { background: #f0f2f5; color: #aaa; cursor: not-allowed; border-color: #ddd; }
+        
+        .area-catatan { margin-top: 15px; background: #fff9c4; padding: 10px; border-radius: 8px; border: 1px dashed #fbc02d; }
+        .area-catatan h4 { margin: 0 0 5px 0; font-size: 13px; color: #856404; }
+        .teks-catatan { width: 100%; border: none; background: transparent; font-size: 13px; resize: vertical; min-height: 50px; outline: none; }
+        
+        .btn-hapus-video { position: absolute; top: 10px; right: 10px; background: rgba(255,0,0,0.8); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; z-index: 10; }
+        .btn-simpan-note { margin-top: 5px; background: #fbc02d; color: #333; padding: 5px 10px; font-size: 11px; border-radius: 5px; border: none; cursor: pointer; }
+
+        /* Warna Platform */
+        .bg-yt { background: #ff0000; }
+        .bg-drive { background: #1fa463; }
+        .bg-tera { background: #2f54eb; }
+        .bg-lain { background: #607d8b; }
+    </style>
+</head>
+<body>
+
+    <div id="kontenAplikasi">
+        
+        <div class="header" style="text-align: center; margin-bottom: 30px; position: relative;">
+            <h1 style="color: #c2185b;">🌸 Koleksi Video Idol (Multi-Platform)</h1>
+            <p style="color: #880e4f;">Dukung link dari YouTube, Google Drive, dan Terabox</p>
+            
+            <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                <a href="index.html" style="background: #e4e6eb; color: #050505; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🎥 YouTube Utama</a>
+                <a href="idol.html" style="background: #ec407a; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🌸 Koleksi Idol</a>
+                <a href="web.html" style="background: #e4e6eb; color: #050505; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🌐 Rak Website</a>
+                <a href="habit.html" style="background: #6f42c1; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">⏳ Deep Work</a>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>1. Kelola Grup / Kategori</h2>
+            <div class="flex-group">
+                <input type="text" id="inputKategoriBaru" placeholder="Tambah grup atau kategori baru...">
+                <button onclick="tambahKategori()">+ Tambah</button>
+            </div>
+            <div id="listKategoriDikelola" style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;"></div>
+        </div>
+
+        <div class="panel">
+            <h2>2. Simpan Video Baru</h2>
+            <div class="flex-group" style="margin-bottom: 10px;">
+                <input type="text" id="inputJudul" placeholder="Judul Video (Wajib)..." style="flex: 2; font-weight: bold;">
+                <input type="text" id="inputDurasi" placeholder="Durasi (cth: 45:00)" style="flex: 1; min-width: 120px;">
+            </div>
+            <div class="flex-group" style="margin-top: 0;">
+                <input type="url" id="linkVideo" placeholder="Paste link (YouTube / G-Drive / Terabox)..." style="flex: 2;">
+                <input type="url" id="inputThumbnail" placeholder="Link Thumbnail (Kosongkan jika YouTube)..." style="flex: 2;">
+            </div>
+            <button id="tombolSimpan" onclick="simpanVideo()" style="width: 100%; margin-top: 15px; font-size: 16px;">Simpan ke Koleksi Idol</button>
+            
+            <div style="margin-top: 15px; font-weight: bold; color: #555;">Pilih Kategori:</div>
+            <div id="wadahPilihKategori" class="wadah-kategori"></div>
+        </div>
+
+        <input type="text" id="inputCari" placeholder="🔍 Cari judul member, grup, atau variety show..." onkeyup="resetKeHalamanSatu()" style="width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 30px; border: 1px solid #f48fb1; outline: none; box-sizing: border-box; background: white;">
+        
+        <div id="filterKategori" class="filter-container"></div>
+        
+        <div class="rak-katalog" id="rakVideo"></div>
+        
+        <div id="paginasiKontainer" class="paginasi"></div>
+
+    </div> 
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
+            authDomain: "katalog-video.firebaseapp.com",
+            databaseURL: "https://katalog-video-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "katalog-video",
+            storageBucket: "katalog-video.firebasestorage.app",
+            messagingSenderId: "1035864136490",
+            appId: "1:1035864136490:web:9abe5dbf41e80b11ad5c53"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let daftarKategori = [];
+        let dataVideo = {};
+        let halamanSaatIni = 1;
+        const itemPerHalaman = 12;
+        let filterAktif = [];
+
+        const kategoriDefault = ["Sakurazaka46", "Nogizaka46", "Hinatazaka46", "Variety Show", "Konser / Live", "Dokumenter", "MV / Music"];
+
+        function muatDataDatabase() {
+            onValue(ref(db, 'kategori_idol'), (snapshot) => {
+                if (snapshot.exists()) {
+                    daftarKategori = snapshot.val();
+                } else {
+                    daftarKategori = kategoriDefault;
+                    set(ref(db, 'kategori_idol'), daftarKategori);
+                }
+                updateUIKat();
+                renderFilter();
+            });
+
+            onValue(ref(db, 'videos_idol'), (snapshot) => { 
+                dataVideo = snapshot.val() || {}; 
+                renderRak(); 
+            });
+        }
+
+        muatDataDatabase();
+
+        const simpanKategoriKeDB = () => set(ref(db, 'kategori_idol'), daftarKategori);
+
+        window.tambahKategori = () => {
+            const val = document.getElementById('inputKategoriBaru').value;
+            if(val && !daftarKategori.includes(val)) { 
+                daftarKategori.push(val); 
+                document.getElementById('inputKategoriBaru').value = ""; 
+                simpanKategoriKeDB();
+            }
+        }
+
+        window.hapusKategori = (index) => {
+            if(confirm("Yakin ingin menghapus kategori ini?")) {
+                daftarKategori.splice(index, 1);
+                simpanKategoriKeDB();
+            }
+        };
+
+        window.updateUIKat = () => {
+            const w = document.getElementById('wadahPilihKategori');
+            const l = document.getElementById('listKategoriDikelola');
+            w.innerHTML = ""; l.innerHTML = "";
+            daftarKategori.forEach((k, i) => {
+                w.innerHTML += `<label style="cursor:pointer; font-size:13px"><input type="checkbox" value="${k}" class="cek-kat"> ${k}</label> `;
+                l.innerHTML += `<span class="tag-badge">${k} <b onclick="hapusKategori(${i})" style="cursor:pointer; color:red; margin-left:5px">x</b></span>`;
+            });
+        }
+
+        window.renderFilter = () => {
+            const kontainer = document.getElementById('filterKategori');
+            kontainer.innerHTML = "";
+            daftarKategori.forEach(k => {
+                const isActive = filterAktif.includes(k) ? 'aktif' : '';
+                kontainer.innerHTML += `<button class="filter-btn ${isActive}" onclick="toggleFilter('${k}')">${k}</button>`;
+            });
+        }
+
+        window.toggleFilter = (kategori) => {
+            const index = filterAktif.indexOf(kategori);
+            if (index > -1) filterAktif.splice(index, 1);
+            else filterAktif.push(kategori); 
+            halamanSaatIni = 1; 
+            renderFilter();
+            renderRak();
+        }
+
+        window.resetKeHalamanSatu = () => {
+            halamanSaatIni = 1;
+            renderRak();
+        }
+
+        // --- FUNGSI DETEKSI PLATFORM ---
+        function deteksiPlatform(url) {
+            const lowerUrl = url.toLowerCase();
+            if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) return 'youtube';
+            if (lowerUrl.includes('drive.google.com')) return 'drive';
+            if (lowerUrl.includes('terabox.com') || lowerUrl.includes('teraboxapp.com') || lowerUrl.includes('1024tera.com') || lowerUrl.includes('freeterabox.com')) return 'terabox';
+            return 'lainnya';
+        }
+
+        function ekstrakVideoId(url, platform) {
+            if (platform === 'youtube') {
+                const match = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=)([^#&?]*)/);
+                return match ? match[1] : url;
+            } else if (platform === 'drive') {
+                const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+                if (match) return match[1];
+                const matchId = url.match(/id=([a-zA-Z0-9_-]+)/);
+                return matchId ? matchId[1] : url;
+            }
+            return url; // Untuk Terabox atau lainnya, simpan URL penuh sebagai ID acuan
+        }
+
+        window.simpanVideo = async () => {
+            const judul = document.getElementById('inputJudul').value.trim();
+            const url = document.getElementById('linkVideo').value.trim();
+            const thumbnailKustom = document.getElementById('inputThumbnail').value.trim();
+            const durasiManual = document.getElementById('inputDurasi').value || "--:--";
+            let kats = Array.from(document.querySelectorAll('.cek-kat:checked')).map(c => c.value);
+            
+            if(!judul) return alert("Judul video wajib diisi!");
+            if(!url) return alert("Link video wajib diisi!");
+
+            const platform = deteksiPlatform(url);
+            const videoId = ekstrakVideoId(url, platform);
+
+            const isDuplicate = Object.values(dataVideo).some(v => v.link === url);
+            if(isDuplicate) {
+                alert("Gagal: Video dengan link ini sudah ada di dalam arsip Anda!");
+                document.getElementById('linkVideo').value = "";
+                return;
+            }
+
+            try {
+                document.getElementById('tombolSimpan').innerText = "Menyimpan Data...";
+                if (kats.length === 0) kats = ["Belum Dikategorikan"];
+
+                // Tentukan Thumbnail
+                let thumbFinal = thumbnailKustom;
+                if (!thumbFinal) {
+                    if (platform === 'youtube') {
+                        thumbFinal = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+                    } else if (platform === 'drive') {
+                        thumbFinal = "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=600&auto=format&fit=crop"; // Placeholder GDrive
+                    } else if (platform === 'terabox') {
+                        thumbFinal = "https://images.unsplash.com/photo-1558442074-3c19857bc1dc?q=80&w=600&auto=format&fit=crop"; // Placeholder Cloud
+                    } else {
+                        thumbFinal = "https://via.placeholder.com/600x400?text=Video";
+                    }
+                }
+
+                push(ref(db, 'videos_idol'), {
+                    judul: judul,
+                    link: url,
+                    platform: platform,
+                    videoId: videoId,
+                    thumbnail: thumbFinal,
+                    kategori: kats,
+                    durasi: durasiManual,
+                    lastWatch: "Belum ditonton",
+                    catatan: "",
+                    waktuSimpan: Date.now()
+                });
+
+                document.getElementById('inputJudul').value = "";
+                document.getElementById('linkVideo').value = "";
+                document.getElementById('inputThumbnail').value = "";
+                document.getElementById('inputDurasi').value = "";
+                document.querySelectorAll('.cek-kat').forEach(c => c.checked = false);
+                document.getElementById('tombolSimpan').innerText = "Simpan ke Koleksi Idol";
+                alert("Video berhasil ditambahkan ke rak!");
+            } catch (e) { 
+                alert("Gagal menyimpan data!"); 
+                document.getElementById('tombolSimpan').innerText = "Simpan ke Koleksi Idol";
+            }
+        };
+
+        window.updateProgress = (id) => {
+            const lastWatch = document.getElementById(`last-${id}`).value;
+            const catatan = document.getElementById(`note-${id}`).value;
+            update(ref(db, `videos_idol/${id}`), { lastWatch, catatan }).then(() => alert("Progress disimpan!"));
+        };
+
+        window.hapusVideo = (id) => confirm("Hapus video dari koleksi?") && remove(ref(db, `videos_idol/${id}`));
+
+        // --- FUNGSI PEMUTAR VIDEO ---
+        window.putarMedia = (idContainer, platform, videoId, linkFull) => {
+            const container = document.getElementById(idContainer);
+            
+            if (platform === 'youtube') {
+                container.innerHTML = `<iframe width="100%" height="170" src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border-radius: 12px 12px 0 0;"></iframe>`;
+            } else if (platform === 'drive') {
+                container.innerHTML = `<iframe src="https://drive.google.com/file/d/${videoId}/preview" width="100%" height="170" allow="autoplay" allowfullscreen style="border-radius: 12px 12px 0 0; border: none;"></iframe>`;
+            } else {
+                // Untuk Terabox atau link eksternal lainnya, buka di tab baru karena diblokir iframe
+                window.open(linkFull, '_blank');
+            }
+        };
+
+        window.renderRak = () => {
+            const cari = document.getElementById('inputCari').value.toLowerCase();
+            const rak = document.getElementById('rakVideo');
+            rak.innerHTML = "";
+
+            let semuaVideo = Object.entries(dataVideo).reverse().map(([id, v]) => ({ id, ...v }));
+
+            if (cari) {
+                semuaVideo = semuaVideo.filter(v => 
+                    v.judul.toLowerCase().includes(cari) || 
+                    v.kategori.some(k => k.toLowerCase().includes(cari)) || 
+                    (v.catatan || "").toLowerCase().includes(cari)
+                );
+            }
+
+            if (filterAktif.length > 0) {
+                semuaVideo = semuaVideo.filter(v => 
+                    v.kategori.some(k => filterAktif.includes(k))
+                );
+            }
+
+            const totalHalaman = Math.ceil(semuaVideo.length / itemPerHalaman);
+            if (halamanSaatIni > totalHalaman && totalHalaman > 0) halamanSaatIni = totalHalaman;
+            
+            const start = (halamanSaatIni - 1) * itemPerHalaman;
+            const end = start + itemPerHalaman;
+            const videoDitampilkan = semuaVideo.slice(start, end);
+
+            if (videoDitampilkan.length === 0) {
+                rak.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; color:#c2185b;">Belum ada video idol yang tersimpan.</div>`;
+            } else {
+                videoDitampilkan.forEach(v => {
+                    
+                    // Setup visual UI berdasar platform
+                    let textPlay = "▶ Play";
+                    let classBadge = "bg-lain";
+                    let labelBadge = "Link";
+
+                    if(v.platform === 'youtube') {
+                        classBadge = "bg-yt"; labelBadge = "YouTube";
+                    } else if (v.platform === 'drive') {
+                        classBadge = "bg-drive"; labelBadge = "G-Drive"; textPlay = "▶ Preview";
+                    } else if (v.platform === 'terabox') {
+                        classBadge = "bg-tera"; labelBadge = "Terabox"; textPlay = "↗ Buka Terabox";
+                    }
+
+                    rak.innerHTML += `
+                        <div class="kartu-video">
+                            <button class="btn-hapus-video" onclick="hapusVideo('${v.id}')">❌</button>
+                            <div class="thumbnail-container" id="player-${v.id}" onclick="putarMedia('player-${v.id}', '${v.platform}', '${v.videoId}', '${v.link}')">
+                                <span class="platform-badge ${classBadge}">${labelBadge}</span>
+                                <img src="${v.thumbnail}" class="thumbnail" loading="lazy">
+                                <span class="durasi-label">${v.durasi}</span>
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.7); color: white; padding: 8px 16px; border-radius: 6px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); pointer-events: none;">${textPlay}</div>
+                            </div>
+                            <div class="konten-kartu">
+                                <div style="margin-bottom:8px">${v.kategori.map(k => `<span class="tag-badge">${k}</span>`).join('')}</div>
+                                <h3 style="font-size:14px; margin:5px 0">${v.judul}</h3>
+                                <input type="text" id="last-${v.id}" value="${v.lastWatch || ''}" placeholder="Menit ke..." style="font-size:12px; margin-top:10px; width:100%; box-sizing:border-box">
+                                <div class="area-catatan">
+                                    <h4>Catatan Nonton:</h4>
+                                    <textarea id="note-${v.id}" class="teks-catatan">${v.catatan || ''}</textarea>
+                                </div>
+                                <button class="btn-simpan-note" onclick="updateProgress('${v.id}')" style="width:100%; margin-top:10px">💾 Simpan Progress</button>
+                                
+                                <a href="${v.link}" target="_blank" rel="noopener noreferrer" style="display:block; width:100%; text-align:center; background:#f48fb1; color:white; padding:8px 0; border-radius:5px; margin-top:8px; text-decoration:none; font-size:12px; font-weight:bold; box-sizing:border-box; transition: background 0.2s;">
+                                    🔗 Buka Link Asli
+                                </a>
+                            </div>
+                        </div>`;
+                });
+            }
+
+            renderPaginasi(totalHalaman);
+        }
+
+        window.gantiHalaman = (nomor) => {
+            halamanSaatIni = nomor;
+            renderRak();
+            document.getElementById('inputCari').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        window.renderPaginasi = (total) => {
+            const kontainer = document.getElementById('paginasiKontainer');
+            kontainer.innerHTML = "";
+            if (total <= 1) return; 
+
+            kontainer.innerHTML += `<button class="page-btn" onclick="gantiHalaman(${halamanSaatIni - 1})" ${halamanSaatIni === 1 ? 'disabled' : ''}>« Prev</button>`;
+            
+            for (let i = 1; i <= total; i++) {
+                const aktif = i === halamanSaatIni ? 'aktif' : '';
+                kontainer.innerHTML += `<button class="page-btn ${aktif}" onclick="gantiHalaman(${i})">${i}</button>`;
+            }
+            
+            kontainer.innerHTML += `<button class="page-btn" onclick="gantiHalaman(${halamanSaatIni + 1})" ${halamanSaatIni === total ? 'disabled' : ''}>Next »</button>`;
+        }
+    </script>
+</body>
+</html>
