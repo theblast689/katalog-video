@@ -11,6 +11,7 @@
         .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; border-top: 4px solid #ec407a; }
         .flex-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 15px; }
         input, textarea { flex: 1; padding: 12px; border: 1px solid #ccd0d5; border-radius: 8px; font-family: inherit; }
+        input:focus, textarea:focus { border-color: #ec407a; outline: none; }
         button { background-color: #ec407a; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button:hover { background-color: #d81b60; }
         .wadah-kategori { display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid #ccd0d5; padding: 12px; border-radius: 8px; background: #fafafa; margin-top: 15px; }
@@ -77,11 +78,11 @@
         <div class="panel">
             <h2>2. Simpan Video Baru</h2>
             <div class="flex-group" style="margin-bottom: 10px;">
-                <input type="text" id="inputJudul" placeholder="Judul Video (Wajib)..." style="flex: 2; font-weight: bold;">
+                <input type="text" id="inputJudul" placeholder="Judul Video (Otomatis untuk YouTube)..." style="flex: 2; font-weight: bold;">
                 <input type="text" id="inputDurasi" placeholder="Durasi (cth: 45:00)" style="flex: 1; min-width: 120px;">
             </div>
             <div class="flex-group" style="margin-top: 0;">
-                <input type="url" id="linkVideo" placeholder="Paste link (YouTube / G-Drive / Terabox)..." style="flex: 2;">
+                <input type="url" id="linkVideo" placeholder="Paste link (YouTube / G-Drive / Terabox)..." style="flex: 2;" oninput="autoAmbilJudulYT()">
                 <input type="url" id="inputThumbnail" placeholder="Link Thumbnail (Kosongkan jika YouTube)..." style="flex: 2;">
             </div>
             <button id="tombolSimpan" onclick="simpanVideo()" style="width: 100%; margin-top: 15px; font-size: 16px;">Simpan ke Koleksi Idol</button>
@@ -215,21 +216,57 @@
                 const matchId = url.match(/id=([a-zA-Z0-9_-]+)/);
                 return matchId ? matchId[1] : url;
             }
-            return url; // Untuk Terabox atau lainnya, simpan URL penuh sebagai ID acuan
+            return url;
         }
 
+        // --- FUNGSI AUTO-AMBIL JUDUL SAAT PASTE ---
+        window.autoAmbilJudulYT = async () => {
+            const url = document.getElementById('linkVideo').value.trim();
+            const inputJudul = document.getElementById('inputJudul');
+            
+            if (deteksiPlatform(url) === 'youtube' && !inputJudul.value) {
+                inputJudul.placeholder = "⏳ Mengambil judul YouTube...";
+                try {
+                    const res = await fetch(`https://noembed.com/embed?url=${url}`);
+                    const meta = await res.json();
+                    if (meta.title) {
+                        inputJudul.value = meta.title;
+                    }
+                } catch (e) {
+                    console.log("Gagal mengambil judul otomatis", e);
+                } finally {
+                    inputJudul.placeholder = "Judul Video (Otomatis untuk YouTube)...";
+                }
+            }
+        };
+
         window.simpanVideo = async () => {
-            const judul = document.getElementById('inputJudul').value.trim();
+            let judul = document.getElementById('inputJudul').value.trim();
             const url = document.getElementById('linkVideo').value.trim();
             const thumbnailKustom = document.getElementById('inputThumbnail').value.trim();
             const durasiManual = document.getElementById('inputDurasi').value || "--:--";
             let kats = Array.from(document.querySelectorAll('.cek-kat:checked')).map(c => c.value);
             
-            if(!judul) return alert("Judul video wajib diisi!");
             if(!url) return alert("Link video wajib diisi!");
 
             const platform = deteksiPlatform(url);
             const videoId = ekstrakVideoId(url, platform);
+
+            // Jika masih kosong saat tombol simpan ditekan (Safety Net)
+            if (!judul) {
+                if (platform === 'youtube') {
+                    try {
+                        document.getElementById('tombolSimpan').innerText = "Mencari Judul...";
+                        const res = await fetch(`https://noembed.com/embed?url=${url}`);
+                        const meta = await res.json();
+                        judul = meta.title || "Video YouTube";
+                    } catch(e) {
+                        return alert("Gagal mengambil judul otomatis. Silakan isi judul secara manual!");
+                    }
+                } else {
+                    return alert("Judul video wajib diisi untuk Google Drive / Terabox!");
+                }
+            }
 
             const isDuplicate = Object.values(dataVideo).some(v => v.link === url);
             if(isDuplicate) {
@@ -248,9 +285,9 @@
                     if (platform === 'youtube') {
                         thumbFinal = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
                     } else if (platform === 'drive') {
-                        thumbFinal = "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=600&auto=format&fit=crop"; // Placeholder GDrive
+                        thumbFinal = "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=600&auto=format&fit=crop"; 
                     } else if (platform === 'terabox') {
-                        thumbFinal = "https://images.unsplash.com/photo-1558442074-3c19857bc1dc?q=80&w=600&auto=format&fit=crop"; // Placeholder Cloud
+                        thumbFinal = "https://images.unsplash.com/photo-1558442074-3c19857bc1dc?q=80&w=600&auto=format&fit=crop"; 
                     } else {
                         thumbFinal = "https://via.placeholder.com/600x400?text=Video";
                     }
@@ -299,7 +336,6 @@
             } else if (platform === 'drive') {
                 container.innerHTML = `<iframe src="https://drive.google.com/file/d/${videoId}/preview" width="100%" height="170" allow="autoplay" allowfullscreen style="border-radius: 12px 12px 0 0; border: none;"></iframe>`;
             } else {
-                // Untuk Terabox atau link eksternal lainnya, buka di tab baru karena diblokir iframe
                 window.open(linkFull, '_blank');
             }
         };
@@ -337,7 +373,6 @@
             } else {
                 videoDitampilkan.forEach(v => {
                     
-                    // Setup visual UI berdasar platform
                     let textPlay = "▶ Play";
                     let classBadge = "bg-lain";
                     let labelBadge = "Link";
