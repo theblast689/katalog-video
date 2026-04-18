@@ -1,426 +1,1056 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LifeOS Habit Tracker & RPG</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#6f42c1">
-    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Blue_question_mark_icon.svg/192px-Blue_question_mark_icon.svg.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeOS — Deep Work RPG</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d0d1a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+:root{
+  --bg:       #07071a;
+  --bg2:      #0e0e2a;
+  --bg3:      #13133a;
+  --surface:  #181840;
+  --border:   rgba(140,100,255,0.18);
+  --gold:     #f5c842;
+  --gold2:    #e8a020;
+  --purple:   #8c64ff;
+  --purple2:  #6040d0;
+  --cyan:     #38d9f5;
+  --green:    #22d98a;
+  --red:      #ff4f6a;
+  --text:     #e8e4ff;
+  --muted:    #7a76a8;
+  --radius:   16px;
+  --radius-sm:10px;
+}
 
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
-        .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .flex-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 15px; }
-        input { flex: 1; padding: 12px; border: 1px solid #ccd0d5; border-radius: 8px; font-family: inherit; }
-        button { background-color: #6f42c1; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:hover { background-color: #5a32a3; }
-        
-        /* Rak Habit */
-        .rak-habit { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .kartu-habit { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-left: 5px solid #6f42c1; position: relative; display: flex; flex-direction: column; justify-content: space-between;}
-        
-        /* RPG UI */
-        .rpg-panel { border-top: 4px solid #f6c23e; text-align: center; background: linear-gradient(135deg, #fff, #fdfbf1); }
-        .exp-bar-container { background:#e9ecef; border-radius:10px; height:24px; width:100%; overflow:hidden; margin-top: 10px; border: 1px solid #ddd;}
-        .exp-bar { background: linear-gradient(90deg, #f6c23e, #f4a200); height:100%; width:0%; transition: width 0.8s ease-in-out; }
-        
-        /* Tombol Hapus */
-        .btn-hapus-misi { position: absolute; top: 10px; right: 10px; background: rgba(220,53,69,0.1); color: #dc3545; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-weight: bold; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
-        .btn-hapus-misi:hover { background: #dc3545; color: white; }
+body{
+  font-family:'Nunito',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
 
-        /* Tabel Riwayat */
-        .tabel-riwayat { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-        .tabel-riwayat th { background: #f8f9fa; padding: 12px; border-bottom: 2px solid #ddd; color: #555;}
-        .tabel-riwayat td { padding: 12px; border-bottom: 1px solid #eee; }
-        .tabel-riwayat tr:hover { background-color: #fdfdfd; }
+/* ─── STARFIELD BG ─────────────────────────────── */
+#stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) ease-in-out infinite var(--delay,0s)}
+@keyframes twinkle{0%,100%{opacity:.1;transform:scale(1)}50%{opacity:.9;transform:scale(1.4)}}
 
-        /* Paginasi Tabel */
-        .paginasi { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
-        .page-btn { background: white; border: 1px solid #ccd0d5; color: #333; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.2s; }
-        .page-btn.aktif { background: #6f42c1; color: white; border-color: #6f42c1; }
-        .page-btn:disabled { background: #f0f2f5; color: #aaa; cursor: not-allowed; }
+/* ─── TOPBAR ──────────────────────────────────── */
+.topbar{
+  position:sticky;top:0;z-index:200;
+  background:rgba(7,7,26,0.85);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:0 20px;
+}
+.topbar-inner{
+  max-width:1100px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  height:56px;gap:12px;
+}
+.logo{font-family:'Cinzel',serif;font-size:15px;color:var(--gold);letter-spacing:.5px;white-space:nowrap}
+.nav-links{display:flex;gap:6px;flex-wrap:wrap}
+.nav-link{
+  padding:5px 13px;border-radius:20px;
+  text-decoration:none;font-size:12px;font-weight:800;
+  transition:opacity .2s,transform .15s;
+}
+.nav-link:hover{opacity:.8;transform:translateY(-1px)}
 
-        /* Deep Work Overlay */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 15, 20, 0.98); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; color: white; }
-        .timer-text { font-size: 80px; font-weight: bold; font-family: monospace; letter-spacing: 5px; color: #f6c23e; margin: 20px 0;}
-        .btn-stop { background-color: #e74a3b; font-size: 18px; padding: 15px 40px; border-radius: 30px; }
-        .btn-stop:hover { background-color: #c0392b; }
-        
-        /* Responsive Table Scroll */
-        .table-responsive { overflow-x: auto; }
-    </style>
+/* ─── LAYOUT ──────────────────────────────────── */
+.main{max-width:1100px;margin:0 auto;padding:28px 20px 80px;position:relative;z-index:1}
+
+/* ─── HERO / CHARACTER PANEL ─────────────────── */
+.hero-panel{
+  background:linear-gradient(135deg,#12123a 0%,#1a0a3a 50%,#0a1a3a 100%);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:30px 32px;
+  margin-bottom:24px;
+  position:relative;
+  overflow:hidden;
+}
+.hero-panel::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 80% 50%,rgba(140,100,255,0.12) 0%,transparent 60%);
+  pointer-events:none;
+}
+.hero-grid{display:grid;grid-template-columns:auto 1fr auto;gap:28px;align-items:center}
+@media(max-width:680px){.hero-grid{grid-template-columns:1fr;text-align:center}}
+
+.avatar-wrap{position:relative;display:inline-block}
+.avatar{
+  width:90px;height:90px;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple2),var(--purple));
+  display:flex;align-items:center;justify-content:center;
+  font-size:42px;
+  border:3px solid var(--gold);
+  box-shadow:0 0 28px rgba(245,200,66,0.4),0 0 60px rgba(140,100,255,0.25);
+  position:relative;
+}
+.avatar-ring{
+  position:absolute;inset:-8px;border-radius:50%;
+  border:2px solid var(--gold);
+  opacity:.35;animation:spin 8s linear infinite;
+}
+.avatar-ring2{
+  position:absolute;inset:-14px;border-radius:50%;
+  border:1px dashed var(--purple);
+  opacity:.25;animation:spin 14s linear infinite reverse;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.char-name{font-family:'Cinzel',serif;font-size:22px;color:var(--gold);font-weight:700;line-height:1.2}
+.char-class{font-size:12px;color:var(--cyan);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-top:3px}
+.char-level{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(245,200,66,0.12);
+  border:1px solid rgba(245,200,66,0.3);
+  border-radius:20px;padding:4px 14px;margin-top:8px;
+  font-size:13px;font-weight:800;color:var(--gold);
+}
+.level-num{font-family:'Cinzel',serif;font-size:20px}
+
+.exp-section{margin-top:12px}
+.exp-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:700}
+.exp-track{background:rgba(255,255,255,0.06);border-radius:8px;height:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.06)}
+.exp-fill{
+  height:100%;border-radius:8px;
+  background:linear-gradient(90deg,var(--purple2),var(--gold));
+  transition:width 1s cubic-bezier(.4,0,.2,1);
+  position:relative;
+}
+.exp-fill::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.3) 50%,transparent 100%);
+  animation:shimmer 2s infinite;
+}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:480px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
+.stat-box{
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:10px 8px;text-align:center;
+}
+.stat-icon{font-size:20px;margin-bottom:2px}
+.stat-val{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--gold)}
+.stat-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+
+/* ─── STREAK BANNER ───────────────────────────── */
+.streak-banner{
+  display:flex;align-items:center;gap:12px;
+  background:linear-gradient(90deg,rgba(255,79,106,0.1),rgba(245,200,66,0.1));
+  border:1px solid rgba(245,200,66,0.2);
+  border-radius:var(--radius);
+  padding:14px 20px;margin-bottom:24px;
+}
+.streak-fire{font-size:32px;animation:bounce .8s ease infinite alternate}
+@keyframes bounce{to{transform:scale(1.15)}}
+.streak-info strong{font-family:'Cinzel',serif;color:var(--gold);font-size:18px}
+.streak-info p{font-size:12px;color:var(--muted);margin-top:1px}
+
+/* ─── PANEL ──────────────────────────────────── */
+.panel{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:22px 24px;
+  margin-bottom:20px;
+}
+.panel-title{
+  font-family:'Cinzel',serif;
+  font-size:14px;color:var(--gold);
+  letter-spacing:.8px;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+
+/* ─── FORM ───────────────────────────────────── */
+.input-row{display:flex;gap:10px;flex-wrap:wrap}
+input[type=text],input[type=url],textarea,select{
+  background:rgba(255,255,255,0.05);
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--text);
+  font-family:'Nunito',sans-serif;
+  font-size:14px;
+  padding:11px 14px;
+  outline:none;
+  transition:border-color .2s,box-shadow .2s;
+  width:100%;
+}
+input:focus,textarea:focus,select:focus{
+  border-color:var(--purple);
+  box-shadow:0 0 0 3px rgba(140,100,255,0.15);
+}
+select option{background:var(--bg2);color:var(--text)}
+
+.btn{
+  padding:10px 22px;border-radius:var(--radius-sm);
+  border:none;font-family:'Nunito',sans-serif;
+  font-size:14px;font-weight:800;cursor:pointer;
+  transition:transform .15s,box-shadow .2s,opacity .2s;
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.btn:active{transform:scale(.96)}
+.btn-gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#1a1000}
+.btn-gold:hover{box-shadow:0 4px 20px rgba(245,200,66,0.4);transform:translateY(-1px)}
+.btn-purple{background:linear-gradient(135deg,var(--purple2),var(--purple));color:#fff}
+.btn-purple:hover{box-shadow:0 4px 20px rgba(140,100,255,0.4);transform:translateY(-1px)}
+.btn-green{background:linear-gradient(135deg,#18b870,var(--green));color:#001a0e}
+.btn-green:hover{box-shadow:0 4px 20px rgba(34,217,138,0.35);transform:translateY(-1px)}
+.btn-red{background:linear-gradient(135deg,#c02040,var(--red));color:#fff}
+.btn-sm{padding:6px 14px;font-size:12px}
+
+/* ─── MISSION GRID ───────────────────────────── */
+.mission-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px}
+.mission-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px 18px;
+  position:relative;
+  display:flex;flex-direction:column;gap:12px;
+  transition:transform .2s,box-shadow .2s,border-color .2s;
+  overflow:hidden;
+}
+.mission-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(180deg,var(--purple),var(--cyan));
+  border-radius:4px 0 0 4px;
+}
+.mission-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.4);border-color:var(--purple)}
+.mission-name{font-weight:800;font-size:15px;line-height:1.4;padding-right:28px;color:var(--text)}
+.mission-meta{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.mission-meta span{background:rgba(140,100,255,0.12);border:1px solid var(--border);border-radius:6px;padding:2px 8px;color:var(--purple)}
+.btn-hapus{
+  position:absolute;top:12px;right:12px;
+  width:26px;height:26px;border-radius:50%;
+  background:rgba(255,79,106,0.12);
+  color:var(--red);border:1px solid rgba(255,79,106,0.2);
+  cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;
+  transition:background .2s,transform .15s;
+}
+.btn-hapus:hover{background:var(--red);color:#fff;transform:scale(1.1)}
+.btn-mulai{
+  width:100%;padding:11px;border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,var(--purple2),var(--purple));
+  color:#fff;border:none;font-family:'Nunito',sans-serif;
+  font-size:13px;font-weight:800;cursor:pointer;
+  transition:box-shadow .2s,transform .15s;
+  letter-spacing:.3px;
+}
+.btn-mulai:hover{box-shadow:0 4px 18px rgba(140,100,255,0.5);transform:translateY(-1px)}
+
+/* ─── ACHIEVEMENTS ────────────────────────────── */
+.ach-grid{display:flex;flex-wrap:wrap;gap:10px}
+.ach-badge{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;border-radius:20px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  font-size:12px;font-weight:700;
+  transition:all .3s;
+}
+.ach-badge.unlocked{
+  background:rgba(245,200,66,0.1);
+  border-color:rgba(245,200,66,0.35);
+  color:var(--gold);
+}
+.ach-badge.locked{opacity:.3;filter:grayscale(1)}
+.ach-icon{font-size:18px}
+.ach-info small{display:block;font-size:10px;color:var(--muted);font-weight:400;margin-top:1px}
+
+/* ─── CHART ──────────────────────────────────── */
+.chart-wrap{position:relative;height:200px}
+
+/* ─── STATS CARDS ─────────────────────────────── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:14px;text-align:center;
+}
+.stat-card-val{font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--cyan)}
+.stat-card-lbl{font-size:11px;color:var(--muted);font-weight:700;margin-top:3px;text-transform:uppercase;letter-spacing:.6px}
+
+/* ─── HISTORY TABLE ───────────────────────────── */
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.filter-row input,.filter-row select{flex:1;min-width:140px;font-size:13px;padding:8px 12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{
+  background:rgba(140,100,255,0.1);
+  border-bottom:1px solid var(--border);
+  padding:11px 12px;color:var(--muted);
+  font-weight:700;text-align:left;letter-spacing:.3px;
+  font-size:11px;text-transform:uppercase;
+}
+tbody td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text)}
+tbody tr:hover{background:rgba(140,100,255,0.06)}
+.exp-gain{color:var(--green);font-weight:800;font-family:'Cinzel',serif}
+.table-scroll{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border)}
+
+/* ─── PAGINATION ──────────────────────────────── */
+.paginasi{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:16px}
+.page-btn{
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  color:var(--muted);padding:6px 12px;
+  border-radius:var(--radius-sm);cursor:pointer;
+  font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;
+  transition:all .15s;
+}
+.page-btn:hover:not(:disabled){border-color:var(--purple);color:var(--purple)}
+.page-btn.aktif{background:var(--purple);color:#fff;border-color:var(--purple)}
+.page-btn:disabled{opacity:.3;cursor:not-allowed}
+
+/* ─── TIMER MODAL ────────────────────────────── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(4,4,18,0.97);
+  z-index:500;
+  justify-content:center;align-items:center;flex-direction:column;
+  gap:8px;
+}
+.modal-overlay.active{display:flex;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.modal-orb{
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(140,100,255,0.3) 0%,transparent 70%);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;margin-bottom:10px;
+}
+.modal-orb::before{
+  content:'';position:absolute;inset:-4px;border-radius:50%;
+  border:2px solid var(--purple);opacity:.5;
+  animation:spin 4s linear infinite;
+}
+.modal-orb::after{
+  content:'';position:absolute;inset:-12px;border-radius:50%;
+  border:1px dashed var(--gold);opacity:.25;
+  animation:spin 7s linear infinite reverse;
+}
+.timer-display{
+  font-family:'Cinzel',serif;
+  font-size:52px;font-weight:900;
+  color:var(--gold);letter-spacing:4px;
+  text-shadow:0 0 40px rgba(245,200,66,0.5);
+}
+.modal-task{font-size:14px;color:var(--cyan);font-weight:700;letter-spacing:1px;text-align:center;margin-top:8px;max-width:320px}
+.modal-tip{font-size:12px;color:var(--muted);margin-top:24px}
+.modal-actions{display:flex;gap:12px;margin-top:20px}
+
+/* ─── TOAST ──────────────────────────────────── */
+#toast-wrap{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{
+  background:var(--bg3);
+  border-left:4px solid var(--purple);
+  border:1px solid var(--border);
+  border-left-width:4px;
+  color:var(--text);
+  padding:12px 18px;border-radius:12px;
+  font-size:13px;font-weight:700;
+  box-shadow:0 8px 28px rgba(0,0,0,0.5);
+  animation:slideIn .3s ease;
+  display:flex;align-items:center;gap:10px;max-width:300px;
+}
+.toast.success{border-left-color:var(--green)}
+.toast.error{border-left-color:var(--red)}
+.toast.gold{border-left-color:var(--gold)}
+@keyframes slideIn{from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOut{to{transform:translateX(30px);opacity:0}}
+
+/* ─── LEVEL UP OVERLAY ───────────────────────── */
+#levelup-overlay{
+  display:none;position:fixed;inset:0;z-index:600;
+  background:rgba(4,4,18,0.9);
+  flex-direction:column;align-items:center;justify-content:center;gap:12px;
+}
+#levelup-overlay.show{display:flex;animation:fadeIn .4s ease}
+.levelup-star{font-size:80px;animation:pop .5s cubic-bezier(.4,0,.2,1)}
+.levelup-title{font-family:'Cinzel',serif;font-size:36px;font-weight:900;color:var(--gold);text-align:center;
+  text-shadow:0 0 40px rgba(245,200,66,0.7);animation:pop .5s .1s both}
+.levelup-sub{font-size:16px;color:var(--cyan);font-weight:700;text-align:center;animation:pop .5s .2s both}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* ─── PARTICLES ──────────────────────────────── */
+.particle{
+  position:fixed;pointer-events:none;z-index:700;
+  width:8px;height:8px;border-radius:50%;
+  animation:particleFly var(--dur,1.2s) ease forwards;
+}
+@keyframes particleFly{
+  0%{transform:translate(0,0) scale(1);opacity:1}
+  100%{transform:translate(var(--tx,0),var(--ty,-120px)) scale(0);opacity:0}
+}
+
+/* ─── LOADING ────────────────────────────────── */
+#loading{
+  position:fixed;inset:0;background:var(--bg);z-index:800;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+}
+.load-logo{font-family:'Cinzel',serif;font-size:28px;color:var(--gold);letter-spacing:2px}
+.load-bar-wrap{width:200px;height:4px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden}
+.load-bar{height:100%;background:linear-gradient(90deg,var(--purple),var(--gold));border-radius:4px;animation:loadAnim 1.4s ease infinite}
+@keyframes loadAnim{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
+
+/* ─── EMPTY STATE ────────────────────────────── */
+.empty{
+  grid-column:1/-1;text-align:center;padding:50px 20px;
+  color:var(--muted);
+}
+.empty .ico{font-size:40px;margin-bottom:10px}
+.empty p{font-weight:700;font-size:15px}
+</style>
 </head>
 <body>
 
-    <div class="header" style="text-align: center; margin-bottom: 30px;">
-        <h1>Deep Work Tracker</h1>
-        <p>Sistem Fokus dengan Elemen RPG & Visualisasi Data</p>
-        
-        <div style="margin-top: 15px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-            <a href="index.html" style="background: #e4e6eb; color: #050505; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🎬 Rak Video</a>
-            <a href="web.html" style="background: #e4e6eb; color: #050505; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🌐 Rak Website</a>
-            <a href="habit.html" style="background: #6f42c1; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">⏳ Deep Work</a>
-             <a href="idol.html" style="background: #ec407a; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🌸 Koleksi Idol</a>
-            <a href="keuangan.html" style="background: #f5b041; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">💰 Keuangan</a>
+<!-- STARS -->
+<div id="stars"></div>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="load-logo">⚔ LIFEOS</div>
+  <div class="load-bar-wrap"><div class="load-bar"></div></div>
+  <div style="font-size:13px;color:var(--muted);font-weight:700">Memuat data pahlawan...</div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-wrap"></div>
+
+<!-- LEVEL UP OVERLAY -->
+<div id="levelup-overlay">
+  <div class="levelup-star">⭐</div>
+  <div class="levelup-title" id="lu-title">LEVEL UP!</div>
+  <div class="levelup-sub" id="lu-sub">Kamu naik ke Level 5</div>
+  <button class="btn btn-gold" onclick="hideLevelUp()" style="margin-top:12px">Lanjutkan ⚡</button>
+</div>
+
+<!-- TIMER MODAL -->
+<div id="timerModal" class="modal-overlay">
+  <div class="modal-orb">
+    <div class="timer-display" id="timerDisplay">00:00:00</div>
+  </div>
+  <div class="modal-task" id="modalTaskName">Misi Aktif...</div>
+  <p class="modal-tip">Jauhkan HP. Tetap fokus. Kamu bisa.</p>
+  <div class="modal-actions">
+    <button class="btn btn-red" onclick="stopTimer()">✅ Selesai & Klaim EXP</button>
+    <button class="btn btn-sm" style="background:rgba(255,255,255,0.07);color:var(--muted)" onclick="batalTimer()">Batal</button>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="logo">⚔ LIFEOS</span>
+    <nav class="nav-links">
+      <a href="index.html"    class="nav-link" style="background:rgba(228,230,235,.12);color:#ccc">🎬 Video</a>
+      <a href="web.html"      class="nav-link" style="background:rgba(228,230,235,.12);color:#ccc">🌐 Web</a>
+      <a href="habit.html"    class="nav-link" style="background:linear-gradient(135deg,#6040d0,#8c64ff);color:#fff">⏳ Deep Work</a>
+      <a href="keuangan.html" class="nav-link" style="background:linear-gradient(135deg,#c07010,#f5c842);color:#1a1000">💰 Keuangan</a>
+    </nav>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- CHARACTER PANEL -->
+  <div class="hero-panel">
+    <div class="hero-grid">
+      <div class="avatar-wrap">
+        <div class="avatar-ring2"></div>
+        <div class="avatar-ring"></div>
+        <div class="avatar" id="avatarEmoji">🧙</div>
+      </div>
+      <div>
+        <div class="char-name">Deep Worker</div>
+        <div class="char-class" id="charClass">APPRENTICE SCHOLAR</div>
+        <div class="char-level">Level <span class="level-num" id="rpgLevel">1</span></div>
+        <div class="exp-section">
+          <div class="exp-label">
+            <span>Focus EXP</span>
+            <span id="expFrac">0 / 100</span>
+          </div>
+          <div class="exp-track"><div class="exp-fill" id="rpgExpBar" style="width:0%"></div></div>
         </div>
-    </div>
-
-    <div class="panel rpg-panel">
-        <h2 style="margin-top: 0; color: #333;">👤 Status Karakter</h2>
-        <div style="font-size: 18px; color: #555;">Level <span id="rpgLevel" style="font-size: 36px; font-weight: bold; color: #f4a200;">1</span></div>
-        <div class="exp-bar-container">
-            <div id="rpgExpBar" class="exp-bar"></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-val" id="statStreak">0</div>
+          <div class="stat-lbl">Streak</div>
         </div>
-        <p style="font-size: 14px; color: #666; margin-top: 8px; font-weight: bold;">Focus EXP: <span id="rpgExpText">0</span> / <span id="rpgNextLevel">100</span></p>
-    </div>
-
-    <div class="panel">
-        <h2>1. Tambah Misi (Habit) Baru</h2>
-        <div class="flex-group">
-            <input type="text" id="inputHabit" placeholder="Contoh: Belajar Kanji JLPT N4...">
-            <button onclick="tambahHabit()">+ Buat Misi</button>
+        <div class="stat-box">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-val" id="statTotal">0</div>
+          <div class="stat-lbl">Total Jam</div>
         </div>
-    </div>
-
-    <div class="rak-habit" id="rakHabit" style="margin-bottom: 30px;"></div>
-
-    <div class="panel">
-        <h2>📊 Grafik Fokus 30 Hari Terakhir</h2>
-        <canvas id="habitChart" width="400" height="150"></canvas>
-    </div>
-
-    <div class="panel" id="panelRiwayat">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-            <h2 style="margin: 0;">📜 Riwayat Aktivitas (1 Tahun)</h2>
-            <button onclick="exportKeExcel()" style="background-color: #28a745; font-size: 13px; padding: 10px 20px;">📥 Export Excel (CSV)</button>
+        <div class="stat-box">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-val" id="statSesi">0</div>
+          <div class="stat-lbl">Sesi</div>
         </div>
-        <div class="table-responsive">
-            <table class="tabel-riwayat">
-                <thead>
-                    <tr>
-                        <th>Waktu Selesai</th>
-                        <th>Nama Misi</th>
-                        <th>Durasi</th>
-                        <th>EXP Didapat</th>
-                    </tr>
-                </thead>
-                <tbody id="riwayatBody">
-                    </tbody>
-            </table>
-        </div>
-        
-        <div id="paginasiRiwayat" class="paginasi"></div>
+      </div>
     </div>
+  </div>
 
-    <div id="timerModal" class="modal-overlay">
-        <h2 id="modalTaskName" style="font-size: 24px; font-weight: normal; color: #aaa;">Misi Aktif...</h2>
-        <div id="timerDisplay" class="timer-text">00:00:00</div>
-        <button class="btn-stop" onclick="stopTimer()">Selesai & Simpan EXP</button>
-        <p style="margin-top: 20px; color: #777; font-size: 14px;">Jauhkan HP. Tetap fokus pada tugas.</p>
+  <!-- STREAK -->
+  <div class="streak-banner" id="streakBanner">
+    <div class="streak-fire" id="streakFire">🔥</div>
+    <div class="streak-info">
+      <strong id="streakLabel">0 Hari Streak!</strong>
+      <p id="streakDesc">Mulai sesi pertamamu hari ini untuk membangun streak.</p>
     </div>
+  </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getDatabase, ref, push, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+  <!-- ADD MISSION -->
+  <div class="panel">
+    <div class="panel-title">⚔ Buat Misi Baru</div>
+    <div class="input-row">
+      <input type="text" id="inputHabit" placeholder="Nama misi, cth: Belajar Kanji JLPT N3..." style="flex:1">
+      <button class="btn btn-gold" onclick="tambahHabit()">+ Buat Misi</button>
+    </div>
+  </div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
-            authDomain: "katalog-video.firebaseapp.com",
-            databaseURL: "https://katalog-video-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "katalog-video",
-            storageBucket: "katalog-video.firebasestorage.app",
-            messagingSenderId: "1035864136490",
-            appId: "1:1035864136490:web:9abe5dbf41e80b11ad5c53"
-        };
+  <!-- MISSION BOARD -->
+  <div class="mission-grid" id="rakHabit"></div>
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+  <!-- ACHIEVEMENTS -->
+  <div class="panel">
+    <div class="panel-title">🏅 Pencapaian</div>
+    <div class="ach-grid" id="achGrid"></div>
+  </div>
 
-        // State Aplikasi
-        let daftarHabit = [];
-        let totalExp = 0;
-        let chartInstance = null;
-        window.dataRiwayatGlobal = {}; 
+  <!-- CHART -->
+  <div class="panel">
+    <div class="panel-title">📊 Grafik Fokus 30 Hari</div>
+    <div class="stats-row" id="summaryStats"></div>
+    <div class="chart-wrap"><canvas id="habitChart"></canvas></div>
+  </div>
 
-        // State Paginasi Riwayat
-        let riwayatHalamanSaatIni = 1;
-        const riwayatPerHalaman = 50;
+  <!-- HISTORY -->
+  <div class="panel" id="panelRiwayat">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div class="panel-title" style="margin:0">📜 Riwayat Aktivitas</div>
+      <button class="btn btn-green btn-sm" onclick="exportCSV()">📥 Export CSV</button>
+    </div>
+    <div class="filter-row">
+      <input type="text" id="filterNama" placeholder="🔍 Cari nama misi..." onkeyup="renderRiwayat()" style="flex:1;min-width:160px">
+      <select id="filterSort" onchange="renderRiwayat()" style="min-width:140px">
+        <option value="terbaru">Terbaru dulu</option>
+        <option value="terlama">Terlama dulu</option>
+        <option value="durasi">Durasi terpanjang</option>
+        <option value="exp">EXP terbesar</option>
+      </select>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>Waktu</th><th>Nama Misi</th><th>Durasi</th><th>EXP</th>
+        </tr></thead>
+        <tbody id="riwayatBody"></tbody>
+      </table>
+    </div>
+    <div id="paginasiRiwayat" class="paginasi"></div>
+  </div>
 
-        // State Timer
-        let intervalId = null;
-        let waktuMulai = null;
-        let idHabitAktif = null;
-        let namaHabitAktif = ""; 
+</main>
 
-        // 1. Sync Data RPG
-        onValue(ref(db, 'rpgStats/totalExp'), (snapshot) => {
-            totalExp = snapshot.val() || 0;
-            updateRPGUI();
-        });
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getDatabase, ref, push, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-        function updateRPGUI() {
-            let level = Math.floor(Math.sqrt(totalExp / 100)) + 1;
-            let nextLevelExp = Math.pow(level, 2) * 100;
-            let prevLevelExp = Math.pow(level - 1, 2) * 100;
-            
-            let expInCurrentLevel = totalExp - prevLevelExp;
-            let expNeededForLevel = nextLevelExp - prevLevelExp;
-            let persentase = (expInCurrentLevel / expNeededForLevel) * 100;
+const firebaseConfig = {
+  apiKey:"AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
+  authDomain:"katalog-video.firebaseapp.com",
+  databaseURL:"https://katalog-video-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"katalog-video",
+  storageBucket:"katalog-video.firebasestorage.app",
+  messagingSenderId:"1035864136490",
+  appId:"1:1035864136490:web:9abe5dbf41e80b11ad5c53"
+};
 
-            document.getElementById('rpgLevel').innerText = level;
-            document.getElementById('rpgExpText').innerText = totalExp;
-            document.getElementById('rpgNextLevel').innerText = nextLevelExp;
-            document.getElementById('rpgExpBar').style.width = Math.min(persentase, 100) + '%';
-        }
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
 
-        // 2. Sync Daftar Habit
-        onValue(ref(db, 'habits'), (snapshot) => {
-            daftarHabit = snapshot.val() || [
-                { id: "h1", nama: "Skripsi Ilmu Perpustakaan" },
-                { id: "h2", nama: "Belajar Kanji JLPT N4" },
-                { id: "h3", nama: "Project LifeOS Development" }
-            ];
-            renderHabit();
-        });
+// ── STATE ───────────────────────────────────────
+let daftarHabit = [];
+let totalExp    = 0;
+let chartInst   = null;
+window.logsGlobal = {};
 
-        window.tambahHabit = () => {
-            const nama = document.getElementById('inputHabit').value;
-            if (nama) {
-                const idBaru = Date.now().toString();
-                daftarHabit.push({ id: idBaru, nama: nama });
-                set(ref(db, 'habits'), daftarHabit);
-                document.getElementById('inputHabit').value = "";
-            }
-        };
+let halRiwayat  = 1;
+const perHal    = 30;
 
-        window.hapusHabit = (id) => {
-            if (confirm("Hapus misi ini dari papan? Riwayat pengerjaannya tidak akan hilang.")) {
-                const updateHabit = daftarHabit.filter(h => h.id !== id);
-                set(ref(db, 'habits'), updateHabit);
-            }
-        };
+// Timer state
+let intervalId      = null;
+let waktuMulai      = null;
+let idHabitAktif    = null;
+let namaHabitAktif  = '';
+let levelSebelumnya = 1;
 
-        window.renderHabit = () => {
-            const rak = document.getElementById('rakHabit');
-            rak.innerHTML = "";
-            daftarHabit.forEach(h => {
-                rak.innerHTML += `
-                    <div class="kartu-habit">
-                        <button class="btn-hapus-misi" onclick="hapusHabit('${h.id}')" title="Hapus Misi">✕</button>
-                        <h3 style="margin-top:0; margin-right:25px; color:#333; font-size:16px;">${h.nama}</h3>
-                        <button onclick="mulaiTimer('${h.id}', '${h.nama.replace(/'/g, "\\'")}')" style="margin-top:15px; width:100%;">▶ Mulai Deep Work</button>
-                    </div>
-                `;
-            });
-        };
+// ── STARFIELD ───────────────────────────────────
+(function(){
+  const c = document.getElementById('stars');
+  for(let i=0;i<80;i++){
+    const s = document.createElement('div');
+    s.className='star';
+    const sz = Math.random()*2+.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:-${Math.random()*4}s`;
+    c.appendChild(s);
+  }
+})();
 
-        // 3. Sistem Timer
-        window.mulaiTimer = (id, nama) => {
-            idHabitAktif = id;
-            namaHabitAktif = nama; 
-            waktuMulai = Date.now();
-            document.getElementById('modalTaskName').innerText = `Fokus: ${nama}`;
-            document.getElementById('timerModal').style.display = "flex";
-            intervalId = setInterval(updateDisplayTimer, 1000);
-        };
+// ── TOAST ──────────────────────────────────────
+function toast(msg, type='info', icon='') {
+  const icons = {info:'ℹ️',success:'✅',error:'❌',gold:'⭐'};
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icon||icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(()=>{
+    el.style.animation='slideOut .3s ease forwards';
+    setTimeout(()=>el.remove(),300);
+  }, 3500);
+}
 
-        function updateDisplayTimer() {
-            let selisihDetik = Math.floor((Date.now() - waktuMulai) / 1000);
-            let jam = String(Math.floor(selisihDetik / 3600)).padStart(2, '0');
-            let menit = String(Math.floor((selisihDetik % 3600) / 60)).padStart(2, '0');
-            let detik = String(selisihDetik % 60).padStart(2, '0');
-            document.getElementById('timerDisplay').innerText = `${jam}:${menit}:${detik}`;
-        }
+// ── RPG HELPERS ─────────────────────────────────
+const CLASSES = [
+  {min:1,  max:3,  name:'NOVICE DREAMER',    emoji:'🌱'},
+  {min:4,  max:7,  name:'APPRENTICE SCHOLAR',emoji:'🧙'},
+  {min:8,  max:12, name:'FOCUSED MAGE',      emoji:'🔮'},
+  {min:13, max:18, name:'DEEP WORK KNIGHT',  emoji:'⚔️'},
+  {min:19, max:25, name:'LEGENDARY MASTER',  emoji:'👑'},
+  {min:26, max:999,name:'MYTHIC OVERLORD',   emoji:'🌟'},
+];
 
-        window.stopTimer = () => {
-            clearInterval(intervalId);
-            let selisihDetik = Math.floor((Date.now() - waktuMulai) / 1000);
-            let durasiMenit = Math.floor(selisihDetik / 60);
+function getLevel(exp){ return Math.floor(Math.sqrt(exp/100))+1 }
+function getClassInfo(lv){ return CLASSES.find(c=>lv>=c.min&&lv<=c.max)||CLASSES[0] }
 
-            if (selisihDetik >= 10) { 
-                let menitTersimpan = durasiMenit > 0 ? durasiMenit : 1;
-                let gainedExp = menitTersimpan * 10;
-                let dateStr = new Date().toISOString().split('T')[0];
+function updateRPGUI(animate=false) {
+  const lv       = getLevel(totalExp);
+  const prev     = Math.pow(lv-1,2)*100;
+  const next     = Math.pow(lv,2)*100;
+  const pct      = Math.min(((totalExp-prev)/(next-prev))*100,100);
+  const info     = getClassInfo(lv);
 
-                push(ref(db, 'habitLogs'), {
-                    habitId: idHabitAktif,
-                    habitNama: namaHabitAktif, 
-                    durasiMenit: menitTersimpan,
-                    dateString: dateStr,
-                    timestamp: Date.now()
-                });
+  document.getElementById('rpgLevel').textContent = lv;
+  document.getElementById('charClass').textContent = info.name;
+  document.getElementById('avatarEmoji').textContent = info.emoji;
+  document.getElementById('expFrac').textContent = `${totalExp} / ${next}`;
+  document.getElementById('rpgExpBar').style.width = pct+'%';
 
-                set(ref(db, 'rpgStats/totalExp'), totalExp + gainedExp);
-                alert(`Bagus! Kamu fokus selama ${menitTersimpan} menit. +${gainedExp} EXP didapatkan.`);
-            } else {
-                alert("Sesi terlalu singkat (Di bawah 10 detik). EXP batal diberikan.");
-            }
+  if(animate && lv > levelSebelumnya){
+    showLevelUp(lv, info);
+  }
+  levelSebelumnya = lv;
+}
 
-            document.getElementById('timerModal').style.display = "none";
-            document.getElementById('timerDisplay').innerText = "00:00:00";
-        };
+// ── LEVEL UP ─────────────────────────────────── 
+function showLevelUp(lv, info){
+  document.getElementById('lu-title').textContent = `LEVEL UP!`;
+  document.getElementById('lu-sub').textContent   = `Kamu kini Level ${lv} — ${info.name} ${info.emoji}`;
+  document.getElementById('levelup-overlay').classList.add('show');
+  spawnParticles(window.innerWidth/2, window.innerHeight/2, 24, ['#f5c842','#8c64ff','#38d9f5','#22d98a']);
+}
+window.hideLevelUp = () => document.getElementById('levelup-overlay').classList.remove('show');
 
-        // 4. Data Logs (Menangani Grafik & Riwayat)
-        onValue(ref(db, 'habitLogs'), (snapshot) => {
-            const logs = snapshot.val() || {};
-            window.dataRiwayatGlobal = logs; 
-            renderGrafik(logs);
-            renderRiwayat(logs);
-        });
+// ── PARTICLES ──────────────────────────────────
+function spawnParticles(x, y, count=12, colors=['#f5c842','#8c64ff','#22d98a']){
+  for(let i=0;i<count;i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const angle = (Math.PI*2/count)*i + Math.random()*.5;
+    const dist  = 60 + Math.random()*80;
+    p.style.cssText = `left:${x}px;top:${y}px;background:${colors[i%colors.length]};--tx:${Math.cos(angle)*dist}px;--ty:${Math.sin(angle)*dist-100}px;--dur:${.8+Math.random()*.6}s`;
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 1400);
+  }
+}
 
-        // GRAFIK 30 HARI
-        function renderGrafik(logs) {
-            const labels = [];
-            const dataDurasi = [];
-            const logArray = Object.values(logs);
+// ── STREAK ─────────────────────────────────────
+function hitungStreak(logs){
+  const days = new Set(Object.values(logs).map(l=>l.dateString));
+  let streak = 0;
+  let d = new Date();
+  while(true){
+    const ds = d.toISOString().split('T')[0];
+    if(!days.has(ds)) break;
+    streak++;
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
 
-            for (let i = 29; i >= 0; i--) {
-                let d = new Date();
-                d.setDate(d.getDate() - i);
-                let dateStr = d.toISOString().split('T')[0];
-                
-                labels.push(d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }));
-                
-                let totalHarian = logArray
-                    .filter(l => l.dateString === dateStr)
-                    .reduce((sum, l) => sum + l.durasiMenit, 0);
-                dataDurasi.push(totalHarian);
-            }
+function updateStreakUI(streak){
+  document.getElementById('streakLabel').textContent = `${streak} Hari Streak!`;
+  document.getElementById('statStreak').textContent  = streak;
+  const fire = streak >= 7 ? '🔥🔥🔥' : streak >= 3 ? '🔥🔥' : streak >= 1 ? '🔥' : '💤';
+  document.getElementById('streakFire').textContent  = fire;
+  document.getElementById('streakDesc').textContent  = streak >= 7
+    ? 'Luar biasa! Kamu konsisten satu minggu penuh!'
+    : streak >= 3
+    ? 'Momentum terbentuk! Jangan berhenti sekarang.'
+    : streak >= 1
+    ? 'Streak dimulai. Pertahankan besok!'
+    : 'Mulai sesi hari ini untuk membangun streak.';
+}
 
-            const ctx = document.getElementById('habitChart').getContext('2d');
-            if (chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Fokus (Menit)',
-                        data: dataDurasi,
-                        backgroundColor: '#6f42c1',
-                        borderRadius: 3 
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    scales: { 
-                        x: { ticks: { maxTicksLimit: 10 } }, 
-                        y: { beginAtZero: true } 
-                    } 
-                }
-            });
-        }
+// ── ACHIEVEMENTS ────────────────────────────────
+const ACHIEVEMENTS = [
+  {id:'first',  icon:'🌱', name:'Langkah Pertama',  desc:'Selesaikan sesi pertama', check:l=>Object.keys(l).length>=1},
+  {id:'ten',    icon:'⚡', name:'Konsistensi',       desc:'10 sesi total',           check:l=>Object.keys(l).length>=10},
+  {id:'fifty',  icon:'🏆', name:'Elite Fokuser',     desc:'50 sesi total',           check:l=>Object.keys(l).length>=50},
+  {id:'hour',   icon:'⏱', name:'Jam Pertama',        desc:'60 menit fokus total',    check:l=>Object.values(l).reduce((s,x)=>s+x.durasiMenit,0)>=60},
+  {id:'tenhrs', icon:'🔥', name:'Dewa Fokus',        desc:'600 menit total',         check:l=>Object.values(l).reduce((s,x)=>s+x.durasiMenit,0)>=600},
+  {id:'streak3',icon:'🗓', name:'3 Hari Streak',     desc:'Streak 3 hari',           check:l=>hitungStreak(l)>=3},
+  {id:'streak7',icon:'👑', name:'Satu Minggu Penuh', desc:'Streak 7 hari',           check:l=>hitungStreak(l)>=7},
+];
 
-        // FUNGSI NAVIGASI HALAMAN RIWAYAT
-        window.gantiHalamanRiwayat = (nomor) => {
-            riwayatHalamanSaatIni = nomor;
-            renderRiwayat(window.dataRiwayatGlobal);
-            document.getElementById('panelRiwayat').scrollIntoView({ behavior: 'smooth' });
-        }
+function renderAchievements(logs){
+  document.getElementById('achGrid').innerHTML = ACHIEVEMENTS.map(a=>{
+    const ok = Object.keys(logs).length ? a.check(logs) : false;
+    return `<div class="ach-badge ${ok?'unlocked':'locked'}">
+      <span class="ach-icon">${a.icon}</span>
+      <div><div>${a.name}</div><small>${a.desc}</small></div>
+    </div>`;
+  }).join('');
+}
 
-        // RENDER TABEL RIWAYAT DENGAN FILTER 1 TAHUN & PAGINASI
-        function renderRiwayat(logs) {
-            const tbody = document.getElementById('riwayatBody');
-            tbody.innerHTML = "";
-            
-            if(!logs) return;
+// ── FIREBASE LISTENERS ──────────────────────────
+onValue(ref(db,'rpgStats/totalExp'), snap=>{
+  totalExp = snap.val()||0;
+  updateRPGUI();
+});
 
-            // 1. Ambil data & urutkan dari yang terbaru
-            let logArray = Object.values(logs).sort((a, b) => b.timestamp - a.timestamp);
-            
-            // 2. Filter hanya data 1 tahun terakhir (365 hari)
-            const satuTahunLalu = Date.now() - (365 * 24 * 60 * 60 * 1000);
-            logArray = logArray.filter(log => log.timestamp >= satuTahunLalu);
+onValue(ref(db,'habits'), snap=>{
+  daftarHabit = snap.val()||[
+    {id:'h1',nama:'Skripsi Ilmu Perpustakaan'},
+    {id:'h2',nama:'Belajar Kanji JLPT N4'},
+    {id:'h3',nama:'Project LifeOS Development'}
+  ];
+  renderHabit();
+});
 
-            if(logArray.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888;">Belum ada riwayat aktivitas dalam 1 tahun terakhir.</td></tr>`;
-                document.getElementById('paginasiRiwayat').innerHTML = "";
-                return;
-            }
+onValue(ref(db,'habitLogs'), snap=>{
+  const logs = snap.val()||{};
+  window.logsGlobal = logs;
 
-            // 3. Kalkulasi Paginasi
-            const totalHalaman = Math.ceil(logArray.length / riwayatPerHalaman);
-            if (riwayatHalamanSaatIni > totalHalaman && totalHalaman > 0) riwayatHalamanSaatIni = totalHalaman;
-            
-            const start = (riwayatHalamanSaatIni - 1) * riwayatPerHalaman;
-            const end = start + riwayatPerHalaman;
-            const logDitampilkan = logArray.slice(start, end);
+  // Stats
+  const vals = Object.values(logs);
+  const totalMenit = vals.reduce((s,x)=>s+x.durasiMenit,0);
+  document.getElementById('statTotal').textContent = (totalMenit/60).toFixed(1);
+  document.getElementById('statSesi').textContent  = vals.length;
 
-            // 4. Masukkan ke Tabel
-            logDitampilkan.forEach(log => {
-                let tgl = new Date(log.timestamp);
-                // Tambahkan tahun (numeric) agar jelas untuk tampilan data 1 tahun
-                let wktSelesai = tgl.toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'}) + " - " + 
-                                 tgl.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
-                let nama = log.habitNama || "Misi Telah Dihapus";
-                let exp = log.durasiMenit * 10;
+  updateStreakUI(hitungStreak(logs));
+  renderAchievements(logs);
+  renderGrafik(logs);
+  renderRiwayat();
+  document.getElementById('loading').style.display = 'none';
+});
 
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="font-weight:bold; color:#555;">${wktSelesai}</td>
-                        <td>${nama}</td>
-                        <td>${log.durasiMenit} menit</td>
-                        <td style="color:#28a745; font-weight:bold;">+${exp}</td>
-                    </tr>
-                `;
-            });
+// ── TAMBAH HABIT ────────────────────────────────
+window.tambahHabit = () => {
+  const nama = document.getElementById('inputHabit').value.trim();
+  if(!nama) return toast('Nama misi tidak boleh kosong!','error');
+  const id = Date.now().toString();
+  daftarHabit.push({id, nama});
+  set(ref(db,'habits'), daftarHabit);
+  document.getElementById('inputHabit').value = '';
+  toast(`Misi "${nama}" ditambahkan!`, 'success');
+};
 
-            // 5. Cetak Tombol Halaman
-            renderPaginasiRiwayat(totalHalaman);
-        }
+window.hapusHabit = (id) => {
+  if(!confirm('Hapus misi ini? Riwayat pengerjaannya tetap tersimpan.')) return;
+  set(ref(db,'habits'), daftarHabit.filter(h=>h.id!==id));
+  toast('Misi dihapus.','info');
+};
 
-        function renderPaginasiRiwayat(total) {
-            const kontainer = document.getElementById('paginasiRiwayat');
-            kontainer.innerHTML = "";
-            if (total <= 1) return; 
+// ── RENDER HABIT ────────────────────────────────
+window.renderHabit = () => {
+  const rak = document.getElementById('rakHabit');
+  if(!daftarHabit.length){
+    rak.innerHTML = `<div class="empty"><div class="ico">⚔️</div><p>Belum ada misi. Buat misi pertamamu!</p></div>`;
+    return;
+  }
+  rak.innerHTML = daftarHabit.map(h => {
+    const sesi = Object.values(window.logsGlobal).filter(l=>l.habitId===h.id).length;
+    return `
+    <div class="mission-card">
+      <button class="btn-hapus" onclick="hapusHabit('${h.id}')">✕</button>
+      <div class="mission-name">${h.nama}</div>
+      <div class="mission-meta"><span>⚔ ${sesi} sesi</span></div>
+      <button class="btn-mulai" onclick="mulaiTimer('${h.id}','${h.nama.replace(/'/g,"\\'").replace(/"/g,"&quot;")}')">▶ Mulai Deep Work</button>
+    </div>`;
+  }).join('');
+};
 
-            kontainer.innerHTML += `<button class="page-btn" onclick="gantiHalamanRiwayat(${riwayatHalamanSaatIni - 1})" ${riwayatHalamanSaatIni === 1 ? 'disabled' : ''}>« Prev</button>`;
-            
-            for (let i = 1; i <= total; i++) {
-                const aktif = i === riwayatHalamanSaatIni ? 'aktif' : '';
-                kontainer.innerHTML += `<button class="page-btn ${aktif}" onclick="gantiHalamanRiwayat(${i})">${i}</button>`;
-            }
-            
-            kontainer.innerHTML += `<button class="page-btn" onclick="gantiHalamanRiwayat(${riwayatHalamanSaatIni + 1})" ${riwayatHalamanSaatIni === total ? 'disabled' : ''}>Next »</button>`;
-        }
+// ── TIMER ───────────────────────────────────────
+window.mulaiTimer = (id, nama) => {
+  // Proteksi double-start
+  if(intervalId) { clearInterval(intervalId); intervalId = null; }
 
-        // EXPORT EXCEL (CSV)
-        window.exportKeExcel = () => {
-            if(!window.dataRiwayatGlobal || Object.keys(window.dataRiwayatGlobal).length === 0) {
-                return alert("Belum ada data untuk diexport!");
-            }
+  idHabitAktif   = id;
+  namaHabitAktif = nama;
+  waktuMulai     = Date.now();
 
-            let csvContent = "data:text/csv;charset=utf-8,Tanggal,Jam,Nama Misi,Durasi (Menit),EXP Didapat\n";
-            
-            // Ambil semua data global, filter 1 tahun terakhir untuk diexport
-            const satuTahunLalu = Date.now() - (365 * 24 * 60 * 60 * 1000);
-            let logArray = Object.values(window.dataRiwayatGlobal)
-                                 .sort((a, b) => b.timestamp - a.timestamp)
-                                 .filter(log => log.timestamp >= satuTahunLalu);
-            
-            logArray.forEach(log => {
-                let d = new Date(log.timestamp);
-                let tgl = d.toLocaleDateString('id-ID'); 
-                let jam = d.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
-                
-                let nama = (log.habitNama || "Misi Telah Dihapus").replace(/,/g, " "); 
-                let exp = log.durasiMenit * 10;
-                
-                csvContent += `${tgl},${jam},${nama},${log.durasiMenit},${exp}\n`;
-            });
+  // Simpan ke localStorage agar survive refresh
+  localStorage.setItem('timer_start',  waktuMulai);
+  localStorage.setItem('timer_id',     id);
+  localStorage.setItem('timer_nama',   nama);
 
-            var encodedUri = encodeURI(csvContent);
-            var link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Riwayat_Fokus_1_Tahun_LifeOS.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        };
+  document.getElementById('modalTaskName').textContent = nama;
+  document.getElementById('timerModal').classList.add('active');
+  intervalId = setInterval(tickTimer, 1000);
+};
 
-    </script>
+function tickTimer(){
+  const detik = Math.floor((Date.now()-waktuMulai)/1000);
+  const j = String(Math.floor(detik/3600)).padStart(2,'0');
+  const m = String(Math.floor((detik%3600)/60)).padStart(2,'0');
+  const s = String(detik%60).padStart(2,'0');
+  document.getElementById('timerDisplay').textContent = `${j}:${m}:${s}`;
+}
+
+window.stopTimer = () => {
+  clearInterval(intervalId); intervalId = null;
+  const detik = Math.floor((Date.now()-waktuMulai)/1000);
+  const menit = Math.max(Math.floor(detik/60), detik>=10?1:0);
+
+  localStorage.removeItem('timer_start');
+  localStorage.removeItem('timer_id');
+  localStorage.removeItem('timer_nama');
+
+  if(detik < 10){
+    tutupModal();
+    toast('Sesi terlalu singkat. EXP tidak diberikan.','error');
+    return;
+  }
+
+  const exp       = menit * 10;
+  const lvBefore  = getLevel(totalExp);
+  const dateStr   = new Date().toISOString().split('T')[0];
+
+  push(ref(db,'habitLogs'), {
+    habitId:    idHabitAktif,
+    habitNama:  namaHabitAktif,
+    durasiMenit:menit,
+    dateString: dateStr,
+    timestamp:  Date.now()
+  });
+
+  set(ref(db,'rpgStats/totalExp'), totalExp + exp);
+  totalExp += exp; // optimistic update untuk animasi level
+  updateRPGUI(true);
+
+  // Particles di tengah layar
+  spawnParticles(window.innerWidth/2, window.innerHeight*.4, 16, ['#f5c842','#8c64ff','#22d98a']);
+
+  tutupModal();
+  toast(`+${exp} EXP! Fokus ${menit} menit. Mantap!`, 'gold', '⚡');
+};
+
+window.batalTimer = () => {
+  if(!confirm('Batalkan sesi ini? EXP tidak akan diberikan.')) return;
+  clearInterval(intervalId); intervalId = null;
+  localStorage.removeItem('timer_start');
+  localStorage.removeItem('timer_id');
+  localStorage.removeItem('timer_nama');
+  tutupModal();
+};
+
+function tutupModal(){
+  document.getElementById('timerModal').classList.remove('active');
+  document.getElementById('timerDisplay').textContent = '00:00:00';
+}
+
+// ── RESUME TIMER (survive refresh) ─────────────
+(function resumeTimer(){
+  const ts   = localStorage.getItem('timer_start');
+  const tid  = localStorage.getItem('timer_id');
+  const tnm  = localStorage.getItem('timer_nama');
+  if(!ts||!tid||!tnm) return;
+  waktuMulai    = parseInt(ts);
+  idHabitAktif  = tid;
+  namaHabitAktif= tnm;
+  document.getElementById('modalTaskName').textContent = tnm;
+  document.getElementById('timerModal').classList.add('active');
+  intervalId = setInterval(tickTimer, 1000);
+  tickTimer();
+})();
+
+// ── ESCAPE key ──────────────────────────────────
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && intervalId){
+    if(confirm('Batalkan sesi Deep Work?')) batalTimer();
+  }
+});
+
+// ── GRAFIK ──────────────────────────────────────
+function renderGrafik(logs){
+  const labels=[], data=[], vals=Object.values(logs);
+  const totalMenit30 = [];
+  for(let i=29;i>=0;i--){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const ds=d.toISOString().split('T')[0];
+    labels.push(d.toLocaleDateString('id-ID',{day:'numeric',month:'short'}));
+    data.push(vals.filter(l=>l.dateString===ds).reduce((s,l)=>s+l.durasiMenit,0));
+    totalMenit30.push(vals.filter(l=>l.dateString===ds).reduce((s,l)=>s+l.durasiMenit,0));
+  }
+
+  // Summary stats
+  const avg30 = totalMenit30.reduce((a,b)=>a+b,0)/30;
+  const max30  = Math.max(...totalMenit30,0);
+  const total7 = totalMenit30.slice(-7).reduce((a,b)=>a+b,0);
+  document.getElementById('summaryStats').innerHTML = `
+    <div class="stat-card"><div class="stat-card-val">${Math.round(avg30)}</div><div class="stat-card-lbl">Rata-rata / hari (mnt)</div></div>
+    <div class="stat-card"><div class="stat-card-val">${max30}</div><div class="stat-card-lbl">Rekor harian (mnt)</div></div>
+    <div class="stat-card"><div class="stat-card-val">${total7}</div><div class="stat-card-lbl">Total 7 hari (mnt)</div></div>
+  `;
+
+  const ctx = document.getElementById('habitChart').getContext('2d');
+  if(chartInst) chartInst.destroy();
+  chartInst = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        label:'Fokus (Menit)',
+        data,
+        backgroundColor: data.map(v=>v>0?'rgba(140,100,255,0.7)':'rgba(255,255,255,0.05)'),
+        borderColor:     data.map(v=>v>0?'#8c64ff':'transparent'),
+        borderWidth:1,
+        borderRadius:5,
+        hoverBackgroundColor:'rgba(245,200,66,0.8)',
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor:'rgba(13,13,26,0.95)',
+        titleColor:'#f5c842',bodyColor:'#e8e4ff',
+        borderColor:'rgba(140,100,255,0.3)',borderWidth:1,
+        padding:10,cornerRadius:10,
+      }},
+      scales:{
+        x:{ticks:{color:'#7a76a8',maxTicksLimit:10,font:{family:'Nunito'}},grid:{color:'rgba(255,255,255,0.03)'}},
+        y:{ticks:{color:'#7a76a8',font:{family:'Nunito'}},grid:{color:'rgba(255,255,255,0.05)'},beginAtZero:true}
+      }
+    }
+  });
+}
+
+// ── RIWAYAT ─────────────────────────────────────
+window.renderRiwayat = () => {
+  const tbody  = document.getElementById('riwayatBody');
+  const cari   = document.getElementById('filterNama').value.toLowerCase();
+  const sort   = document.getElementById('filterSort').value;
+  const logs   = window.logsGlobal;
+
+  const setahun = Date.now()-(365*24*3600*1000);
+  let arr = Object.values(logs).filter(l=>l.timestamp>=setahun);
+
+  if(cari) arr = arr.filter(l=>(l.habitNama||'').toLowerCase().includes(cari));
+
+  if(sort==='terbaru')  arr.sort((a,b)=>b.timestamp-a.timestamp);
+  if(sort==='terlama')  arr.sort((a,b)=>a.timestamp-b.timestamp);
+  if(sort==='durasi')   arr.sort((a,b)=>b.durasiMenit-a.durasiMenit);
+  if(sort==='exp')      arr.sort((a,b)=>(b.durasiMenit*10)-(a.durasiMenit*10));
+
+  if(!arr.length){
+    tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">Belum ada riwayat.</td></tr>`;
+    document.getElementById('paginasiRiwayat').innerHTML='';
+    return;
+  }
+
+  const total = Math.ceil(arr.length/perHal);
+  if(halRiwayat>total) halRiwayat=total;
+  const page = arr.slice((halRiwayat-1)*perHal, halRiwayat*perHal);
+
+  tbody.innerHTML = page.map(l=>{
+    const d   = new Date(l.timestamp);
+    const tgl = d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+    const jam = d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+    const exp = l.durasiMenit*10;
+    return `<tr>
+      <td style="color:var(--muted);white-space:nowrap">${tgl} ${jam}</td>
+      <td style="font-weight:700">${l.habitNama||'Misi Dihapus'}</td>
+      <td>${l.durasiMenit} mnt</td>
+      <td class="exp-gain">+${exp} XP</td>
+    </tr>`;
+  }).join('');
+
+  renderPaginasi(total);
+};
+
+function renderPaginasi(total){
+  const k = document.getElementById('paginasiRiwayat');
+  if(total<=1){k.innerHTML='';return;}
+  let html=`<button class="page-btn" onclick="gHal(${halRiwayat-1})" ${halRiwayat===1?'disabled':''}>‹</button>`;
+  for(let i=1;i<=total;i++){
+    if(i===1||i===total||(i>=halRiwayat-2&&i<=halRiwayat+2)){
+      html+=`<button class="page-btn ${i===halRiwayat?'aktif':''}" onclick="gHal(${i})">${i}</button>`;
+    } else if(i===halRiwayat-3||i===halRiwayat+3){
+      html+=`<span style="color:var(--muted);align-self:center">…</span>`;
+    }
+  }
+  html+=`<button class="page-btn" onclick="gHal(${halRiwayat+1})" ${halRiwayat===total?'disabled':''}>›</button>`;
+  k.innerHTML=html;
+}
+
+window.gHal = n => { halRiwayat=n; renderRiwayat(); document.getElementById('panelRiwayat').scrollIntoView({behavior:'smooth'}); };
+
+// ── EXPORT CSV (Blob) ───────────────────────────
+window.exportCSV = () => {
+  const logs = window.logsGlobal;
+  if(!Object.keys(logs).length) return toast('Belum ada data untuk diexport.','error');
+
+  const setahun = Date.now()-(365*24*3600*1000);
+  const rows = [['Tanggal','Jam','Nama Misi','Durasi (Menit)','EXP']];
+  Object.values(logs)
+    .filter(l=>l.timestamp>=setahun)
+    .sort((a,b)=>b.timestamp-a.timestamp)
+    .forEach(l=>{
+      const d = new Date(l.timestamp);
+      rows.push([
+        d.toLocaleDateString('id-ID'),
+        d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),
+        `"${(l.habitNama||'').replace(/"/g,'""')}"`,
+        l.durasiMenit,
+        l.durasiMenit*10
+      ]);
+    });
+
+  const csv  = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'),{href:url,download:'RiwayatFokus_LifeOS.csv'});
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('File CSV berhasil diexport!','success');
+};
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+</script>
 </body>
 </html>
