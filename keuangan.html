@@ -3,133 +3,867 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LifeOS Finance Tracker - Update</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#f5b041">
-    
+    <title>LifeOS · Finance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
-        .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .flex-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 15px; }
-        input, select { flex: 1; padding: 12px; border: 1px solid #ccd0d5; border-radius: 8px; font-family: inherit; }
-        button { background-color: #f5b041; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:hover { background-color: #d68910; }
-        
-        .grid-saldo { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
-        .kartu-saldo { background: linear-gradient(135deg, #fdfbf1, #fff); border-top: 4px solid #f5b041; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
-        .angka-saldo { font-size: 28px; font-weight: bold; color: #333; margin: 10px 0; }
-        .btn-edit-saldo { background: #e4e6eb; color: #333; padding: 6px 12px; font-size: 12px; margin-top: 10px; }
-        
-        .nav-links { margin-top: 15px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-        .nav-links a { padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px; transition: 0.2s; }
-        
-        .list-transaksi { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-        .item-transaksi { display: flex; justify-content: space-between; align-items: center; background: #fafafa; padding: 15px; border-radius: 8px; border-left: 4px solid #ccc; }
-        .item-transaksi.pengeluaran { border-left-color: #e74c3c; }
-        .item-transaksi.pemasukan { border-left-color: #2ecc71; }
-        .badge-kategori { font-size: 11px; padding: 3px 8px; border-radius: 4px; background: #e4e6eb; }
+        :root {
+            --bg: #0e0f14;
+            --surface: #16181f;
+            --surface2: #1e2029;
+            --border: #2a2d3a;
+            --gold: #c9a84c;
+            --gold-dim: #a8872f;
+            --gold-glow: rgba(201,168,76,0.15);
+            --red: #e05c5c;
+            --green: #4caf81;
+            --blue: #5b8af0;
+            --text: #e8e9ee;
+            --text-dim: #7a7f96;
+            --text-muted: #454960;
+            --radius: 14px;
+            --radius-sm: 8px;
+        }
 
-        .tag-kategori { background: #fdf2e9; color: #d35400; padding: 4px 10px; border-radius: 6px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; margin: 5px;}
-        .hapus-btn { cursor: pointer; color: red; font-weight: bold; }
-        .btn-export { background-color: #2ecc71; padding: 8px 16px; font-size: 13px; }
-        .btn-export:hover { background-color: #27ae60; }
-        
-        /* Tambahan untuk Filter Bulan */
-        .header-histori { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #eee; padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;}
-        .input-bulan { padding: 8px 15px; border-radius: 8px; border: 1px solid #ccd0d5; font-weight: bold; color: #333; font-family: inherit; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        /* Background texture */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 20% 10%, rgba(201,168,76,0.06) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 80%, rgba(91,138,240,0.04) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .app-wrapper {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── HEADER ── */
+        .app-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+            animation: fadeDown 0.6s ease both;
+        }
+
+        .logo-badge {
+            font-family: 'Playfair Display', serif;
+            font-size: 11px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--gold);
+            border: 1px solid var(--gold-dim);
+            padding: 5px 14px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+            background: var(--gold-glow);
+        }
+
+        .app-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 40px;
+            color: var(--text);
+            letter-spacing: -1px;
+        }
+
+        .app-header p {
+            color: var(--text-dim);
+            font-size: 14px;
+            margin-top: 6px;
+            font-weight: 300;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .nav-links a {
+            padding: 8px 18px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-dim);
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--text); border-color: var(--gold-dim); }
+        .nav-links a.active { background: var(--gold-glow); color: var(--gold); border-color: var(--gold-dim); }
+
+        /* ── DIVIDER ── */
+        .gold-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+            margin: 40px 0;
+            opacity: 0.5;
+        }
+
+        /* ── SALDO GRID ── */
+        .saldo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 28px;
+            animation: fadeUp 0.5s ease 0.1s both;
+        }
+
+        .kartu-saldo {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .kartu-saldo:hover { transform: translateY(-2px); border-color: var(--gold-dim); }
+
+        .kartu-saldo::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+        }
+
+        .kartu-saldo.total::before {
+            background: linear-gradient(90deg, var(--green), #7fffbe);
+        }
+
+        .kartu-label {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+        }
+
+        .kartu-nilai {
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+            color: var(--text);
+            line-height: 1.1;
+        }
+
+        .kartu-nilai.total-val { color: var(--green); }
+
+        .btn-edit-saldo {
+            margin-top: 12px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            font-size: 11px;
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+        }
+
+        .btn-edit-saldo:hover { color: var(--gold); border-color: var(--gold-dim); background: var(--gold-glow); }
+
+        /* ── SUMMARY ROW ── */
+        .summary-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 28px;
+            animation: fadeUp 0.5s ease 0.15s both;
+        }
+
+        .summary-chip {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .summary-chip .icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .summary-chip.in .icon { background: rgba(76,175,129,0.15); }
+        .summary-chip.out .icon { background: rgba(224,92,92,0.15); }
+        .summary-chip.net .icon { background: rgba(91,138,240,0.15); }
+
+        .summary-chip .info small {
+            display: block;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 3px;
+        }
+
+        .summary-chip .info strong {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .summary-chip.in .info strong { color: var(--green); }
+        .summary-chip.out .info strong { color: var(--red); }
+        .summary-chip.net .info strong { color: var(--blue); }
+
+        /* ── PANEL ── */
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 20px;
+            animation: fadeUp 0.5s ease 0.2s both;
+        }
+
+        .panel-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            color: var(--text);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title span {
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--gold);
+            background: var(--gold-glow);
+            border: 1px solid var(--gold-dim);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        /* ── FORM ── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full { grid-column: 1 / -1; }
+
+        .form-group label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .form-group input,
+        .form-group select {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            padding: 11px 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .form-group input::placeholder { color: var(--text-muted); }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--gold-dim);
+            box-shadow: 0 0 0 3px var(--gold-glow);
+        }
+
+        select option { background: var(--surface2); color: var(--text); }
+
+        /* Tab style for jenis */
+        .jenis-tabs {
+            display: flex;
+            gap: 8px;
+            grid-column: 1 / -1;
+        }
+
+        .jenis-tab {
+            flex: 1;
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--text-dim);
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .jenis-tab.active-pengeluaran { background: rgba(224,92,92,0.15); border-color: var(--red); color: var(--red); }
+        .jenis-tab.active-pemasukan { background: rgba(76,175,129,0.15); border-color: var(--green); color: var(--green); }
+
+        /* ── BUTTONS ── */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+            color: #0e0f14;
+            border: none;
+            padding: 12px 28px;
+            border-radius: var(--radius-sm);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,168,76,0.25); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .btn-secondary {
+            background: var(--surface2);
+            color: var(--text-dim);
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover { color: var(--text); border-color: var(--gold-dim); background: var(--gold-glow); }
+
+        .btn-green {
+            background: rgba(76,175,129,0.2);
+            color: var(--green);
+            border: 1px solid var(--green);
+            padding: 9px 18px;
+            border-radius: var(--radius-sm);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-green:hover { background: rgba(76,175,129,0.3); }
+
+        .btn-transfer {
+            background: rgba(91,138,240,0.15);
+            color: var(--blue);
+            border: 1px solid rgba(91,138,240,0.4);
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-transfer:hover { background: rgba(91,138,240,0.25); }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        /* ── HISTORI ── */
+        .histori-toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 160px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 9px 14px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-box::placeholder { color: var(--text-muted); }
+        .search-box:focus { border-color: var(--gold-dim); }
+
+        .month-input {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 9px 12px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .month-input:focus { border-color: var(--gold-dim); }
+
+        /* Chart wrapper */
+        .chart-wrapper {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .chart-canvas-wrap { flex: 1; min-width: 180px; max-width: 220px; }
+        .chart-legend { flex: 1; min-width: 160px; }
+        .chart-legend-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); }
+        .chart-legend-item:last-child { border-bottom: none; }
+        .chart-legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; margin-right: 8px; }
+        .chart-legend-label { font-size: 12px; color: var(--text-dim); display: flex; align-items: center; flex: 1; }
+        .chart-legend-val { font-size: 12px; font-weight: 600; color: var(--text); }
+        .chart-empty { text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px; width: 100%; }
+
+        /* ── TRANSAKSI ITEM ── */
+        .list-transaksi { display: flex; flex-direction: column; gap: 8px; }
+
+        .item-transaksi {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            border-left: 3px solid var(--border);
+            transition: all 0.2s;
+            gap: 12px;
+        }
+
+        .item-transaksi:hover { border-color: var(--gold-dim); transform: translateX(2px); }
+        .item-transaksi.pengeluaran { border-left-color: var(--red); }
+        .item-transaksi.pemasukan { border-left-color: var(--green); }
+        .item-transaksi.transfer { border-left-color: var(--blue); }
+
+        .item-info { flex: 1; }
+        .item-nama { font-weight: 600; font-size: 14px; color: var(--text); }
+        .item-meta { display: flex; gap: 8px; align-items: center; margin-top: 4px; flex-wrap: wrap; }
+        .badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.06); color: var(--text-dim); font-weight: 500; }
+        .badge.sumber { color: var(--gold); background: var(--gold-glow); }
+        .item-date { font-size: 11px; color: var(--text-muted); }
+
+        .item-amount { text-align: right; flex-shrink: 0; }
+        .amount-val { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; }
+        .amount-val.minus { color: var(--red); }
+        .amount-val.plus { color: var(--green); }
+        .amount-val.transfer { color: var(--blue); }
+        .item-actions { display: flex; gap: 8px; margin-top: 4px; justify-content: flex-end; }
+        .hapus-btn { font-size: 11px; color: var(--text-muted); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; transition: color 0.2s; padding: 0; }
+        .hapus-btn:hover { color: var(--red); }
+        .edit-btn { font-size: 11px; color: var(--text-muted); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; transition: color 0.2s; padding: 0; }
+        .edit-btn:hover { color: var(--gold); }
+
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+        .empty-state .empty-icon { font-size: 32px; margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; }
+
+        /* ── KATEGORI ── */
+        .kat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px; }
+        .kat-section h4 { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+        .kat-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag-kat {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tag-kat:hover { border-color: var(--gold-dim); color: var(--text); }
+        .tag-kat .hapus-kat { color: var(--red); cursor: pointer; font-weight: 700; font-size: 12px; line-height: 1; }
+        .tag-kat .hapus-kat:hover { opacity: 0.7; }
+
+        /* ── TOAST ── */
+        #toast-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+        }
+
+        .toast {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 18px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            animation: slideIn 0.3s ease;
+            max-width: 300px;
+        }
+
+        .toast.success { border-left: 3px solid var(--green); }
+        .toast.error { border-left: 3px solid var(--red); }
+        .toast.info { border-left: 3px solid var(--blue); }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            width: 90%;
+            max-width: 420px;
+            animation: scaleIn 0.25s ease;
+        }
+
+        .modal h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+        /* ── LOADING ── */
+        .loading-indicator {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateX(20px); } }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 640px) {
+            .saldo-grid { grid-template-columns: 1fr 1fr; }
+            .kartu-saldo.total { grid-column: 1 / -1; }
+            .summary-row { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .kat-grid { grid-template-columns: 1fr; }
+            .chart-wrapper { flex-direction: column; }
+            .chart-canvas-wrap { max-width: 100%; }
+        }
     </style>
 </head>
 <body>
+    <div id="toast-container"></div>
 
-    <div class="header" style="text-align: center; margin-bottom: 30px;">
-        <h1>Finance Dashboard</h1>
-        <p>Catat Arus Kas & Pantau Saldo Secara Realtime</p>
-        
-        <div class="nav-links">
-            <a href="index.html" style="background: #e4e6eb; color: #050505;">🎥 Rak Video</a>
-            <a href="web.html" style="background: #e4e6eb; color: #050505;">🌐 Rak Website</a>
-            <a href="habit.html" style="background: #e4e6eb; color: #050505;">⏳ Deep Work</a>
-             <a href="idol.html" style="background: #ec407a; color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px;">🌸 Koleksi Idol</a>
-            <a href="keuangan.html" style="background: #f5b041; color: white;">💰 Keuangan</a>
-        </div>
-    </div>
-
-    <div class="grid-saldo">
-        <div class="kartu-saldo">
-            <h3 style="margin: 0; color: #777; font-size: 16px;">💳 Saldo Bank</h3>
-            <div class="angka-saldo" id="teksSaldoBank">Rp 0</div>
-            <button class="btn-edit-saldo" onclick="editSaldo('bank')">✏️ Sesuaikan Manual</button>
-        </div>
-        <div class="kartu-saldo">
-            <h3 style="margin: 0; color: #777; font-size: 16px;">👛 Saldo Dompet</h3>
-            <div class="angka-saldo" id="teksSaldoDompet">Rp 0</div>
-            <button class="btn-edit-saldo" onclick="editSaldo('dompet')">✏️ Sesuaikan Manual</button>
-        </div>
-    </div>
-
-    <div class="panel">
-        <h2>📝 Catat Transaksi Baru</h2>
-        <div class="flex-group">
-            <select id="inputJenis" onchange="updateDropdownKategori()">
-                <option value="pengeluaran">📉 Pengeluaran</option>
-                <option value="pemasukan">📈 Pemasukan</option>
-            </select>
-            <select id="inputSumber">
-                <option value="bank">💳 Bank</option>
-                <option value="dompet">👛 Dompet</option>
-            </select>
-        </div>
-        <div class="flex-group">
-            <input type="text" id="inputNama" placeholder="Contoh: Print Skripsi / Beli Kopi...">
-            <input type="number" id="inputHarga" placeholder="Nominal (Rp)">
-        </div>
-        <div class="flex-group">
-            <select id="inputKategori"></select>
-            <button onclick="simpanTransaksi()">Catat!</button>
-        </div>
-    </div>
-
-    <div class="panel">
-        <div class="header-histori">
-            <h2 style="margin: 0;">🗓️ Histori Transaksi</h2>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <label for="filterBulan" style="font-size: 14px; font-weight: bold; color: #555;">Pilih Bulan:</label>
-                <input type="month" id="filterBulan" class="input-bulan" onchange="gantiBulanView()">
-                <button onclick="exportCSV()" class="btn-export">📥 Export CSV</button>
+    <!-- Modal Edit Saldo -->
+    <div class="modal-overlay" id="modalSaldo">
+        <div class="modal">
+            <h3>✏️ Sesuaikan Saldo</h3>
+            <div class="form-group">
+                <label id="modalSaldoLabel">Saldo Bank</label>
+                <input type="number" id="modalSaldoInput" placeholder="Masukkan nominal">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="simpanEditSaldo()">Simpan</button>
+                <button class="btn-secondary" onclick="tutupModal('modalSaldo')">Batal</button>
             </div>
         </div>
-        
-        <div style="flex: 1; min-width: 300px; margin-bottom: 20px;">
-            <canvas id="grafikKategori" style="max-height: 250px;"></canvas>
-        </div>
-        
-        <div class="list-transaksi" id="rakTransaksi"></div>
     </div>
 
-    <div class="panel">
-        <h2>⚙️ Kelola Kategori</h2>
-        <div class="flex-group">
-            <select id="jenisKategoriBaru">
-                <option value="pengeluaran">Kategori Pengeluaran</option>
-                <option value="pemasukan">Kategori Pemasukan</option>
-            </select>
-            <input type="text" id="inputNamaKategori" placeholder="Contoh: Bensin, Uang Jajan...">
-            <button onclick="tambahKategori()">+ Tambah</button>
+    <!-- Modal Transfer -->
+    <div class="modal-overlay" id="modalTransfer">
+        <div class="modal">
+            <h3>🔄 Transfer Antar Rekening</h3>
+            <div class="form-group" style="margin-bottom:12px">
+                <label>Dari</label>
+                <select id="transferDari">
+                    <option value="bank">💳 Bank</option>
+                    <option value="dompet">👛 Dompet</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
+                <label>Ke</label>
+                <select id="transferKe">
+                    <option value="dompet">👛 Dompet</option>
+                    <option value="bank">💳 Bank</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Nominal</label>
+                <input type="number" id="transferNominal" placeholder="Rp">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="prosesTransfer()">Transfer</button>
+                <button class="btn-secondary" onclick="tutupModal('modalTransfer')">Batal</button>
+            </div>
         </div>
-        <div style="margin-top: 15px;">
-            <h4>Kategori Pengeluaran:</h4>
-            <div id="listKatPengeluaran"></div>
-            <h4 style="margin-top: 10px;">Kategori Pemasukan:</h4>
-            <div id="listKatPemasukan"></div>
+    </div>
+
+    <!-- Modal Edit Transaksi -->
+    <div class="modal-overlay" id="modalEdit">
+        <div class="modal">
+            <h3>✏️ Edit Transaksi</h3>
+            <input type="hidden" id="editId">
+            <input type="hidden" id="editJenis">
+            <input type="hidden" id="editSumber">
+            <input type="hidden" id="editHargaLama">
+            <div class="form-group" style="margin-bottom:12px">
+                <label>Nama</label>
+                <input type="text" id="editNama">
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
+                <label>Nominal</label>
+                <input type="number" id="editHarga">
+            </div>
+            <div class="form-group" style="margin-bottom:12px">
+                <label>Tanggal</label>
+                <input type="date" id="editTanggal">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="simpanEdit()">Simpan</button>
+                <button class="btn-secondary" onclick="tutupModal('modalEdit')">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-wrapper">
+        <!-- Header -->
+        <div class="app-header">
+            <div class="logo-badge">LifeOS Finance</div>
+            <h1>Finance Dashboard</h1>
+            <p>Catat arus kas & pantau saldo secara realtime</p>
+            <nav class="nav-links">
+                <a href="index.html">🎥 Rak Video</a>
+                <a href="web.html">🌐 Rak Website</a>
+                <a href="habit.html">⏳ Deep Work</a>
+                <a href="keuangan.html" class="active">💰 Keuangan</a>
+            </nav>
+        </div>
+
+        <!-- Saldo Cards -->
+        <div class="saldo-grid">
+            <div class="kartu-saldo">
+                <div class="kartu-label">💳 Saldo Bank</div>
+                <div class="kartu-nilai" id="teksSaldoBank">Rp 0</div>
+                <button class="btn-edit-saldo" onclick="bukaModalSaldo('bank')">✏️ Sesuaikan Manual</button>
+            </div>
+            <div class="kartu-saldo">
+                <div class="kartu-label">👛 Saldo Dompet</div>
+                <div class="kartu-nilai" id="teksSaldoDompet">Rp 0</div>
+                <button class="btn-edit-saldo" onclick="bukaModalSaldo('dompet')">✏️ Sesuaikan Manual</button>
+            </div>
+            <div class="kartu-saldo total">
+                <div class="kartu-label">📊 Total Aset</div>
+                <div class="kartu-nilai total-val" id="teksSaldoTotal">Rp 0</div>
+                <button class="btn-transfer" style="margin-top:12px; font-family:'DM Sans',sans-serif;" onclick="bukaModalTransfer()">🔄 Transfer</button>
+            </div>
+        </div>
+
+        <!-- Summary Bulanan -->
+        <div class="summary-row" id="summaryRow">
+            <div class="summary-chip in">
+                <div class="icon">📈</div>
+                <div class="info"><small>Pemasukan Bulan Ini</small><strong id="sumPemasukan">Rp 0</strong></div>
+            </div>
+            <div class="summary-chip out">
+                <div class="icon">📉</div>
+                <div class="info"><small>Pengeluaran Bulan Ini</small><strong id="sumPengeluaran">Rp 0</strong></div>
+            </div>
+            <div class="summary-chip net">
+                <div class="icon">💡</div>
+                <div class="info"><small>Selisih / Net</small><strong id="sumNet">Rp 0</strong></div>
+            </div>
+        </div>
+
+        <!-- Form Transaksi -->
+        <div class="panel">
+            <div class="panel-title">📝 Catat Transaksi <span>Baru</span></div>
+            <div class="form-grid">
+                <!-- Jenis Tabs -->
+                <div class="jenis-tabs">
+                    <button class="jenis-tab active-pengeluaran" id="tabPengeluaran" onclick="setJenis('pengeluaran')">📉 Pengeluaran</button>
+                    <button class="jenis-tab" id="tabPemasukan" onclick="setJenis('pemasukan')">📈 Pemasukan</button>
+                </div>
+                <input type="hidden" id="inputJenis" value="pengeluaran">
+
+                <div class="form-group">
+                    <label>Rekening</label>
+                    <select id="inputSumber">
+                        <option value="bank">💳 Bank</option>
+                        <option value="dompet">👛 Dompet</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <select id="inputKategori"></select>
+                </div>
+                <div class="form-group">
+                    <label>Nama Transaksi</label>
+                    <input type="text" id="inputNama" placeholder="Contoh: Beli kopi, Gaji...">
+                </div>
+                <div class="form-group">
+                    <label>Nominal (Rp)</label>
+                    <input type="number" id="inputHarga" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Tanggal</label>
+                    <input type="date" id="inputTanggal">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn-primary" id="btnCatat" onclick="simpanTransaksi()">✦ Catat Transaksi</button>
+            </div>
+        </div>
+
+        <!-- Histori -->
+        <div class="panel">
+            <div class="panel-title">🗓️ Histori Transaksi</div>
+            <div class="histori-toolbar">
+                <input type="text" class="search-box" id="searchBox" placeholder="🔍  Cari transaksi..." oninput="renderHistori()">
+                <input type="month" id="filterBulan" class="month-input" onchange="gantiBulanView()">
+                <button class="btn-green" onclick="exportCSV()">📥 Export CSV</button>
+            </div>
+
+            <!-- Summary chips update based on view month -->
+            <div class="chart-wrapper" id="chartWrapper">
+                <div class="chart-empty" id="chartEmpty">Belum ada data pengeluaran</div>
+                <div class="chart-canvas-wrap" id="chartCanvasWrap" style="display:none">
+                    <canvas id="grafikKategori"></canvas>
+                </div>
+                <div class="chart-legend" id="chartLegend" style="display:none"></div>
+            </div>
+
+            <div class="list-transaksi" id="rakTransaksi">
+                <div class="loading-indicator"><div class="spinner"></div>Memuat transaksi...</div>
+            </div>
+        </div>
+
+        <!-- Kategori -->
+        <div class="panel">
+            <div class="panel-title">⚙️ Kelola Kategori</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Jenis</label>
+                    <select id="jenisKategoriBaru">
+                        <option value="pengeluaran">Pengeluaran</option>
+                        <option value="pemasukan">Pemasukan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nama Kategori Baru</label>
+                    <input type="text" id="inputNamaKategori" placeholder="Contoh: Bensin, Uang Jajan...">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn-primary" onclick="tambahKategori()">+ Tambah Kategori</button>
+            </div>
+            <div class="kat-grid">
+                <div class="kat-section">
+                    <h4>📉 Pengeluaran</h4>
+                    <div class="kat-tags" id="listKatPengeluaran"></div>
+                </div>
+                <div class="kat-section">
+                    <h4>📈 Pemasukan</h4>
+                    <div class="kat-tags" id="listKatPemasukan"></div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        // Menambahkan fungsi 'off' untuk mencegah penumpukan data saat ganti bulan
         import { getDatabase, ref, push, onValue, set, remove, update, get, off } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
@@ -149,214 +883,375 @@
         };
         let transaksiTampil = {};
         let chartInstance = null;
+        let activeListenerRef = null;
+        let currentEditSaldoJenis = null;
 
-        // Mendapatkan bulan ini (YYYY-MM)
         const d = new Date();
-        const bulanIni = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
-        
-        // Variabel untuk menyimpan bulan apa yang sedang dilihat di layar
-        let bulanAktif = bulanIni; 
-        
-        const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+        const bulanIni = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        let bulanAktif = bulanIni;
 
-        // Set default value di kalender HTML
+        const formatRupiah = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+
+        // Set default values
         document.getElementById('filterBulan').value = bulanAktif;
+        document.getElementById('inputTanggal').value = new Date().toISOString().split('T')[0];
 
-        // --- Firebase Listeners ---
-        onValue(ref(db, 'finance/saldo'), (snapshot) => {
-            if(snapshot.exists()) saldo = snapshot.val();
-            document.getElementById('teksSaldoBank').innerText = formatRupiah(saldo.bank);
-            document.getElementById('teksSaldoDompet').innerText = formatRupiah(saldo.dompet);
+        // ── TOAST ──
+        function toast(msg, type = 'success') {
+            const c = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = `toast ${type}`;
+            const icons = { success: '✓', error: '✕', info: 'ℹ' };
+            t.innerHTML = `<span>${icons[type]}</span> ${msg}`;
+            c.appendChild(t);
+            setTimeout(() => { t.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => t.remove(), 300); }, 3000);
+        }
+
+        // ── MODAL ──
+        window.tutupModal = (id) => document.getElementById(id).classList.remove('open');
+
+        window.bukaModalSaldo = (jenis) => {
+            currentEditSaldoJenis = jenis;
+            document.getElementById('modalSaldoLabel').textContent = jenis === 'bank' ? '💳 Saldo Bank' : '👛 Saldo Dompet';
+            document.getElementById('modalSaldoInput').value = saldo[jenis];
+            document.getElementById('modalSaldo').classList.add('open');
+        };
+
+        window.simpanEditSaldo = () => {
+            const val = parseInt(document.getElementById('modalSaldoInput').value);
+            if (isNaN(val)) return toast('Nominal tidak valid', 'error');
+            saldo[currentEditSaldoJenis] = val;
+            update(ref(db, 'finance/saldo'), saldo);
+            tutupModal('modalSaldo');
+            toast(`Saldo ${currentEditSaldoJenis} diperbarui!`);
+        };
+
+        window.bukaModalTransfer = () => document.getElementById('modalTransfer').classList.add('open');
+
+        window.prosesTransfer = () => {
+            const dari = document.getElementById('transferDari').value;
+            const ke = document.getElementById('transferKe').value;
+            const nominal = parseInt(document.getElementById('transferNominal').value);
+            if (isNaN(nominal) || nominal <= 0) return toast('Nominal tidak valid', 'error');
+            if (dari === ke) return toast('Rekening asal & tujuan sama', 'error');
+            if (saldo[dari] < nominal) return toast(`Saldo ${dari} tidak cukup!`, 'error');
+
+            saldo[dari] -= nominal;
+            saldo[ke] += nominal;
+            update(ref(db, 'finance/saldo'), saldo);
+
+            // Catat sebagai transaksi transfer
+            const today = new Date().toISOString().split('T')[0];
+            push(ref(db, `finance/transaksi/${bulanIni}`), {
+                jenis: 'transfer', sumber: dari, tujuan: ke, nama: `Transfer ${dari} → ${ke}`,
+                harga: nominal, kategori: 'Transfer', tanggal: today, timestamp: Date.now()
+            });
+
+            tutupModal('modalTransfer');
+            document.getElementById('transferNominal').value = '';
+            toast(`Transfer ${formatRupiah(nominal)} berhasil!`);
+        };
+
+        // ── FORM JENIS TOGGLE ──
+        window.setJenis = (jenis) => {
+            document.getElementById('inputJenis').value = jenis;
+            const tabP = document.getElementById('tabPengeluaran');
+            const tabM = document.getElementById('tabPemasukan');
+            tabP.className = 'jenis-tab' + (jenis === 'pengeluaran' ? ' active-pengeluaran' : '');
+            tabM.className = 'jenis-tab' + (jenis === 'pemasukan' ? ' active-pemasukan' : '');
+            updateDropdownKategori();
+        };
+
+        // ── FIREBASE LISTENERS ──
+        onValue(ref(db, 'finance/saldo'), (snap) => {
+            if (snap.exists()) saldo = snap.val();
+            renderSaldo();
         });
 
-        onValue(ref(db, 'finance/kategori'), (snapshot) => {
-            if(snapshot.exists()) kategori = snapshot.val();
+        onValue(ref(db, 'finance/kategori'), (snap) => {
+            if (snap.exists()) kategori = snap.val();
             renderKategoriUI();
             updateDropdownKategori();
         });
 
-        // --- FUNGSI BARU: Memuat Data Berdasarkan Pilihan Bulan ---
-        function muatDataHistori(bulanPilihan) {
-            // Putuskan koneksi dari bulan sebelumnya agar data tidak bercampur
-            off(ref(db, `finance/transaksi`));
-            
-            // Sambungkan ke laci bulan yang baru dipilih
-            onValue(ref(db, `finance/transaksi/${bulanPilihan}`), (snapshot) => {
-                transaksiTampil = snapshot.val() || {};
+        function renderSaldo() {
+            document.getElementById('teksSaldoBank').textContent = formatRupiah(saldo.bank || 0);
+            document.getElementById('teksSaldoDompet').textContent = formatRupiah(saldo.dompet || 0);
+            document.getElementById('teksSaldoTotal').textContent = formatRupiah((saldo.bank || 0) + (saldo.dompet || 0));
+        }
+
+        // ── LOAD HISTORI ──
+        function muatDataHistori(bulan) {
+            if (activeListenerRef) off(activeListenerRef);
+            document.getElementById('rakTransaksi').innerHTML = '<div class="loading-indicator"><div class="spinner"></div>Memuat transaksi...</div>';
+
+            activeListenerRef = ref(db, `finance/transaksi/${bulan}`);
+            onValue(activeListenerRef, (snap) => {
+                transaksiTampil = snap.val() || {};
                 renderHistori();
                 renderChart();
+                renderSummary();
             });
         }
-        
-        // Panggil fungsi pertama kali dengan bulan ini
+
         muatDataHistori(bulanAktif);
 
-        // Fungsi saat kamu mengganti bulan di kalender UI
         window.gantiBulanView = () => {
             bulanAktif = document.getElementById('filterBulan').value;
             muatDataHistori(bulanAktif);
         };
 
-        // --- Core Functions ---
-        window.editSaldo = (jenis) => {
-            let nominalBaru = prompt(`Masukkan jumlah saldo aktual ${jenis}:`, saldo[jenis]);
-            if(nominalBaru && !isNaN(nominalBaru)) {
-                saldo[jenis] = parseInt(nominalBaru);
-                update(ref(db, 'finance/saldo'), saldo);
-            }
-        };
-
-        window.simpanTransaksi = () => {
+        // ── SIMPAN TRANSAKSI ── (selalu ke bulanIni, bukan bulanAktif)
+        window.simpanTransaksi = async () => {
             const jenis = document.getElementById('inputJenis').value;
             const sumber = document.getElementById('inputSumber').value;
-            const nama = document.getElementById('inputNama').value;
+            const nama = document.getElementById('inputNama').value.trim();
             const harga = parseInt(document.getElementById('inputHarga').value);
             const kat = document.getElementById('inputKategori').value;
+            const tanggal = document.getElementById('inputTanggal').value || new Date().toISOString().split('T')[0];
 
-            if(!nama || isNaN(harga)) return alert("Data tidak lengkap!");
+            if (!nama) return toast('Nama transaksi wajib diisi', 'error');
+            if (isNaN(harga) || harga <= 0) return toast('Nominal tidak valid', 'error');
 
-            if(jenis === 'pengeluaran') saldo[sumber] -= harga;
+            if (jenis === 'pengeluaran' && saldo[sumber] < harga) {
+                if (!confirm(`Saldo ${sumber} tidak cukup (${formatRupiah(saldo[sumber])}). Lanjutkan quand même?`)) return;
+            }
+
+            const btn = document.getElementById('btnCatat');
+            btn.disabled = true;
+            btn.textContent = 'Menyimpan...';
+
+            if (jenis === 'pengeluaran') saldo[sumber] -= harga;
             else saldo[sumber] += harga;
 
-            // Transaksi selalu disimpan ke folder bulan yang SEDANG DIBUKA di layar
-            push(ref(db, `finance/transaksi/${bulanAktif}`), {
-                jenis, sumber, nama, harga, kategori: kat, 
-                tanggal: new Date().toISOString().split('T')[0],
-                timestamp: Date.now()
-            });
+            const targetBulan = tanggal.substring(0, 7); // Simpan ke bulan sesuai tanggal transaksi
+            await push(ref(db, `finance/transaksi/${targetBulan}`), { jenis, sumber, nama, harga, kategori: kat, tanggal, timestamp: Date.now() });
+            await update(ref(db, 'finance/saldo'), saldo);
 
+            document.getElementById('inputNama').value = '';
+            document.getElementById('inputHarga').value = '';
+            btn.disabled = false;
+            btn.textContent = '✦ Catat Transaksi';
+            toast(`${jenis === 'pengeluaran' ? '📉' : '📈'} ${nama} — ${formatRupiah(harga)} dicatat!`);
+        };
+
+        // ── HAPUS & EDIT ──
+        window.hapusTransaksi = (id, jenis, sumber, harga) => {
+            if (!confirm('Hapus transaksi ini?')) return;
+            if (jenis === 'pengeluaran') saldo[sumber] += harga;
+            else if (jenis === 'pemasukan') saldo[sumber] -= harga;
             update(ref(db, 'finance/saldo'), saldo);
-            document.getElementById('inputNama').value = "";
-            document.getElementById('inputHarga').value = "";
+            remove(ref(db, `finance/transaksi/${bulanAktif}/${id}`));
+            toast('Transaksi dihapus', 'info');
         };
 
-        // --- Export & Auto-Reminder Logic ---
+        window.bukaEdit = (id, t) => {
+            document.getElementById('editId').value = id;
+            document.getElementById('editJenis').value = t.jenis;
+            document.getElementById('editSumber').value = t.sumber;
+            document.getElementById('editHargaLama').value = t.harga;
+            document.getElementById('editNama').value = t.nama;
+            document.getElementById('editHarga').value = t.harga;
+            document.getElementById('editTanggal').value = t.tanggal;
+            document.getElementById('modalEdit').classList.add('open');
+        };
+
+        window.simpanEdit = async () => {
+            const id = document.getElementById('editId').value;
+            const jenis = document.getElementById('editJenis').value;
+            const sumber = document.getElementById('editSumber').value;
+            const hargaLama = parseInt(document.getElementById('editHargaLama').value);
+            const hargaBaru = parseInt(document.getElementById('editHarga').value);
+            const nama = document.getElementById('editNama').value.trim();
+            const tanggal = document.getElementById('editTanggal').value;
+
+            if (!nama || isNaN(hargaBaru)) return toast('Data tidak valid', 'error');
+
+            const selisih = hargaBaru - hargaLama;
+            if (jenis === 'pengeluaran') saldo[sumber] -= selisih;
+            else if (jenis === 'pemasukan') saldo[sumber] += selisih;
+
+            await update(ref(db, `finance/transaksi/${bulanAktif}/${id}`), { nama, harga: hargaBaru, tanggal });
+            await update(ref(db, 'finance/saldo'), saldo);
+
+            tutupModal('modalEdit');
+            toast('Transaksi diperbarui!');
+        };
+
+        // ── EXPORT CSV ──
         window.exportCSV = () => {
-            const dataArr = Object.values(transaksiTampil);
-            if (dataArr.length === 0) return alert(`Tidak ada data transaksi untuk bulan ${bulanAktif}.`);
-
-            let csvContent = "Tanggal,Nama,Kategori,Sumber,Jenis,Nominal\n";
-            dataArr.sort((a,b) => a.timestamp - b.timestamp).forEach(t => {
-                csvContent += `${t.tanggal},"${t.nama}","${t.kategori}",${t.sumber},${t.jenis},${t.harga}\n`;
+            const arr = Object.values(transaksiTampil);
+            if (!arr.length) return toast(`Tidak ada data untuk ${bulanAktif}`, 'error');
+            let csv = "Tanggal,Nama,Kategori,Sumber,Jenis,Nominal\n";
+            arr.sort((a, b) => a.timestamp - b.timestamp).forEach(t => {
+                csv += `${t.tanggal},"${t.nama}","${t.kategori}",${t.sumber},${t.jenis},${t.harga}\n`;
             });
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.setAttribute("href", URL.createObjectURL(blob));
-            link.setAttribute("download", `Laporan_Keuangan_${bulanAktif}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `Laporan_Keuangan_${bulanAktif}.csv`;
+            a.click();
+            toast('CSV berhasil diunduh!');
         };
 
+        // ── AUTO REMINDER GANTI BULAN ──
         async function cekGantiBulan() {
-            let bulanTerakhir = localStorage.getItem("lastFinanceMonth");
-            if (!bulanTerakhir) {
-                localStorage.setItem("lastFinanceMonth", bulanIni);
-                return;
-            }
-            if (bulanTerakhir !== bulanIni) {
-                if (confirm(`Bulan baru terdeteksi! Download rekapan bulan lalu (${bulanTerakhir})?`)) {
-                    const snapshot = await get(ref(db, `finance/transaksi/${bulanTerakhir}`));
-                    if (snapshot.exists()) {
-                        // Jalankan export manual untuk bulan lalu
-                        const dataArr = Object.values(snapshot.val());
+            let last = localStorage.getItem('lastFinanceMonth');
+            if (!last) { localStorage.setItem('lastFinanceMonth', bulanIni); return; }
+            if (last !== bulanIni) {
+                if (confirm(`Bulan baru! Download rekapan ${last}?`)) {
+                    const snap = await get(ref(db, `finance/transaksi/${last}`));
+                    if (snap.exists()) {
+                        const arr = Object.values(snap.val());
                         let csv = "Tanggal,Nama,Kategori,Sumber,Jenis,Nominal\n";
-                        dataArr.sort((a,b) => a.timestamp - b.timestamp).forEach(t => {
+                        arr.sort((a,b) => a.timestamp - b.timestamp).forEach(t => {
                             csv += `${t.tanggal},"${t.nama}","${t.kategori}",${t.sumber},${t.jenis},${t.harga}\n`;
                         });
                         const b = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                        const l = document.createElement("a");
+                        const l = document.createElement('a');
                         l.href = URL.createObjectURL(b);
-                        l.download = `Laporan_Keuangan_${bulanTerakhir}.csv`;
+                        l.download = `Laporan_Keuangan_${last}.csv`;
                         l.click();
                     }
                 }
-                localStorage.setItem("lastFinanceMonth", bulanIni);
+                localStorage.setItem('lastFinanceMonth', bulanIni);
             }
         }
         cekGantiBulan();
 
-        // --- UI Rendering ---
-        function renderHistori() {
+        // ── RENDER FUNCTIONS ──
+        function renderSummary() {
+            let totalIn = 0, totalOut = 0;
+            Object.values(transaksiTampil).forEach(t => {
+                if (t.jenis === 'pemasukan') totalIn += t.harga;
+                else if (t.jenis === 'pengeluaran') totalOut += t.harga;
+            });
+            document.getElementById('sumPemasukan').textContent = formatRupiah(totalIn);
+            document.getElementById('sumPengeluaran').textContent = formatRupiah(totalOut);
+            const net = totalIn - totalOut;
+            const el = document.getElementById('sumNet');
+            el.textContent = formatRupiah(Math.abs(net));
+            el.style.color = net >= 0 ? 'var(--green)' : 'var(--red)';
+        }
+
+        window.renderHistori = function() {
             const rak = document.getElementById('rakTransaksi');
-            rak.innerHTML = "";
-            
-            const arrayTransaksi = Object.entries(transaksiTampil).sort((a,b) => b[1].timestamp - a[1].timestamp);
-            
-            if(arrayTransaksi.length === 0) {
-                rak.innerHTML = `<div style="text-align:center; padding:20px; color:#999;">Belum ada transaksi di bulan ini.</div>`;
+            const query = document.getElementById('searchBox').value.toLowerCase();
+            rak.innerHTML = '';
+
+            let arr = Object.entries(transaksiTampil).sort((a, b) => b[1].timestamp - a[1].timestamp);
+
+            if (query) arr = arr.filter(([, t]) => t.nama.toLowerCase().includes(query) || (t.kategori||'').toLowerCase().includes(query));
+
+            if (!arr.length) {
+                rak.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>${query ? 'Tidak ada hasil pencarian' : 'Belum ada transaksi bulan ini'}</p></div>`;
                 return;
             }
 
-            arrayTransaksi.forEach(([id, t]) => {
-                const isPeng = t.jenis === 'pengeluaran';
-                rak.innerHTML += `
-                    <div class="item-transaksi ${t.jenis}">
-                        <div><strong>${t.nama}</strong><br><span class="badge-kategori">${t.kategori}</span> <span style="font-size:10px; color:#888;">${t.tanggal}</span></div>
-                        <div style="text-align:right">
-                            <strong style="color:${isPeng?'#e74c3c':'#2ecc71'}">${isPeng?'-':'+'} ${formatRupiah(t.harga)}</strong>
-                            <br><span onclick="hapusTransaksi('${id}','${t.jenis}','${t.sumber}',${t.harga})" class="hapus-btn" style="font-size:11px">Hapus</span>
-                        </div>
-                    </div>`;
-            });
-        }
+            arr.forEach(([id, t]) => {
+                const isOut = t.jenis === 'pengeluaran';
+                const isTransfer = t.jenis === 'transfer';
+                const amountClass = isTransfer ? 'transfer' : (isOut ? 'minus' : 'plus');
+                const prefix = isTransfer ? '→' : (isOut ? '−' : '+');
+                const sumberLabel = t.sumber === 'bank' ? '💳 Bank' : '👛 Dompet';
 
-        window.hapusTransaksi = (id, jenis, sumber, harga) => {
-            if(!confirm("Hapus?")) return;
-            if(jenis === 'pengeluaran') saldo[sumber] += harga;
-            else saldo[sumber] -= harga;
-            update(ref(db, 'finance/saldo'), saldo);
-            // Menghapus data di bulan yang sedang aktif dilihat
-            remove(ref(db, `finance/transaksi/${bulanAktif}/${id}`));
+                rak.innerHTML += `
+                <div class="item-transaksi ${t.jenis}">
+                    <div class="item-info">
+                        <div class="item-nama">${t.nama}</div>
+                        <div class="item-meta">
+                            <span class="badge">${t.kategori || '-'}</span>
+                            <span class="badge sumber">${sumberLabel}</span>
+                            <span class="item-date">${t.tanggal}</span>
+                        </div>
+                    </div>
+                    <div class="item-amount">
+                        <div class="amount-val ${amountClass}">${prefix} ${formatRupiah(t.harga)}</div>
+                        ${!isTransfer ? `<div class="item-actions">
+                            <button class="edit-btn" onclick='bukaEdit("${id}", ${JSON.stringify(t)})'>✏️ Edit</button>
+                            <button class="hapus-btn" onclick="hapusTransaksi('${id}','${t.jenis}','${t.sumber}',${t.harga})">🗑 Hapus</button>
+                        </div>` : ''}
+                    </div>
+                </div>`;
+            });
         };
 
         function renderChart() {
+            const COLORS = ['#c9a84c','#e05c5c','#4caf81','#5b8af0','#9b6bf0','#f0a05b','#4cbbe0','#e07bb5'];
             let rekap = {};
             Object.values(transaksiTampil).forEach(t => {
-                if(t.jenis === 'pengeluaran') rekap[t.kategori] = (rekap[t.kategori] || 0) + t.harga;
+                if (t.jenis === 'pengeluaran') rekap[t.kategori] = (rekap[t.kategori]||0) + t.harga;
             });
+
+            const hasData = Object.keys(rekap).length > 0;
+            document.getElementById('chartEmpty').style.display = hasData ? 'none' : 'block';
+            document.getElementById('chartCanvasWrap').style.display = hasData ? 'block' : 'none';
+            document.getElementById('chartLegend').style.display = hasData ? 'block' : 'none';
+
+            if (!hasData) { if (chartInstance) { chartInstance.destroy(); chartInstance = null; } return; }
+
             const ctx = document.getElementById('grafikKategori').getContext('2d');
-            if(chartInstance) chartInstance.destroy();
-            
-            // Jika tidak ada data pengeluaran, jangan render grafik kosong
-            if(Object.keys(rekap).length === 0) return;
+            if (chartInstance) chartInstance.destroy();
+
+            const total = Object.values(rekap).reduce((a,b)=>a+b, 0);
+            const labels = Object.keys(rekap);
+            const vals = Object.values(rekap);
 
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
-                data: { labels: Object.keys(rekap), datasets: [{ data: Object.values(rekap), backgroundColor: ['#f5b041', '#e74c3c', '#3498db', '#9b59b6', '#1abc9c', '#34495e'] }] },
-                options: { maintainAspectRatio: false }
+                data: {
+                    labels,
+                    datasets: [{ data: vals, backgroundColor: COLORS.slice(0, labels.length), borderWidth: 2, borderColor: '#16181f', hoverBorderColor: '#c9a84c' }]
+                },
+                options: {
+                    maintainAspectRatio: true, cutout: '68%', plugins: { legend: { display: false }, tooltip: {
+                        callbacks: { label: ctx => ` ${formatRupiah(ctx.parsed)}` }
+                    } }
+                }
             });
+
+            const legend = document.getElementById('chartLegend');
+            legend.innerHTML = labels.map((k, i) => `
+                <div class="chart-legend-item">
+                    <span class="chart-legend-label"><span class="chart-legend-dot" style="background:${COLORS[i]}"></span>${k}</span>
+                    <span class="chart-legend-val">${((vals[i]/total)*100).toFixed(0)}%</span>
+                </div>`).join('');
         }
 
         window.updateDropdownKategori = () => {
             const jenis = document.getElementById('inputJenis').value;
-            document.getElementById('inputKategori').innerHTML = kategori[jenis].map(k => `<option value="${k}">${k}</option>`).join('');
+            document.getElementById('inputKategori').innerHTML = (kategori[jenis]||[]).map(k => `<option value="${k}">${k}</option>`).join('');
         };
 
         window.tambahKategori = () => {
             const jenis = document.getElementById('jenisKategoriBaru').value;
-            const nama = document.getElementById('inputNamaKategori').value;
-            if(nama && !kategori[jenis].includes(nama)) {
-                kategori[jenis].push(nama);
-                set(ref(db, 'finance/kategori'), kategori);
-                document.getElementById('inputNamaKategori').value = "";
-            }
+            const nama = document.getElementById('inputNamaKategori').value.trim();
+            if (!nama) return toast('Nama kategori kosong', 'error');
+            if (kategori[jenis].includes(nama)) return toast('Kategori sudah ada', 'error');
+            kategori[jenis].push(nama);
+            set(ref(db, 'finance/kategori'), kategori);
+            document.getElementById('inputNamaKategori').value = '';
+            toast(`Kategori "${nama}" ditambahkan!`);
         };
 
         window.hapusKategori = (jenis, i) => {
-            if(confirm("Hapus kategori?")) {
-                kategori[jenis].splice(i, 1);
-                set(ref(db, 'finance/kategori'), kategori);
-            }
+            if (!confirm('Hapus kategori ini?')) return;
+            kategori[jenis].splice(i, 1);
+            set(ref(db, 'finance/kategori'), kategori);
         };
 
         function renderKategoriUI() {
-            ['pengeluaran', 'pemasukan'].forEach(j => {
+            ['pengeluaran','pemasukan'].forEach(j => {
                 const el = document.getElementById(j === 'pengeluaran' ? 'listKatPengeluaran' : 'listKatPemasukan');
-                el.innerHTML = kategori[j].map((k, i) => `<div class="tag-kategori">${k} <span class="hapus-btn" onclick="hapusKategori('${j}', ${i})">✕</span></div>`).join('');
+                el.innerHTML = (kategori[j]||[]).map((k, i) =>
+                    `<div class="tag-kat">${k}<span class="hapus-kat" onclick="hapusKategori('${j}',${i})">✕</span></div>`
+                ).join('');
             });
+            updateDropdownKategori();
         }
+
+        // Expose toast globally
+        window.showToast = toast;
     </script>
 </body>
 </html>
