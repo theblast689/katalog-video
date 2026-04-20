@@ -2,7 +2,9 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Katalog Video Fokus Pro</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1877f2">
@@ -51,7 +53,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            height: 58px;
+            height: 54px;
             gap: 16px;
         }
         .logo { font-weight: 700; font-size: 16px; color: var(--blue); white-space: nowrap; }
@@ -66,8 +68,39 @@
         }
         .nav-link:hover { opacity: .8; }
 
+        /* ── BOTTOM NAV (mobile only) ── */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            z-index: 200;
+            padding: 0 0 env(safe-area-inset-bottom);
+        }
+        .bottom-nav-inner {
+            display: flex;
+            justify-content: space-around;
+            height: 56px;
+        }
+        .bnav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--muted);
+            gap: 3px;
+            transition: color .15s;
+        }
+        .bnav-item.active { color: var(--blue); }
+        .bnav-item span:first-child { font-size: 20px; line-height: 1; }
+
         /* ── MAIN LAYOUT ── */
-        .main { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
+        .main { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
 
         /* ── PANEL ── */
         .panel {
@@ -193,18 +226,49 @@
         }
         .filter-bar {
             display: flex;
-            flex-wrap: wrap;
             gap: 8px;
             margin-bottom: 20px;
             align-items: center;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding-bottom: 4px;
         }
+        .filter-bar::-webkit-scrollbar { display: none; }
         .filter-btn {
-            padding: 6px 14px;
+            padding: 7px 14px;
             border-radius: 20px;
             border: 1.5px solid var(--border);
             background: var(--surface);
             font-family: inherit;
             font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .15s, border-color .15s, color .15s;
+            color: var(--muted);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .filter-btn:hover { border-color: var(--blue); color: var(--blue); }
+        .filter-btn.aktif { background: var(--blue); color: #fff; border-color: var(--blue); }
+        .filter-sort {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .filter-sort select {
+            padding: 7px 10px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            background: var(--surface);
+        }
             font-weight: 600;
             cursor: pointer;
             transition: background .15s, border-color .15s, color .15s;
@@ -254,7 +318,7 @@
 
         .thumbnail-container {
             position: relative;
-            height: 172px;
+            aspect-ratio: 16/9;
             background: #e0e3e8;
             cursor: pointer;
             overflow: hidden;
@@ -270,23 +334,27 @@
         .thumbnail-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(0,0,0,0.35);
+            background: rgba(0,0,0,0.28);
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
             transition: opacity .2s;
         }
+        /* Always show play overlay on touch devices */
+        @media (hover: none) {
+            .thumbnail-overlay { opacity: 1; background: rgba(0,0,0,0.18); }
+        }
         .thumbnail-container:hover .thumbnail-overlay { opacity: 1; }
         .play-btn {
-            width: 52px;
-            height: 52px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             background: var(--blue);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 18px;
             color: #fff;
             box-shadow: 0 4px 16px rgba(0,0,0,0.4);
         }
@@ -466,6 +534,81 @@
             animation: spin .7s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+        /* ── MOBILE RESPONSIVE ── */
+        @media (max-width: 640px) {
+            /* Hide desktop nav, show bottom nav */
+            .nav-links { display: none; }
+            .bottom-nav { display: block; }
+
+            /* Adjust main padding for bottom nav */
+            .main { padding: 16px 12px 80px; }
+            .topbar { padding: 0 14px; }
+
+            /* Compact panels */
+            .panel { padding: 16px 14px; margin-bottom: 14px; }
+            .panel-title { font-size: 14px; margin-bottom: 12px; }
+
+            /* Form stacked vertically */
+            .flex-row { flex-direction: column; gap: 8px; margin-top: 10px; }
+            .flex-row input, .flex-row button { width: 100%; }
+            #tombolSimpan { padding: 13px; font-size: 15px; }
+
+            /* Link input full row */
+            #linkVideo { font-size: 15px; padding: 13px 14px; }
+            #inputDurasi { font-size: 15px; }
+
+            /* Kategori chips compact */
+            .wadah-kategori { padding: 10px; gap: 6px; }
+            .kat-label { font-size: 13px; padding: 7px 12px; }
+
+            /* Grid 1 column */
+            .rak-katalog { grid-template-columns: 1fr; gap: 14px; }
+
+            /* Search full width */
+            .search-wrap input { font-size: 15px; padding: 13px 14px 13px 42px; }
+
+            /* Kartu bigger touch targets */
+            .konten-kartu { padding: 12px 14px 14px; gap: 9px; }
+            .judul-video { font-size: 14px; }
+            .btn-simpan, .btn-tonton {
+                padding: 11px 8px;
+                font-size: 13px;
+            }
+            .progress-wrap input { padding: 10px 12px; font-size: 14px; }
+            .teks-catatan { font-size: 13px; }
+
+            /* Bigger hapus button for touch */
+            .btn-hapus-video { width: 34px; height: 34px; font-size: 14px; }
+
+            /* Toast adjust for bottom nav */
+            #toast-container { bottom: 68px; right: 12px; left: 12px; }
+            .toast { max-width: 100%; }
+
+            /* Pagination compact */
+            .page-btn { padding: 9px 12px; font-size: 13px; }
+        }
+
+        /* FAB scroll-to-top */
+        .fab-top {
+            display: none;
+            position: fixed;
+            bottom: 72px;
+            right: 16px;
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: var(--blue);
+            color: #fff;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(24,119,242,.4);
+            z-index: 150;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity .25s;
+        }
+        @media (max-width: 640px) { .fab-top { display: flex; } }
     </style>
 </head>
 <body>
@@ -477,6 +620,19 @@
 
 <div id="toast-container"></div>
 
+<!-- FAB scroll to top -->
+<button class="fab-top" id="fabTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- Bottom Navigation (mobile) -->
+<nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+        <a href="index.html" class="bnav-item active"><span>🎥</span><span>Rak Video</span></a>
+        <a href="web.html" class="bnav-item"><span>🌐</span><span>Website</span></a>
+        <a href="habit.html" class="bnav-item"><span>⏳</span><span>Deep Work</span></a>
+        <a href="keuangan.html" class="bnav-item"><span>💰</span><span>Keuangan</span></a>
+    </div>
+</nav>
+
 <!-- TOPBAR -->
 <header class="topbar">
     <div class="topbar-inner">
@@ -485,9 +641,7 @@
             <a href="index.html"    class="nav-link" style="background:#1877f2;color:#fff;">🎥 Rak Video</a>
             <a href="web.html"      class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Website</a>
             <a href="habit.html"    class="nav-link" style="background:#6f42c1;color:#fff;">⏳ Deep Work</a>
-            <a href="course.html"    class="nav-link" style="background:#6f42c1;color:#fff;">course</a>
             <a href="keuangan.html" class="nav-link" style="background:#f59e0b;color:#fff;">💰 Keuangan</a>
-            <a href="idol.html" class="nav-link" style="background:#f59e0b;color:#fff;">Idol</a>
         </nav>
     </div>
 </header>
@@ -963,7 +1117,8 @@ window.putarVideo = (containerId, url) => {
     // Replace img tag only (keep overlay etc. intact by replacing whole container content)
     const parent = container.closest('.thumbnail-container');
     parent.onclick = null;
-    parent.innerHTML = `<iframe width="100%" height="172" src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&cc_load_policy=0&disablekb=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="display:block;border-radius:0;"></iframe>`;
+    parent.style.aspectRatio = '16/9';
+    parent.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&cc_load_policy=0" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen style="display:block;border-radius:0;"></iframe>`;
 };
 
 window.resetKeHalamanSatu = () => { halamanSaatIni = 1; renderRak(); };
@@ -1003,6 +1158,12 @@ if ('serviceWorker' in navigator) {
             .catch(e => console.log('SW failed:', e));
     });
 }
+
+// FAB scroll to top visibility
+const fab = document.getElementById('fabTop');
+window.addEventListener('scroll', () => {
+    if (fab) fab.style.opacity = window.scrollY > 320 ? '1' : '0';
+}, { passive: true });
 </script>
 </body>
 </html>
