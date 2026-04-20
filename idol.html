@@ -2,7 +2,10 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>🌸 Koleksi Idol</title>
     <meta name="theme-color" content="#c2185b">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -353,6 +356,11 @@
             overflow: hidden;
         }
 
+        /* When playing video, let it resize naturally */
+        .thumb-wrap.playing {
+            height: auto;
+        }
+
         .thumb-wrap img {
             width: 100%; height: 100%;
             object-fit: cover;
@@ -654,15 +662,93 @@
         /* ── RESPONSIVE ── */
         @media (max-width: 600px) {
             .form-grid { grid-template-columns: 1fr; }
-            .header h1 { font-size: 32px; }
-            .stat-strip { gap: 8px; }
-            .stat-chip { min-width: 100px; }
+            .header h1 { font-size: 28px; }
+            .header p { font-size: 11px; }
+            .header-kamon { font-size: 24px; }
+            .nav-links a { padding: 6px 12px; font-size: 12px; }
+
+            /* Stat strip jadi 2 kolom */
+            .stat-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+            .stat-chip { min-width: unset; padding: 10px 12px; }
+
+            /* Kartu 1 kolom */
+            .rak-katalog { grid-template-columns: 1fr; gap: 14px; }
+
+            /* Thumb pakai aspect ratio */
+            .thumb-wrap { height: auto; aspect-ratio: 16/9; }
+
+            /* App padding bawah lebih besar untuk nav bar */
+            .app { padding: 20px 12px 90px; }
+
+            /* Panel lebih compact */
+            .panel { padding: 16px; }
+
+            /* Toolbar full width */
+            .toolbar { flex-direction: column; gap: 8px; }
+            .search-wrap { min-width: 100%; }
+            .sort-select { width: 100%; }
+
+            /* Kartu actions lebih besar (touch friendly) */
+            .kartu-actions button, .kartu-actions a {
+                padding: 10px 8px;
+                font-size: 12px;
+            }
+
+            /* Status select lebih besar */
+            .status-select { padding: 12px 10px; font-size: 13px; }
+
+            /* Modal full screen di mobile */
+            .modal { width: 96%; max-width: 100%; padding: 20px 16px; margin: 0 8px; }
+
+            /* Toast di bawah layar */
+            #toast-container { bottom: 80px; right: 12px; left: 12px; }
+            .toast { max-width: 100%; }
+
+            /* Filter chips scroll horizontal */
+            .filter-wrap { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+            .filter-wrap::-webkit-scrollbar { display: none; }
+            .filter-btn { white-space: nowrap; flex-shrink: 0; }
+
+            /* Paginasi lebih compact */
+            .page-btn { padding: 8px 10px; font-size: 12px; }
+        }
+
+        /* Bottom floating button di mobile */
+        .fab-scroll {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            right: 16px;
+            width: 48px; height: 48px;
+            background: linear-gradient(135deg, var(--rose), var(--burgundy));
+            color: white;
+            border-radius: 50%;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(139,32,64,.35);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            transition: opacity .2s;
+        }
+
+        @media (max-width: 600px) {
+            .fab-scroll { display: flex; }
+        }
+
+        /* Sticky panel tambah video di mobile */
+        @media (max-width: 600px) {
+            .kartu-body { padding: 12px 14px; }
+            .catatan-wrap textarea { min-height: 60px; }
+            .kat-picker { max-height: 90px; }
         }
     </style>
 </head>
 <body>
 
 <div id="toast-container"></div>
+<button class="fab-scroll" id="fabTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Ke atas">↑</button>
 
 <!-- Modal Edit Video -->
 <div class="modal-bg" id="modalEdit">
@@ -712,7 +798,6 @@
             <a href="idol.html" class="active">🌸 Koleksi Idol</a>
             <a href="web.html">🌐 Rak Website</a>
             <a href="habit.html">⏳ Deep Work</a>
-            <a href="course.html">course</a>
         </nav>
     </div>
 
@@ -927,6 +1012,25 @@
                 const thumbUrl = `https://img.youtube.com/vi/${vid}/mqdefault.jpg`;
                 prevEl.src = thumbUrl;
                 prevEl.style.display = 'block';
+
+                // Auto-fetch duration via Piped API
+                const durEl = document.getElementById('inputDurasi');
+                durEl.placeholder = '⏳ Mengambil durasi...';
+                try {
+                    const durRes = await fetch(`https://pipedapi.kavin.rocks/streams/${vid}`);
+                    const durData = await durRes.json();
+                    if (durData.duration && durData.duration > 0) {
+                        const sec = durData.duration;
+                        const h = Math.floor(sec / 3600);
+                        const m = Math.floor((sec % 3600) / 60);
+                        const s = sec % 60;
+                        const durStr = h > 0
+                            ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+                            : `${m}:${String(s).padStart(2,'0')}`;
+                        durEl.value = durStr;
+                    }
+                } catch(e) { /* gagal ambil durasi, biarkan manual */ }
+                durEl.placeholder = 'Contoh: 45:00';
             } catch (e) {}
             judulEl.placeholder = 'Isi judul video...';
         } else if (plat === 'drive') {
@@ -1093,10 +1197,11 @@
     // ── PUTAR MEDIA ──
     window.putarMedia = (containerId, platform, videoId, linkFull) => {
         const c = document.getElementById(containerId);
+        c.classList.add('playing');
         if (platform === 'youtube') {
-            c.innerHTML = `<iframe width="100%" height="168" src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allow="autoplay;encrypted-media" allowfullscreen style="display:block;border-radius:14px 14px 0 0;"></iframe>`;
+            c.innerHTML = `<iframe width="100%" style="aspect-ratio:16/9;display:block;border-radius:14px 14px 0 0;" src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&disablekb=0" frameborder="0" allow="autoplay;encrypted-media;fullscreen" allowfullscreen></iframe>`;
         } else if (platform === 'drive') {
-            c.innerHTML = `<iframe src="https://drive.google.com/file/d/${videoId}/preview" width="100%" height="168" allow="autoplay" allowfullscreen style="display:block;border:none;border-radius:14px 14px 0 0;"></iframe>`;
+            c.innerHTML = `<iframe src="https://drive.google.com/file/d/${videoId}/preview" width="100%" style="aspect-ratio:16/9;display:block;border:none;border-radius:14px 14px 0 0;" allow="autoplay" allowfullscreen></iframe>`;
         } else {
             window.open(linkFull, '_blank');
         }
@@ -1263,6 +1368,13 @@
 
         k.appendChild(btn('»', halaman + 1, halaman === total));
     }
+</script>
+<script>
+    // FAB visibility
+    window.addEventListener('scroll', () => {
+        const fab = document.getElementById('fabTop');
+        if (fab) fab.style.opacity = window.scrollY > 300 ? '1' : '0';
+    });
 </script>
 </body>
 </html>
