@@ -729,7 +729,6 @@
                 <a href="web.html">🌐 Rak Website</a>
                 <a href="habit.html">⏳ Deep Work</a>
                 <a href="keuangan.html" class="active">💰 Keuangan</a>
-                <a href="idol.html" class="active">idol</a>
             </nav>
         </div>
 
@@ -866,6 +865,11 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getDatabase, ref, push, onValue, set, remove, update, get, off } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+            from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        // ── Ganti dengan UID kamu (sama seperti di index.html) ──
+        const UID_PEMILIK = "S8Ai4dQxFtQ7n7fu5zLlgG7iuTm2";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
@@ -874,8 +878,78 @@
             projectId: "katalog-video"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+        const app  = initializeApp(firebaseConfig);
+        const db   = getDatabase(app);
+        const auth = getAuth(app);
+
+        // ── Login overlay helper ───────────────────────────────
+        function buatLoginOverlay() {
+            if (document.getElementById('auth-overlay')) return;
+            const el = document.createElement('div');
+            el.id = 'auth-overlay';
+            el.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(14,15,20,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;font-family:inherit;';
+            el.innerHTML = `
+                <div style="font-size:48px;">&#128274;</div>
+                <p style="font-size:20px;font-weight:700;color:#e8e9ee;">FokusPro · Finance</p>
+                <p style="font-size:14px;color:#7a7f96;">Masuk dulu untuk melihat data keuangan.</p>
+                <button id="btn-glogin" style="display:flex;align-items:center;gap:10px;justify-content:center;padding:14px 24px;background:#fff;color:#1c1c1e;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;width:280px;">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20">
+                    Masuk dengan Google
+                </button>
+                <p id="glogin-err" style="color:#e05c5c;font-size:13px;display:none;"></p>
+            `;
+            document.body.appendChild(el);
+            document.getElementById('btn-glogin').addEventListener('click', async () => {
+                const btn = document.getElementById('btn-glogin');
+                const err = document.getElementById('glogin-err');
+                btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = '⏳ Menghubungkan...';
+                err.style.display = 'none';
+                try {
+                    await signInWithPopup(auth, new GoogleAuthProvider());
+                } catch(e) {
+                    btn.disabled = false; btn.style.opacity = '1';
+                    btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20"> Masuk dengan Google';
+                    err.textContent = 'Login gagal: ' + e.message; err.style.display = 'block';
+                }
+            });
+        }
+
+        function tambahTombolLogout(user) {
+            if (document.getElementById('btn-logout-fin')) return;
+            // cari nav atau header untuk taruh tombol
+            const nav = document.querySelector('nav, .topbar-inner, header');
+            if (!nav) return;
+            const btn = document.createElement('button');
+            btn.id = 'btn-logout-fin';
+            btn.title = user.email;
+            btn.style.cssText = 'position:fixed;top:12px;right:16px;z-index:500;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;background:rgba(224,92,92,0.12);color:#e05c5c;border:1px solid rgba(224,92,92,0.3);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;';
+            btn.innerHTML = (user.photoURL ? `<img src="${user.photoURL}" width="16" height="16" style="border-radius:50%">` : '👤') + ' Logout';
+            btn.onclick = () => { if(confirm('Yakin logout?')) signOut(auth); };
+            document.body.appendChild(btn);
+        }
+
+        // ── AUTH STATE — semua init dijalankan di sini ─────────
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                buatLoginOverlay();
+                return;
+            }
+            // Hapus overlay login jika ada
+            const overlay = document.getElementById('auth-overlay');
+            if (overlay) overlay.remove();
+
+            // Cek kepemilikan
+            if (UID_PEMILIK !== 'GANTI_DENGAN_UID_KAMU' && user.uid !== UID_PEMILIK) {
+                document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;font-family:sans-serif;"><div style="font-size:48px;">&#128683;</div><p style="font-weight:700;font-size:18px;color:#e05c5c;">Akses Ditolak</p><button onclick="import('https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js').then(m=>m.signOut(m.getAuth()))" style="padding:10px 20px;background:#e05c5c;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700;">Logout</button></div>';
+                return;
+            }
+
+            tambahTombolLogout(user);
+            initApp(); // jalankan semua inisialisasi app
+        });
+
+        // ── Semua kode app dibungkus dalam fungsi ini ──────────
+        function initApp() {
 
         let saldo = { bank: 0, dompet: 0 };
         let kategori = {
@@ -964,16 +1038,21 @@
         };
 
         // ── FIREBASE LISTENERS ──
+        const errDB = (e) => {
+            console.error('Firebase error:', e.code);
+            toast('Gagal memuat data: ' + e.code, 'error');
+        };
+
         onValue(ref(db, 'finance/saldo'), (snap) => {
             if (snap.exists()) saldo = snap.val();
             renderSaldo();
-        });
+        }, errDB);
 
         onValue(ref(db, 'finance/kategori'), (snap) => {
             if (snap.exists()) kategori = snap.val();
             renderKategoriUI();
             updateDropdownKategori();
-        });
+        }, errDB);
 
         function renderSaldo() {
             document.getElementById('teksSaldoBank').textContent = formatRupiah(saldo.bank || 0);
@@ -992,10 +1071,12 @@
                 renderHistori();
                 renderChart();
                 renderSummary();
-            });
+            }, errDB);
         }
 
         muatDataHistori(bulanAktif);
+
+        } // end initApp()
 
         window.gantiBulanView = () => {
             bulanAktif = document.getElementById('filterBulan').value;
