@@ -630,7 +630,6 @@
         <a href="web.html" class="bnav-item"><span>🌐</span><span>Website</span></a>
         <a href="habit.html" class="bnav-item"><span>⏳</span><span>Deep Work</span></a>
         <a href="keuangan.html" class="bnav-item"><span>💰</span><span>Keuangan</span></a>
-        <a href="course.html" class="bnav-item"><span>🌐</span><span>course</span></a>
     </div>
 </nav>
 
@@ -643,7 +642,6 @@
             <a href="web.html"      class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Website</a>
             <a href="habit.html"    class="nav-link" style="background:#6f42c1;color:#fff;">⏳ Deep Work</a>
             <a href="keuangan.html" class="nav-link" style="background:#f59e0b;color:#fff;">💰 Keuangan</a>
-            <a href="course.html"    class="nav-link" style="background:#6f42c1;color:#fff;">course</a>
         </nav>
     </div>
 </header>
@@ -794,21 +792,12 @@ window.deteksiDurasiOtomatis = async () => {
 </script>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+// ── Auth: hanya pemilik yang bisa akses ──────────────────────
+import { requireAuth, db } from "./auth.js";
+import { ref, push, onValue, remove, update, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
-    authDomain: "katalog-video.firebaseapp.com",
-    databaseURL: "https://katalog-video-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "katalog-video",
-    storageBucket: "katalog-video.firebasestorage.app",
-    messagingSenderId: "1035864136490",
-    appId: "1:1035864136490:web:9abe5dbf41e80b11ad5c53"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+// Tunggu login sebelum lanjut — muatDataDatabase() dipanggil setelah ini
+const { user } = await requireAuth();
 
 let daftarKategori = [];
 let dataVideo = {};
@@ -864,6 +853,7 @@ function muatDataDatabase() {
     });
 }
 
+// muatDataDatabase() dipanggil setelah requireAuth() selesai (lihat atas)
 muatDataDatabase();
 
 const simpanKategoriKeDB = () => set(ref(db, 'kategori'), daftarKategori);
