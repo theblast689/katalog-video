@@ -635,9 +635,6 @@ const db   = getDatabase(app2);
         document.body.appendChild(btn);
     }
 
-    let _appInited = false;
-    function _runAppOnce() { if (_appInited) return; _appInited = true; initApp(); }
-
     // ── SESSION FAST-PATH: skip overlay kalau sudah pernah login ──
     if (sessionStorage.getItem('fp_uid')) {
         // Langsung jalankan app — Firebase auth akan verify di background
@@ -655,9 +652,31 @@ const db   = getDatabase(app2);
                 btn.onclick = () => { if(confirm('Yakin logout?')) { sessionStorage.clear(); signOut(auth); } };
                 document.body.appendChild(btn);
             })();
-            _runAppOnce();
+            // [initApp removido - aguarda onAuthStateChanged]
         } catch(e) { console.warn('fast-path error:', e); }
     }
+    // ── SESSION FAST-PATH: sembunyikan overlay langsung ──────────
+    // Hanya hapus overlay jika sudah pernah login (UX improvement)
+    // initApp() TIDAK dipanggil di sini — tunggu Firebase auth verify
+    if (sessionStorage.getItem('fp_uid')) {
+        const _fpOv = document.getElementById('auth-overlay');
+        if (_fpOv) _fpOv.remove();
+        // Tambah tombol logout sementara (akan di-replace setelah auth)
+        if (!document.getElementById('btn-app-logout') && !document.getElementById('btn-logout') && !document.getElementById('btn-logout-fin')) {
+            const _fpBtn = document.createElement('button');
+            _fpBtn.id = 'btn-app-logout';
+            const _fpPhoto = sessionStorage.getItem('fp_photo') || '';
+            _fpBtn.style.cssText = 'position:fixed;top:12px;right:16px;z-index:1000;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;background:rgba(229,57,53,0.12);color:#e53935;border:1px solid rgba(229,57,53,0.3);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;';
+            _fpBtn.innerHTML = (_fpPhoto ? `<img src="${_fpPhoto}" width="16" height="16" style="border-radius:50%">` : '👤') + ' Logout';
+            _fpBtn.onclick = () => { if(confirm('Yakin logout?')) { sessionStorage.clear(); signOut(auth); } };
+            document.body.appendChild(_fpBtn);
+        }
+    }
+
+    // Guard: pastikan initApp() hanya jalan SEKALI
+    let _appInited = false;
+
+
 
     onAuthStateChanged(auth, (user) => {
         if (!user) { _buatOverlay(PAGE_TITLE); return; }
@@ -668,10 +687,10 @@ const db   = getDatabase(app2);
             return;
         }
         _tambahLogout(user);
-        sessionStorage.setItem('fp_uid', user.uid);
+sessionStorage.setItem('fp_uid', user.uid);
         sessionStorage.setItem('fp_email', user.email || '');
         sessionStorage.setItem('fp_photo', user.photoURL || '');
-        _runAppOnce();
+        if (!_appInited) { _appInited = true; initApp(); }
     });
 
     function initApp() {
