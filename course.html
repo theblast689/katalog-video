@@ -609,7 +609,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChang
     from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 // ── Ganti dengan UID kamu (sama seperti di file lainnya) ──
-const UID_PEMILIK = "GANTI_DENGAN_UID_KAMU";
+const UID_PEMILIK = "S8Ai4dQxFtQ7n7fu5zLlgG7iuTm2";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
@@ -690,7 +690,7 @@ function _tambahLogout(user) {
     if (!user) { _buatOverlay(); return; }
     const ov = document.getElementById('auth-overlay');
     if (ov) ov.remove();
-    if (UID_PEMILIK !== 'GANTI_DENGAN_UID_KAMU' && user.uid !== UID_PEMILIK) {
+    if (UID_PEMILIK !== 'S8Ai4dQxFtQ7n7fu5zLlgG7iuTm2' && user.uid !== UID_PEMILIK) {
         document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;"><div style="font-size:48px;">&#128683;</div><p style="font-weight:700;font-size:18px;color:#e05c5c;">Akses Ditolak</p></div>';
         return;
     }

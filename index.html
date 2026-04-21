@@ -824,7 +824,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChang
 // ⚠️  GANTI dengan UID Google kamu setelah login pertama kali!
 //     Cara: buka Console browser (F12) → lihat log "UID kamu:"
 // ─────────────────────────────────────────────────────────────
-const UID_PEMILIK = "GANTI_DENGAN_UID_KAMU";
+const UID_PEMILIK = "S8Ai4dQxFtQ7n7fu5zLlgG7iuTm2";
 
 const firebaseConfig = {
     apiKey: "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
@@ -898,7 +898,7 @@ onAuthStateChanged(auth, (user) => {
     console.log('Email:', user.email);
 
     // Cek kepemilikan (skip cek kalau belum diisi)
-    if (UID_PEMILIK !== 'GANTI_DENGAN_UID_KAMU' && user.uid !== UID_PEMILIK) {
+    if (UID_PEMILIK !== 'S8Ai4dQxFtQ7n7fu5zLlgG7iuTm2' && user.uid !== UID_PEMILIK) {
         showState('denied');
         return;
     }
