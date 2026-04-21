@@ -924,12 +924,33 @@
             btn.title = user.email;
             btn.style.cssText = 'position:fixed;top:12px;right:16px;z-index:500;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;background:rgba(224,92,92,0.12);color:#e05c5c;border:1px solid rgba(224,92,92,0.3);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;';
             btn.innerHTML = (user.photoURL ? `<img src="${user.photoURL}" width="16" height="16" style="border-radius:50%">` : '👤') + ' Logout';
-            btn.onclick = () => { if(confirm('Yakin logout?')) signOut(auth); };
+            btn.onclick = () => { if(confirm('Yakin logout?')) { sessionStorage.removeItem('fp_uid'); sessionStorage.removeItem('fp_email'); sessionStorage.removeItem('fp_photo'); signOut(auth); } };
             document.body.appendChild(btn);
         }
 
         // ── AUTH STATE — semua init dijalankan di sini ─────────
-        onAuthStateChanged(auth, (user) => {
+        // ── SESSION FAST-PATH: skip overlay kalau sudah pernah login ──
+    if (sessionStorage.getItem('fp_uid')) {
+        // Langsung jalankan app — Firebase auth akan verify di background
+        try {
+            const _fpPhoto = sessionStorage.getItem('fp_photo') || '';
+            const _fpEmail = sessionStorage.getItem('fp_email') || '';
+            // Tambah tombol logout sementara
+            (function() {
+                const existing = document.getElementById('btn-app-logout') || document.getElementById('btn-logout') || document.getElementById('btn-logout-fin');
+                if (existing) return;
+                const btn = document.createElement('button');
+                btn.id = 'btn-app-logout';
+                btn.style.cssText = 'position:fixed;top:12px;right:16px;z-index:1000;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;background:rgba(229,57,53,0.12);color:#e53935;border:1px solid rgba(229,57,53,0.3);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;';
+                btn.innerHTML = (_fpPhoto ? `<img src="${_fpPhoto}" width="16" height="16" style="border-radius:50%">` : '👤') + ' Logout';
+                btn.onclick = () => { if(confirm('Yakin logout?')) { sessionStorage.clear(); signOut(auth); } };
+                document.body.appendChild(btn);
+            })();
+            initApp();
+        } catch(e) { console.warn('fast-path error:', e); }
+    }
+
+    onAuthStateChanged(auth, (user) => {
             if (!user) {
                 buatLoginOverlay();
                 return;
@@ -945,6 +966,9 @@
             }
 
             tambahTombolLogout(user);
+sessionStorage.setItem('fp_uid', user.uid);
+        sessionStorage.setItem('fp_email', user.email || '');
+        sessionStorage.setItem('fp_photo', user.photoURL || '');
             initApp(); // jalankan semua inisialisasi app
         });
 
