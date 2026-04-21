@@ -640,10 +640,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getDatabase, ref, push, onValue, remove, update, set }
         from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
-        from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-    const PAGE_TITLE = "Website";
     const cfg = {
         apiKey:            "AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
         authDomain:        "katalog-video.firebaseapp.com",
@@ -653,114 +650,8 @@
         messagingSenderId: "1035864136490",
         appId:             "1:1035864136490:web:9abe5dbf41e80b11ad5c53"
     };
-    const app2 = initializeApp(cfg, 'web-app');
-    const db   = getDatabase(app2);
-    // ── Ganti dengan UID kamu (sama seperti di index.html) ──
-    const UID_PEMILIK = "S8Ai4dQxFtQ7n7fu5zLlgG7iuTm2";
-
-    const auth = getAuth(app2);
-
-    function _buatOverlay(judul) {
-        if (document.getElementById('auth-overlay')) return;
-        const el = document.createElement('div');
-        el.id = 'auth-overlay';
-        el.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(7,7,26,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;font-family:inherit;';
-        el.innerHTML = `
-            <div style="font-size:48px;">&#128274;</div>
-            <p style="font-size:20px;font-weight:700;color:#e8e9ee;">FokusPro · ${judul}</p>
-            <p style="font-size:14px;color:#7a76a8;">Masuk dulu untuk mengakses halaman ini.</p>
-            <button id="btn-glogin" style="display:flex;align-items:center;gap:10px;justify-content:center;padding:14px 24px;background:#fff;color:#1c1c1e;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;min-width:260px;">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20">
-                Masuk dengan Google
-            </button>
-            <p id="glogin-err" style="color:#ff6b6b;font-size:13px;display:none;"></p>
-        `;
-        document.body.appendChild(el);
-        document.getElementById('btn-glogin').addEventListener('click', async () => {
-            const btn = document.getElementById('btn-glogin');
-            const err = document.getElementById('glogin-err');
-            btn.disabled = true; btn.style.opacity = '0.6'; btn.textContent = '⏳ Menghubungkan...';
-            try {
-                await signInWithPopup(auth, new GoogleAuthProvider());
-            } catch(e) {
-                btn.disabled = false; btn.style.opacity = '1';
-                btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20"> Masuk dengan Google';
-                err.textContent = 'Login gagal: ' + e.message; err.style.display = 'block';
-            }
-        });
-    }
-
-    function _tambahLogout(user) {
-        if (document.getElementById('btn-app-logout')) return;
-        const btn = document.createElement('button');
-        btn.id = 'btn-app-logout';
-        btn.title = user.email;
-        btn.style.cssText = 'position:fixed;top:12px;right:16px;z-index:1000;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;background:rgba(229,57,53,0.12);color:#e53935;border:1px solid rgba(229,57,53,0.3);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;';
-        btn.innerHTML = (user.photoURL ? `<img src="${user.photoURL}" width="16" height="16" style="border-radius:50%">` : '👤') + ' Logout';
-        btn.onclick = () => { if(confirm('Yakin logout?')) { sessionStorage.removeItem('fp_uid'); sessionStorage.removeItem('fp_email'); sessionStorage.removeItem('fp_photo'); signOut(auth); } };
-        document.body.appendChild(btn);
-    }
-
-    // ── SESSION FAST-PATH: skip overlay kalau sudah pernah login ──
-    if (sessionStorage.getItem('fp_uid')) {
-        // Langsung jalankan app — Firebase auth akan verify di background
-        try {
-            const _fpPhoto = sessionStorage.getItem('fp_photo') || '';
-            const _fpEmail = sessionStorage.getItem('fp_email') || '';
-            // Tambah tombol logout sementara
-            (function() {
-                const existing = document.getElementById('btn-app-logout') || document.getElementById('btn-logout') || document.getElementById('btn-logout-fin');
-                if (existing) return;
-                const btn = document.createElement('button');
-                btn.id = 'btn-app-logout';
-                btn.style.cssText = 'position:fixed;top:12px;right:16px;z-index:1000;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;background:rgba(229,57,53,0.12);color:#e53935;border:1px solid rgba(229,57,53,0.3);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;';
-                btn.innerHTML = (_fpPhoto ? `<img src="${_fpPhoto}" width="16" height="16" style="border-radius:50%">` : '👤') + ' Logout';
-                btn.onclick = () => { if(confirm('Yakin logout?')) { sessionStorage.clear(); signOut(auth); } };
-                document.body.appendChild(btn);
-            })();
-            // [initApp removido - aguarda onAuthStateChanged]
-        } catch(e) { console.warn('fast-path error:', e); }
-    }
-    // ── SESSION FAST-PATH: sembunyikan overlay langsung ──────────
-    // Hanya hapus overlay jika sudah pernah login (UX improvement)
-    // initApp() TIDAK dipanggil di sini — tunggu Firebase auth verify
-    if (sessionStorage.getItem('fp_uid')) {
-        const _fpOv = document.getElementById('auth-overlay');
-        if (_fpOv) _fpOv.remove();
-        // Tambah tombol logout sementara (akan di-replace setelah auth)
-        if (!document.getElementById('btn-app-logout') && !document.getElementById('btn-logout') && !document.getElementById('btn-logout-fin')) {
-            const _fpBtn = document.createElement('button');
-            _fpBtn.id = 'btn-app-logout';
-            const _fpPhoto = sessionStorage.getItem('fp_photo') || '';
-            _fpBtn.style.cssText = 'position:fixed;top:12px;right:16px;z-index:1000;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;background:rgba(229,57,53,0.12);color:#e53935;border:1px solid rgba(229,57,53,0.3);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;';
-            _fpBtn.innerHTML = (_fpPhoto ? `<img src="${_fpPhoto}" width="16" height="16" style="border-radius:50%">` : '👤') + ' Logout';
-            _fpBtn.onclick = () => { if(confirm('Yakin logout?')) { sessionStorage.clear(); signOut(auth); } };
-            document.body.appendChild(_fpBtn);
-        }
-    }
-
-    // Guard: pastikan initApp() hanya jalan SEKALI
-    let _appInited = false;
-
-
-
-    onAuthStateChanged(auth, (user) => {
-        if (!user) { _buatOverlay(PAGE_TITLE); return; }
-        const ov = document.getElementById('auth-overlay');
-        if (ov) ov.remove();
-        if (UID_PEMILIK !== 'S8Ai4dQxFtQ7n7fu5zLlgG7iuTm2' && user.uid !== UID_PEMILIK) {
-            document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;"><div style="font-size:48px;">&#128683;</div><p style="font-weight:700;font-size:18px;color:#e05c5c;">Akses Ditolak</p></div>';
-            return;
-        }
-        _tambahLogout(user);
-sessionStorage.setItem('fp_uid', user.uid);
-        sessionStorage.setItem('fp_email', user.email || '');
-        sessionStorage.setItem('fp_photo', user.photoURL || '');
-        if (!_appInited) { _appInited = true; initApp(); }
-    });
-
-    function initApp() {
-
+    const app = initializeApp(cfg);
+    const db  = getDatabase(app);
 
     /* ── STATE ── */
     let daftarKat = [];
@@ -899,8 +790,6 @@ sessionStorage.setItem('fp_uid', user.uid);
         dataWeb = snap.val() || {};
         renderRak(); updateStats();
     });
-
-    } // end initApp
 
     window.simpanWeb = () => {
         const url  = document.getElementById('linkWeb').value.trim();
