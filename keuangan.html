@@ -929,7 +929,10 @@
         }
 
         // ── AUTH STATE — semua init dijalankan di sini ─────────
-        // ── SESSION FAST-PATH: skip overlay kalau sudah pernah login ──
+        let _appInited = false;
+    function _runAppOnce() { if (_appInited) return; _appInited = true; initApp(); }
+
+    // ── SESSION FAST-PATH: skip overlay kalau sudah pernah login ──
     if (sessionStorage.getItem('fp_uid')) {
         // Langsung jalankan app — Firebase auth akan verify di background
         try {
@@ -946,7 +949,7 @@
                 btn.onclick = () => { if(confirm('Yakin logout?')) { sessionStorage.clear(); signOut(auth); } };
                 document.body.appendChild(btn);
             })();
-            initApp();
+            _runAppOnce();
         } catch(e) { console.warn('fast-path error:', e); }
     }
 
@@ -966,10 +969,10 @@
             }
 
             tambahTombolLogout(user);
-sessionStorage.setItem('fp_uid', user.uid);
+        sessionStorage.setItem('fp_uid', user.uid);
         sessionStorage.setItem('fp_email', user.email || '');
         sessionStorage.setItem('fp_photo', user.photoURL || '');
-            initApp(); // jalankan semua inisialisasi app
+            _runAppOnce(); // jalankan semua inisialisasi app
         });
 
         // ── Semua kode app dibungkus dalam fungsi ini ──────────
