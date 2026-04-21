@@ -740,7 +740,7 @@ function getThumbnail(url) {
 }
 
 // ── SOURCE DETECT UI ──
-} // end initApp
+
 
 window.detectSource = async () => {
     const url = document.getElementById('linkInput').value.trim();
@@ -1044,7 +1044,7 @@ onValue(ref(db,'courses'), (snap)=>{
     dataCourse = {};
     renderCourses();
     document.getElementById('loading-overlay').style.display='none';
-});
+}); } // end initApp
 
 </script>
 </body>

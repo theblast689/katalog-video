@@ -827,7 +827,7 @@ onValue(ref(db,'habitLogs'), snap=>{
 });
 
 // ── TAMBAH HABIT ────────────────────────────────
-} // end initApp
+
 
 window.tambahHabit = () => {
   const nama = document.getElementById('inputHabit').value.trim();
@@ -1115,7 +1115,7 @@ if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('./sw.js').catch(()=>{});
   });
-}
+} } // end initApp
 </script>
 </body>
 </html>
