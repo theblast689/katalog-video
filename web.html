@@ -2,7 +2,9 @@
 <html lang="id" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Rak Website — Katalog Pro</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3fb950">
@@ -154,6 +156,23 @@
         }
         .nav-tab:hover { background: rgba(255,255,255,0.14); color: white; }
         .nav-tab.active { background: var(--bg); color: var(--text); }
+
+        /* ── BOTTOM NAV (mobile) ── */
+        .bottom-nav {
+            display: none;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--surface); border-top: 1px solid var(--border);
+            z-index: 200; padding: 0 0 env(safe-area-inset-bottom);
+        }
+        .bottom-nav-inner { display: flex; justify-content: space-around; height: 56px; }
+        .bnav-item {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-decoration: none; font-size: 9px; font-weight: 700;
+            color: rgba(255,255,255,0.45); gap: 2px; transition: color .15s;
+        }
+        .bnav-item.active { color: #3fb950; }
+        .bnav-item span:first-child { font-size: 18px; line-height: 1; }
 
         /* ==============================
            MAIN
@@ -505,11 +524,13 @@
         ============================== */
         @media (max-width: 640px) {
             .header-inner { padding: 18px 16px 0; }
-            .main { padding: 14px; }
+            .main { padding: 14px 12px 80px; }
             .card-grid { grid-template-columns: 1fr; gap: 14px; }
             .form-row { flex-direction: column; }
             .controls-bar { flex-direction: column; }
             .brand h1 { font-size: 19px; }
+            .nav-tabs { display: none; }
+            .bottom-nav { display: block; }
         }
     </style>
 </head>
@@ -542,12 +563,12 @@
 
         <!-- Nav -->
         <nav class="nav-tabs">
-            <a href="index.html"    class="nav-tab">🎬 Video</a>
-            <a href="web.html"      class="nav-tab active">📝 Website</a>
-            <a href="habit.html"    class="nav-tab">⏳ Deep Work</a>
-            <a href="keuangan.html" class="nav-tab">💰 Keuangan</a>
-            <a href="idol.html" class="nav-tab">Idol</a>
-            <a href="course.html" class="nav-tab">Course</a>
+            <a href="index.html"    class="nav-tab">🎥 Video</a>
+            <a href="course.html"   class="nav-tab">📚 Course</a>
+            <a href="web.html"      class="nav-tab active">🌐 Web</a>
+            <a href="habit.html"    class="nav-tab">⏳ Fokus</a>
+            <a href="keuangan.html" class="nav-tab">💰 Duit</a>
+            <a href="idol.html"     class="nav-tab">🌸 Idol</a>
         </nav>
     </div>
 </header>
@@ -1025,5 +1046,16 @@
         });
     }
 </script>
+
+<nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+        <a href="index.html"    class="bnav-item"><span>🎥</span><span>Video</span></a>
+        <a href="course.html"   class="bnav-item"><span>📚</span><span>Course</span></a>
+        <a href="web.html"      class="bnav-item active"><span>🌐</span><span>Web</span></a>
+        <a href="habit.html"    class="bnav-item"><span>⏳</span><span>Fokus</span></a>
+        <a href="keuangan.html" class="bnav-item"><span>💰</span><span>Duit</span></a>
+        <a href="idol.html"     class="bnav-item"><span>🌸</span><span>Idol</span></a>
+    </div>
+</nav>
 </body>
 </html>

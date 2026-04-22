@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -103,6 +103,25 @@
 
         .nav-links a:hover { border-color: var(--rose); color: var(--rose); }
         .nav-links a.active { background: var(--rose); color: white; border-color: var(--rose); }
+
+        /* ── BOTTOM NAV (mobile) ── */
+        .bottom-nav {
+            display: none;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--white);
+            border-top: 1.5px solid var(--border);
+            z-index: 300;
+            padding: 0 0 env(safe-area-inset-bottom);
+        }
+        .bottom-nav-inner { display: flex; justify-content: space-around; height: 56px; }
+        .bnav-item {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-decoration: none; font-size: 9px; font-weight: 700;
+            color: var(--text-light); gap: 2px; transition: color .15s;
+        }
+        .bnav-item.active { color: var(--rose); }
+        .bnav-item span:first-child { font-size: 18px; line-height: 1; }
 
         /* ── STAT STRIP ── */
         .stat-strip {
@@ -665,7 +684,8 @@
             .header h1 { font-size: 28px; }
             .header p { font-size: 11px; }
             .header-kamon { font-size: 24px; }
-            .nav-links a { padding: 6px 12px; font-size: 12px; }
+            .nav-links { display: none; }
+            .bottom-nav { display: block; }
 
             /* Stat strip jadi 2 kolom */
             .stat-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -794,12 +814,12 @@
         <h1>Koleksi <em>Idol</em></h1>
         <p>Arsip video multi-platform · YouTube · Google Drive · Terabox</p>
         <nav class="nav-links">
-            <a href="index.html">🎥 YouTube Utama</a>
-            <a href="idol.html" class="active">🌸 Koleksi Idol</a>
-            <a href="web.html">🌐 Rak Website</a>
-            <a href="course.html">Course</a>
-            <a href="keuangan.html">Keuangan</a>
-            <a href="habit.html">⏳ Deep Work</a>
+            <a href="index.html">🎥 Video</a>
+            <a href="course.html">📚 Course</a>
+            <a href="web.html">🌐 Web</a>
+            <a href="habit.html">⏳ Fokus</a>
+            <a href="keuangan.html">💰 Duit</a>
+            <a href="idol.html" class="active">🌸 Idol</a>
         </nav>
     </div>
 
@@ -1378,5 +1398,16 @@
         if (fab) fab.style.opacity = window.scrollY > 300 ? '1' : '0';
     });
 </script>
+
+<nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+        <a href="index.html"    class="bnav-item"><span>🎥</span><span>Video</span></a>
+        <a href="course.html"   class="bnav-item"><span>📚</span><span>Course</span></a>
+        <a href="web.html"      class="bnav-item"><span>🌐</span><span>Web</span></a>
+        <a href="habit.html"    class="bnav-item"><span>⏳</span><span>Fokus</span></a>
+        <a href="keuangan.html" class="bnav-item"><span>💰</span><span>Duit</span></a>
+        <a href="idol.html"     class="bnav-item active"><span>🌸</span><span>Idol</span></a>
+    </div>
+</nav>
 </body>
 </html>

@@ -2,8 +2,12 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Video Course | FokusPro</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1877f2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -44,6 +48,26 @@
         .nav-links { display: flex; gap: 6px; flex-wrap: wrap; }
         .nav-link { padding: 6px 14px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; transition: opacity .2s; }
         .nav-link:hover { opacity: .8; }
+
+        /* ── BOTTOM NAV (mobile) ── */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            z-index: 200;
+            padding: 0 0 env(safe-area-inset-bottom);
+        }
+        .bottom-nav-inner { display: flex; justify-content: space-around; height: 56px; }
+        .bnav-item {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-decoration: none; font-size: 9px; font-weight: 700;
+            color: var(--muted); gap: 2px; transition: color .15s;
+        }
+        .bnav-item.active { color: var(--blue); }
+        .bnav-item span:first-child { font-size: 18px; line-height: 1; }
 
         /* ── MAIN ── */
         .main { max-width: 1200px; margin: 0 auto; padding: 28px 20px 80px; }
@@ -389,6 +413,22 @@
 
         /* ── HELPER ── */
         .divider { height: 1px; background: rgba(255,255,255,0.07); margin: 0 -24px; }
+
+        /* ── MOBILE ── */
+        @media (max-width: 640px) {
+            .nav-links { display: none; }
+            .bottom-nav { display: block; }
+            .main { padding: 16px 12px 80px; }
+            .topbar { padding: 0 14px; }
+            .topbar-inner { height: 50px; }
+            .course-grid { grid-template-columns: 1fr; gap: 14px; }
+            .subject-bar { gap: 6px; }
+            .subj-btn { padding: 6px 12px; font-size: 12px; }
+            .hero-title { font-size: 18px; }
+            .search-sort-bar { flex-direction: column; gap: 8px; }
+            .sort-select { width: 100%; }
+            #toast-container { bottom: 68px; right: 12px; left: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -401,12 +441,13 @@
     <div class="topbar-inner">
         <span class="logo">🎓 FokusPro</span>
         <nav class="nav-links">
-            <a href="index.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">🎥 Rak Video</a>
+        <nav class="nav-links">
+            <a href="index.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">🎥 Video</a>
             <a href="course.html"   class="nav-link" style="background:#1877f2;color:#fff;">📚 Course</a>
-            <a href="web.html"      class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Website</a>
-            <a href="idol.html"      class="nav-link" style="background:#e4e6eb;color:#050505;">Idol</a>
-            <a href="habit.html"    class="nav-link" style="background:#6f42c1;color:#fff;">⏳ Deep Work</a>
-            <a href="keuangan.html" class="nav-link" style="background:#f59e0b;color:#fff;">💰 Keuangan</a>
+            <a href="web.html"      class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Web</a>
+            <a href="habit.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">⏳ Fokus</a>
+            <a href="keuangan.html" class="nav-link" style="background:#e4e6eb;color:#050505;">💰 Duit</a>
+            <a href="idol.html"     class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
         </nav>
     </div>
 </header>
@@ -986,5 +1027,16 @@ onValue(ref(db,'courses'), (snap)=>{
 });
 
 </script>
+
+<nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+        <a href="index.html"    class="bnav-item"><span>🎥</span><span>Video</span></a>
+        <a href="course.html"   class="bnav-item active"><span>📚</span><span>Course</span></a>
+        <a href="web.html"      class="bnav-item"><span>🌐</span><span>Web</span></a>
+        <a href="habit.html"    class="bnav-item"><span>⏳</span><span>Fokus</span></a>
+        <a href="keuangan.html" class="bnav-item"><span>💰</span><span>Duit</span></a>
+        <a href="idol.html"     class="bnav-item"><span>🌸</span><span>Idol</span></a>
+    </div>
+</nav>
 </body>
 </html>

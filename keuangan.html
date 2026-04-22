@@ -2,8 +2,12 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>LifeOS · Finance</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0e0f14">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -633,6 +637,25 @@
         @keyframes fadeOut { to { opacity: 0; transform: translateX(20px); } }
 
         /* ── RESPONSIVE ── */
+        /* ── BOTTOM NAV (mobile) ── */
+        .bottom-nav {
+            display: none;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            z-index: 300;
+            padding: 0 0 env(safe-area-inset-bottom);
+        }
+        .bottom-nav-inner { display: flex; justify-content: space-around; height: 56px; }
+        .bnav-item {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-decoration: none; font-size: 9px; font-weight: 700;
+            color: var(--text-dim); gap: 2px; transition: color .15s;
+        }
+        .bnav-item.active { color: var(--gold); }
+        .bnav-item span:first-child { font-size: 18px; line-height: 1; }
+
         @media (max-width: 640px) {
             .saldo-grid { grid-template-columns: 1fr 1fr; }
             .kartu-saldo.total { grid-column: 1 / -1; }
@@ -641,6 +664,10 @@
             .kat-grid { grid-template-columns: 1fr; }
             .chart-wrapper { flex-direction: column; }
             .chart-canvas-wrap { max-width: 100%; }
+            .app-header h1 { font-size: 28px; }
+            .app-wrapper { padding: 24px 14px 80px; }
+            .nav-links { display: none; }
+            .bottom-nav { display: block; }
         }
     </style>
 </head>
@@ -725,12 +752,13 @@
             <h1>Finance Dashboard</h1>
             <p>Catat arus kas & pantau saldo secara realtime</p>
             <nav class="nav-links">
-                <a href="index.html">🎥 Rak Video</a>
-                <a href="web.html">🌐 Rak Website</a>
-                <a href="habit.html">⏳ Deep Work</a>
-                <a href="course.html">Course</a>
-                <a href="idol.html">Idol</a>
+            <nav class="nav-links">
+                <a href="index.html">🎥 Video</a>
+                <a href="course.html">📚 Course</a>
+                <a href="web.html">🌐 Web</a>
+                <a href="habit.html">⏳ Fokus</a>
                 <a href="keuangan.html" class="active">💰 Keuangan</a>
+                <a href="idol.html">🌸 Idol</a>
             </nav>
         </div>
 
@@ -1255,5 +1283,16 @@
         // Expose toast globally
         window.showToast = toast;
     </script>
+
+<nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+        <a href="index.html"    class="bnav-item"><span>🎥</span><span>Video</span></a>
+        <a href="course.html"   class="bnav-item"><span>📚</span><span>Course</span></a>
+        <a href="web.html"      class="bnav-item"><span>🌐</span><span>Web</span></a>
+        <a href="habit.html"    class="bnav-item"><span>⏳</span><span>Fokus</span></a>
+        <a href="keuangan.html" class="bnav-item active"><span>💰</span><span>Duit</span></a>
+        <a href="idol.html"     class="bnav-item"><span>🌸</span><span>Idol</span></a>
+    </div>
+</nav>
 </body>
 </html>
