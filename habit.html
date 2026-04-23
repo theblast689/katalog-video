@@ -376,6 +376,53 @@ tbody tr:hover{background:rgba(140,100,255,0.06)}
 .modal-tip{font-size:12px;color:var(--muted);margin-top:24px}
 .modal-actions{display:flex;gap:12px;margin-top:20px}
 
+/* ─── COUNTDOWN PRESETS ──────────────────────── */
+.mission-countdown{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  margin-top:4px;
+}
+.mission-countdown-label{font-size:10px;color:var(--muted);font-weight:700;white-space:nowrap}
+.btn-preset{
+  padding:5px 10px;border-radius:8px;border:1px solid var(--border);
+  background:rgba(56,217,245,0.07);color:var(--cyan);
+  font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;
+  cursor:pointer;transition:all .15s;
+}
+.btn-preset:hover{background:rgba(56,217,245,0.2);border-color:var(--cyan)}
+.btn-preset-custom{
+  padding:4px 8px;border-radius:8px;border:1px solid var(--border);
+  background:rgba(255,255,255,0.04);color:var(--muted);
+  font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;
+  cursor:pointer;transition:all .15s;
+}
+.btn-preset-custom:hover{border-color:var(--purple);color:var(--purple)}
+
+/* ─── COUNTDOWN RING ─────────────────────────── */
+.modal-orb-wrap{position:relative;margin-bottom:10px}
+.countdown-ring{position:absolute;inset:-16px;pointer-events:none}
+.countdown-ring circle{
+  transition:stroke-dashoffset .95s linear;
+  transform-origin:center;
+}
+.timer-mode-badge{
+  font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  padding:3px 12px;border-radius:12px;text-align:center;margin-top:6px;
+}
+.badge-stopwatch{background:rgba(140,100,255,0.15);color:var(--purple)}
+.badge-countdown{background:rgba(56,217,245,0.15);color:var(--cyan)}
+.countdown-info{
+  font-size:13px;color:var(--muted);font-weight:700;
+  margin-top:4px;text-align:center;
+}
+.countdown-pulse .timer-display{
+  animation:cdPulse .5s ease;
+}
+@keyframes cdPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+/* countdown warning state */
+.countdown-warn .timer-display{color:var(--red)!important;text-shadow:0 0 40px rgba(255,79,106,0.6)!important}
+.countdown-warn .modal-orb::before{border-color:var(--red)!important}
+
 /* ─── TOAST ──────────────────────────────────── */
 #toast-wrap{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
 .toast{
@@ -478,9 +525,29 @@ tbody tr:hover{background:rgba(140,100,255,0.06)}
 
 <!-- TIMER MODAL -->
 <div id="timerModal" class="modal-overlay">
-  <div class="modal-orb">
-    <div class="timer-display" id="timerDisplay">00:00:00</div>
+  <div class="modal-orb-wrap">
+    <!-- SVG countdown ring -->
+    <svg class="countdown-ring" id="countdownRing" viewBox="0 0 232 232" style="display:none">
+      <circle cx="116" cy="116" r="108" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
+      <circle id="ringProgress" cx="116" cy="116" r="108" fill="none"
+        stroke="url(#ringGrad)" stroke-width="6"
+        stroke-linecap="round"
+        stroke-dasharray="678.58"
+        stroke-dashoffset="0"
+        transform="rotate(-90 116 116)"/>
+      <defs>
+        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#38d9f5"/>
+          <stop offset="100%" stop-color="#8c64ff"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <div class="modal-orb" id="modalOrb">
+      <div class="timer-display" id="timerDisplay">00:00:00</div>
+    </div>
   </div>
+  <div id="timerModeBadge" class="timer-mode-badge badge-stopwatch">⏱ STOPWATCH</div>
+  <div class="countdown-info" id="countdownInfo" style="display:none"></div>
   <div class="modal-task" id="modalTaskName">Misi Aktif...</div>
   <p class="modal-tip">Jauhkan HP. Tetap fokus. Kamu bisa.</p>
   <div class="modal-actions">
@@ -641,6 +708,8 @@ let waktuMulai      = null;
 let idHabitAktif    = null;
 let namaHabitAktif  = '';
 let levelSebelumnya = 1;
+let targetDetik     = 0; // 0 = stopwatch, >0 = countdown mode
+const RING_CIRC     = 678.58; // 2 * PI * 108
 
 // ── STARFIELD ───────────────────────────────────
 (function(){
@@ -828,51 +897,130 @@ window.renderHabit = () => {
   }
   rak.innerHTML = daftarHabit.map(h => {
     const sesi = Object.values(window.logsGlobal).filter(l=>l.habitId===h.id).length;
+    const safeName = h.nama.replace(/'/g,"\\'").replace(/"/g,"&quot;");
     return `
     <div class="mission-card">
       <button class="btn-hapus" onclick="hapusHabit('${h.id}')">✕</button>
       <div class="mission-name">${h.nama}</div>
       <div class="mission-meta"><span>⚔ ${sesi} sesi</span></div>
-      <button class="btn-mulai" onclick="mulaiTimer('${h.id}','${h.nama.replace(/'/g,"\\'").replace(/"/g,"&quot;")}')">▶ Mulai Deep Work</button>
+      <button class="btn-mulai" onclick="mulaiTimer('${h.id}','${safeName}',0)">▶ Mulai Stopwatch</button>
+      <div class="mission-countdown">
+        <span class="mission-countdown-label">⏳ Hitung mundur:</span>
+        <button class="btn-preset" onclick="mulaiTimer('${h.id}','${safeName}',15*60)">15m</button>
+        <button class="btn-preset" onclick="mulaiTimer('${h.id}','${safeName}',25*60)">25m</button>
+        <button class="btn-preset" onclick="mulaiTimer('${h.id}','${safeName}',45*60)">45m</button>
+        <button class="btn-preset" onclick="mulaiTimer('${h.id}','${safeName}',60*60)">60m</button>
+        <button class="btn-preset-custom" onclick="mulaiCustomCountdown('${h.id}','${safeName}')">Kustom…</button>
+      </div>
     </div>`;
   }).join('');
 };
 
 // ── TIMER ───────────────────────────────────────
-window.mulaiTimer = (id, nama) => {
+window.mulaiTimer = (id, nama, durasi=0) => {
   // Proteksi double-start
   if(intervalId) { clearInterval(intervalId); intervalId = null; }
 
   idHabitAktif   = id;
   namaHabitAktif = nama;
   waktuMulai     = Date.now();
+  targetDetik    = durasi; // 0 = stopwatch
 
   // Simpan ke localStorage agar survive refresh
   localStorage.setItem('timer_start',  waktuMulai);
   localStorage.setItem('timer_id',     id);
   localStorage.setItem('timer_nama',   nama);
+  localStorage.setItem('timer_target', durasi);
 
   document.getElementById('modalTaskName').textContent = nama;
+
+  // Update modal UI berdasarkan mode
+  const badge  = document.getElementById('timerModeBadge');
+  const ring   = document.getElementById('countdownRing');
+  const info   = document.getElementById('countdownInfo');
+  const orb    = document.getElementById('modalOrb');
+
+  if(targetDetik > 0){
+    badge.className  = 'timer-mode-badge badge-countdown';
+    badge.textContent= '⏳ HITUNG MUNDUR';
+    ring.style.display = 'block';
+    info.style.display  = 'block';
+    const m = Math.floor(durasi/60), s = durasi%60;
+    info.textContent = `Target: ${m > 0 ? m+'m ':'' }${s > 0 ? s+'d':''}`;
+    document.getElementById('ringProgress').style.strokeDashoffset = '0';
+    orb.classList.remove('countdown-warn');
+  } else {
+    badge.className  = 'timer-mode-badge badge-stopwatch';
+    badge.textContent= '⏱ STOPWATCH';
+    ring.style.display = 'none';
+    info.style.display  = 'none';
+    orb.classList.remove('countdown-warn');
+  }
+
   document.getElementById('timerModal').classList.add('active');
   intervalId = setInterval(tickTimer, 1000);
+  tickTimer();
+};
+
+window.mulaiCustomCountdown = (id, nama) => {
+  const input = prompt('Masukkan durasi hitung mundur (menit):', '30');
+  if(!input) return;
+  const mnt = parseInt(input);
+  if(isNaN(mnt)||mnt<=0||mnt>300) { toast('Durasi harus 1–300 menit!','error'); return; }
+  mulaiTimer(id, nama, mnt*60);
 };
 
 function tickTimer(){
   const detik = Math.floor((Date.now()-waktuMulai)/1000);
-  const j = String(Math.floor(detik/3600)).padStart(2,'0');
-  const m = String(Math.floor((detik%3600)/60)).padStart(2,'0');
-  const s = String(detik%60).padStart(2,'0');
-  document.getElementById('timerDisplay').textContent = `${j}:${m}:${s}`;
+
+  if(targetDetik > 0){
+    // ── COUNTDOWN MODE ──
+    const remaining = Math.max(targetDetik - detik, 0);
+    const j = String(Math.floor(remaining/3600)).padStart(2,'0');
+    const m = String(Math.floor((remaining%3600)/60)).padStart(2,'0');
+    const s = String(remaining%60).padStart(2,'0');
+    document.getElementById('timerDisplay').textContent = `${j}:${m}:${s}`;
+
+    // Ring progress
+    const pct = remaining / targetDetik;
+    const offset = RING_CIRC * (1 - pct);
+    document.getElementById('ringProgress').style.strokeDashoffset = offset;
+
+    // Warning state (last 20%)
+    const orb = document.getElementById('modalOrb');
+    if(remaining <= targetDetik * 0.2 && remaining > 0){
+      orb.classList.add('countdown-warn');
+    } else {
+      orb.classList.remove('countdown-warn');
+    }
+
+    // Auto-complete when done
+    if(remaining <= 0){
+      clearInterval(intervalId); intervalId = null;
+      // Vibrasi jika didukung
+      if(navigator.vibrate) navigator.vibrate([300,100,300,100,500]);
+      toast('⏳ Waktu habis! EXP diklaimkan otomatis.','gold','🎯');
+      spawnParticles(window.innerWidth/2, window.innerHeight*.4, 20, ['#38d9f5','#f5c842','#22d98a']);
+      setTimeout(()=>{ stopTimer(true); }, 800);
+    }
+  } else {
+    // ── STOPWATCH MODE ──
+    const j = String(Math.floor(detik/3600)).padStart(2,'0');
+    const m = String(Math.floor((detik%3600)/60)).padStart(2,'0');
+    const s = String(detik%60).padStart(2,'0');
+    document.getElementById('timerDisplay').textContent = `${j}:${m}:${s}`;
+  }
 }
 
-window.stopTimer = () => {
-  clearInterval(intervalId); intervalId = null;
+window.stopTimer = (auto=false) => {
+  if(intervalId){ clearInterval(intervalId); intervalId = null; }
   const detik = Math.floor((Date.now()-waktuMulai)/1000);
   const menit = Math.max(Math.floor(detik/60), detik>=10?1:0);
 
   localStorage.removeItem('timer_start');
   localStorage.removeItem('timer_id');
   localStorage.removeItem('timer_nama');
+  localStorage.removeItem('timer_target');
 
   if(detik < 10){
     tutupModal();
@@ -909,12 +1057,21 @@ window.batalTimer = () => {
   localStorage.removeItem('timer_start');
   localStorage.removeItem('timer_id');
   localStorage.removeItem('timer_nama');
+  localStorage.removeItem('timer_target');
   tutupModal();
 };
 
 function tutupModal(){
   document.getElementById('timerModal').classList.remove('active');
   document.getElementById('timerDisplay').textContent = '00:00:00';
+  document.getElementById('countdownRing').style.display = 'none';
+  document.getElementById('countdownInfo').style.display = 'none';
+  document.getElementById('modalOrb').classList.remove('countdown-warn');
+  document.getElementById('timerModeBadge').className = 'timer-mode-badge badge-stopwatch';
+  document.getElementById('timerModeBadge').textContent = '⏱ STOPWATCH';
+  document.getElementById('ringProgress').style.strokeDashoffset = '0';
+  targetDetik = 0;
+  localStorage.removeItem('timer_target');
 }
 
 // ── RESUME TIMER (survive refresh) ─────────────
@@ -922,11 +1079,28 @@ function tutupModal(){
   const ts   = localStorage.getItem('timer_start');
   const tid  = localStorage.getItem('timer_id');
   const tnm  = localStorage.getItem('timer_nama');
+  const tgt  = localStorage.getItem('timer_target');
   if(!ts||!tid||!tnm) return;
   waktuMulai    = parseInt(ts);
   idHabitAktif  = tid;
   namaHabitAktif= tnm;
+  targetDetik   = tgt ? parseInt(tgt) : 0;
+
   document.getElementById('modalTaskName').textContent = tnm;
+
+  // Restore modal UI
+  const badge  = document.getElementById('timerModeBadge');
+  const ring   = document.getElementById('countdownRing');
+  const info   = document.getElementById('countdownInfo');
+  if(targetDetik > 0){
+    badge.className  = 'timer-mode-badge badge-countdown';
+    badge.textContent= '⏳ HITUNG MUNDUR';
+    ring.style.display = 'block';
+    info.style.display = 'block';
+    const m = Math.floor(targetDetik/60), s = targetDetik%60;
+    info.textContent = `Target: ${m > 0 ? m+'m ':'' }${s > 0 ? s+'d':''}`;
+  }
+
   document.getElementById('timerModal').classList.add('active');
   intervalId = setInterval(tickTimer, 1000);
   tickTimer();
