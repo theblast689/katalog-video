@@ -159,8 +159,8 @@ body{
 @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 
 /* STATS */
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-@media(max-width:480px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:580px){.stats-grid{grid-template-columns:repeat(2,2fr)}}
 .stat-box{
   background:rgba(255,255,255,0.04);
   border:1px solid var(--border);
@@ -171,7 +171,29 @@ body{
 .stat-val{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--gold)}
 .stat-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
 
-/* ─── STREAK BANNER ───────────────────────────── */
+/* ─── TODAY FOCUS BANNER ──────────────────────── */
+.today-banner{
+  display:flex;align-items:center;gap:16px;
+  background:linear-gradient(90deg,rgba(56,217,245,0.08),rgba(140,100,255,0.08));
+  border:1px solid rgba(56,217,245,0.25);
+  border-radius:var(--radius);
+  padding:16px 22px;margin-bottom:24px;
+  position:relative;overflow:hidden;
+}
+.today-banner::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(180deg,var(--cyan),var(--purple));
+}
+.today-icon{font-size:30px;line-height:1;flex-shrink:0}
+.today-info{flex:1;min-width:0}
+.today-title{font-size:11px;color:var(--cyan);font-weight:800;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:4px}
+.today-time{font-family:'Cinzel',serif;font-size:26px;font-weight:700;color:var(--text);line-height:1}
+.today-sub{font-size:11px;color:var(--muted);margin-top:3px;font-weight:600}
+.today-bar-wrap{flex:1;min-width:80px;max-width:180px}
+.today-bar-label{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:5px;font-weight:700}
+.today-bar-track{background:rgba(255,255,255,0.06);border-radius:6px;height:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.05)}
+.today-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width .8s cubic-bezier(.4,0,.2,1)}
+@media(max-width:480px){.today-bar-wrap{display:none}}
 .streak-banner{
   display:flex;align-items:center;gap:12px;
   background:linear-gradient(90deg,rgba(255,79,106,0.1),rgba(245,200,66,0.1));
@@ -610,6 +632,11 @@ tbody tr:hover{background:rgba(140,100,255,0.06)}
           <div class="stat-val" id="statSesi">0</div>
           <div class="stat-lbl">Sesi</div>
         </div>
+        <div class="stat-box" style="border-color:rgba(56,217,245,0.3)">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-val" id="statHariIni" style="color:var(--cyan);font-size:14px">0m</div>
+          <div class="stat-lbl">Hari Ini</div>
+        </div>
       </div>
     </div>
   </div>
@@ -620,6 +647,23 @@ tbody tr:hover{background:rgba(140,100,255,0.06)}
     <div class="streak-info">
       <strong id="streakLabel">0 Hari Streak!</strong>
       <p id="streakDesc">Mulai sesi pertamamu hari ini untuk membangun streak.</p>
+    </div>
+  </div>
+
+  <!-- TODAY FOCUS BANNER -->
+  <div class="today-banner" id="todayBanner">
+    <div class="today-icon">🎯</div>
+    <div class="today-info">
+      <div class="today-title">⚡ Fokus Hari Ini</div>
+      <div class="today-time" id="todayTimeDisplay">0 menit</div>
+      <div class="today-sub" id="todaySub">Belum ada sesi hari ini. Yuk mulai!</div>
+    </div>
+    <div class="today-bar-wrap">
+      <div class="today-bar-label">
+        <span id="todayBarLabel">0 / 120 mnt</span>
+        <span id="todayBarPct">0%</span>
+      </div>
+      <div class="today-bar-track"><div class="today-bar-fill" id="todayBarFill" style="width:0%"></div></div>
     </div>
   </div>
 
@@ -839,6 +883,62 @@ function renderAchievements(logs){
   }).join('');
 }
 
+// ── TODAY FOCUS ─────────────────────────────────
+const TODAY_GOAL = 120; // default daily goal in minutes
+
+function updateTodayUI(logs) {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayMenit = Object.values(logs)
+    .filter(l => l.dateString === todayStr)
+    .reduce((s, l) => s + l.durasiMenit, 0);
+
+  const jam  = Math.floor(todayMenit / 60);
+  const mnt  = todayMenit % 60;
+  const pct  = Math.min(Math.round((todayMenit / TODAY_GOAL) * 100), 100);
+
+  // Hero stat box
+  const statEl = document.getElementById('statHariIni');
+  if (statEl) statEl.textContent = jam > 0 ? `${jam}j ${mnt}m` : `${mnt}m`;
+
+  // Time display
+  const dispEl = document.getElementById('todayTimeDisplay');
+  if (dispEl) {
+    if (jam > 0) dispEl.textContent = `${jam} jam ${mnt} menit`;
+    else if (todayMenit > 0) dispEl.textContent = `${mnt} menit`;
+    else dispEl.textContent = '0 menit';
+  }
+
+  // Sub text
+  const subEl = document.getElementById('todaySub');
+  if (subEl) {
+    const todaySesi = Object.values(logs).filter(l => l.dateString === todayStr).length;
+    if (todayMenit === 0) subEl.textContent = 'Belum ada sesi hari ini. Yuk mulai!';
+    else if (todayMenit >= TODAY_GOAL) subEl.textContent = `🔥 Target harian tercapai! ${todaySesi} sesi diselesaikan.`;
+    else subEl.textContent = `${todaySesi} sesi • Kurang ${TODAY_GOAL - todayMenit} menit lagi untuk target.`;
+  }
+
+  // Progress bar
+  const fillEl = document.getElementById('todayBarFill');
+  const lblEl  = document.getElementById('todayBarLabel');
+  const pctEl  = document.getElementById('todayBarPct');
+  if (fillEl) fillEl.style.width = pct + '%';
+  if (lblEl)  lblEl.textContent  = `${todayMenit} / ${TODAY_GOAL} mnt`;
+  if (pctEl)  pctEl.textContent  = pct + '%';
+
+  // Banner color shift when goal reached
+  const banner = document.getElementById('todayBanner');
+  if (banner) {
+    if (todayMenit >= TODAY_GOAL) {
+      banner.style.background = 'linear-gradient(90deg,rgba(34,217,138,0.12),rgba(245,200,66,0.08))';
+      banner.style.borderColor = 'rgba(34,217,138,0.35)';
+      banner.querySelector('.today-bar-fill').style.background = 'linear-gradient(90deg,var(--green),var(--gold))';
+    } else {
+      banner.style.background = '';
+      banner.style.borderColor = '';
+    }
+  }
+}
+
 // ── FIREBASE LISTENERS ──────────────────────────
 onValue(ref(db,'rpgStats/totalExp'), snap=>{
   totalExp = snap.val()||0;
@@ -865,6 +965,7 @@ onValue(ref(db,'habitLogs'), snap=>{
   document.getElementById('statSesi').textContent  = vals.length;
 
   updateStreakUI(hitungStreak(logs));
+  updateTodayUI(logs);
   renderAchievements(logs);
   renderGrafik(logs);
   renderRiwayat();
