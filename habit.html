@@ -576,6 +576,8 @@ tbody tr:hover{background:rgba(140,100,255,0.06)}
     <button class="btn btn-red" onclick="stopTimer()">✅ Selesai & Klaim EXP</button>
     <button class="btn btn-sm" style="background:rgba(255,255,255,0.07);color:var(--muted)" onclick="batalTimer()">Batal</button>
   </div>
+  <div id="notifStatus" style="margin-top:12px;font-size:11px;font-weight:700;color:var(--muted);text-align:center;cursor:pointer;letter-spacing:.5px;"
+       onclick="mintaIzinManual()"></div>
 </div>
 
 <!-- TOPBAR -->
@@ -755,6 +757,107 @@ let namaHabitAktif  = '';
 let levelSebelumnya = 1;
 let targetDetik     = 0; // 0 = stopwatch, >0 = countdown mode
 const RING_CIRC     = 678.58; // 2 * PI * 108
+
+// ── ALARM SUARA (Web Audio API) ─────────────────
+function playAlarm() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Sequensi nada: 3 beep naik lalu 1 panjang
+    const notes = [
+      { freq: 440, start: 0,    dur: 0.18 },
+      { freq: 554, start: 0.22, dur: 0.18 },
+      { freq: 659, start: 0.44, dur: 0.18 },
+      { freq: 880, start: 0.70, dur: 0.55 },
+    ];
+    notes.forEach(({ freq, start, dur }) => {
+      const osc   = ctx.createOscillator();
+      const gain  = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type      = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, ctx.currentTime + start);
+      gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + start + 0.02);
+      gain.gain.linearRampToValueAtTime(0,   ctx.currentTime + start + dur);
+      osc.start(ctx.currentTime + start);
+      osc.stop (ctx.currentTime + start + dur + 0.05);
+    });
+    // Ulangi sekali lagi setelah 1.4 detik
+    setTimeout(() => {
+      notes.forEach(({ freq, start, dur }) => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, ctx.currentTime + start);
+        gain.gain.linearRampToValueAtTime(0.45, ctx.currentTime + start + 0.02);
+        gain.gain.linearRampToValueAtTime(0,    ctx.currentTime + start + dur);
+        osc.start(ctx.currentTime + start);
+        osc.stop (ctx.currentTime + start + dur + 0.05);
+      });
+    }, 1400);
+  } catch(e) { console.warn('Audio tidak didukung:', e); }
+}
+
+// ── NOTIFIKASI SISTEM ────────────────────────────
+function mintaIzinNotifikasi() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(updateNotifStatus);
+  }
+}
+
+window.mintaIzinManual = async () => {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    toast('Notifikasi sudah aktif ✓', 'success');
+    return;
+  }
+  const result = await Notification.requestPermission();
+  updateNotifStatus();
+  if (result === 'granted') toast('Notifikasi diaktifkan! 🔔', 'success');
+  else toast('Izin notifikasi ditolak.', 'error');
+};
+
+function updateNotifStatus() {
+  const el = document.getElementById('notifStatus');
+  if (!el) return;
+  if (!('Notification' in window)) {
+    el.textContent = '🔕 Browser tidak mendukung notifikasi';
+    el.style.color = 'var(--muted)';
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    el.innerHTML = '🔔 Notifikasi aktif';
+    el.style.color = 'var(--green)';
+  } else if (Notification.permission === 'denied') {
+    el.innerHTML = '🔕 Notifikasi diblokir — aktifkan di pengaturan browser';
+    el.style.color = 'var(--red)';
+  } else {
+    el.innerHTML = '🔔 Tap untuk aktifkan notifikasi';
+    el.style.color = 'var(--cyan)';
+    el.style.textDecoration = 'underline';
+  }
+}
+
+function kirimNotifikasi(namaHabit) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  const notif = new Notification('⏳ Waktu Habis! — FokusPro', {
+    body: `Sesi "${namaHabit}" selesai. EXP berhasil diklaim! 🎯`,
+    icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Blue_question_mark_icon.svg/192px-Blue_question_mark_icon.svg.png',
+    badge: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Blue_question_mark_icon.svg/192px-Blue_question_mark_icon.svg.png',
+    tag: 'fokuspro-timer',
+    requireInteraction: false,
+    silent: false,
+  });
+  // Auto-tutup notifikasi setelah 6 detik
+  setTimeout(() => notif.close(), 6000);
+  // Klik notifikasi → fokus ke tab ini
+  notif.onclick = () => { window.focus(); notif.close(); };
+}
 
 // ── STARFIELD ───────────────────────────────────
 (function(){
@@ -1043,6 +1146,8 @@ window.mulaiTimer = (id, nama, durasi=0) => {
   const orb    = document.getElementById('modalOrb');
 
   if(targetDetik > 0){
+    // Minta izin notifikasi saat pertama kali pakai countdown
+    mintaIzinNotifikasi();
     badge.className  = 'timer-mode-badge badge-countdown';
     badge.textContent= '⏳ HITUNG MUNDUR';
     ring.style.display = 'block';
@@ -1060,6 +1165,7 @@ window.mulaiTimer = (id, nama, durasi=0) => {
   }
 
   document.getElementById('timerModal').classList.add('active');
+  updateNotifStatus();
   intervalId = setInterval(tickTimer, 1000);
   tickTimer();
 };
@@ -1099,6 +1205,10 @@ function tickTimer(){
     // Auto-complete when done
     if(remaining <= 0){
       clearInterval(intervalId); intervalId = null;
+      // Suara alarm
+      playAlarm();
+      // Notifikasi sistem (muncul meski tab tidak aktif)
+      kirimNotifikasi(namaHabitAktif);
       // Vibrasi jika didukung
       if(navigator.vibrate) navigator.vibrate([300,100,300,100,500]);
       toast('⏳ Waktu habis! EXP diklaimkan otomatis.','gold','🎯');
