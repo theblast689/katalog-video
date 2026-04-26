@@ -118,6 +118,40 @@
         #loading-overlay { position: fixed; inset: 0; background: rgba(247,240,240,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; gap: 12px; font-weight: 600; color: var(--primary); }
         .spinner { width: 36px; height: 36px; border: 3px solid var(--primary-light); border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* ── TIME TRACKER WIDGET ── */
+        .waktu-hari-ini {
+            display: flex; align-items: center; gap: 7px;
+            background: var(--primary-light);
+            border: 1.5px solid #f5b8b8;
+            border-radius: 20px; padding: 5px 13px;
+            font-size: 12px; font-weight: 700; color: var(--primary);
+            white-space: nowrap; cursor: default; user-select: none; flex-shrink: 0;
+        }
+        .waktu-hari-ini .dot-live {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--green); animation: blink-dot 1.4s ease-in-out infinite; flex-shrink: 0;
+        }
+        .waktu-hari-ini.paused .dot-live { background: var(--yellow); animation: none; }
+        @keyframes blink-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .waktu-wrap { position: relative; flex-shrink: 0; }
+        .waktu-tooltip {
+            display: none; position: absolute; top: calc(100% + 8px); right: 0;
+            background: #1c1c1e; color: #fff; font-size: 11px; font-weight: 600;
+            padding: 8px 12px; border-radius: 10px; white-space: nowrap;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 300;
+        }
+        .waktu-tooltip::before {
+            content:''; position:absolute; top:-5px; right:16px;
+            border-left:5px solid transparent; border-right:5px solid transparent;
+            border-bottom:5px solid #1c1c1e;
+        }
+        .waktu-wrap:hover .waktu-tooltip { display: block; }
+        @media (max-width: 640px) {
+            .waktu-hari-ini { font-size: 11px; padding: 4px 10px; }
+            .waktu-tooltip { right: -8px; }
+        }
+
         .fab-top { display: none; position: fixed; bottom: 72px; right: 16px; width: 44px; height: 44px; border-radius: 50%; background: var(--primary); color: #fff; border: none; font-size: 18px; cursor: pointer; box-shadow: 0 4px 16px rgba(214,40,40,.4); z-index: 150; align-items: center; justify-content: center; opacity: 0; transition: opacity .25s; }
         @media (max-width: 640px) {
             .nav-links { display: none; }
@@ -171,6 +205,16 @@
 <header class="topbar">
     <div class="topbar-inner">
         <span class="logo">🇯🇵 日本語 Video</span>
+        <div class="waktu-wrap">
+            <div class="waktu-hari-ini" id="waktuWidget">
+                <span class="dot-live"></span>
+                <span id="waktuTeks">00:00:00</span>
+            </div>
+            <div class="waktu-tooltip" id="waktuTooltip">
+                ⏱ Waktu di halaman ini hari ini<br>
+                <span id="waktuTooltipDetail" style="color:#aaa;font-weight:500;">Memuat...</span>
+            </div>
+        </div>
         <nav class="nav-links">
             <a href="index.html"  class="nav-link" style="background:#e4e6eb;color:#050505;">🎥 Video</a>
             <a href="course.html" class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Course</a>
@@ -616,6 +660,82 @@ if ('serviceWorker' in navigator) {
 }
 const fab = document.getElementById('fabTop');
 window.addEventListener('scroll', () => { if (fab) fab.style.opacity = window.scrollY > 320 ? '1' : '0'; }, { passive: true });
+
+// ── TIME TRACKER ──────────────────────────────────────
+(function() {
+    const PAGE_KEY = 'waktu_halaman_jepang';
+    const todayKey = () => {
+        const d = new Date();
+        return `${PAGE_KEY}_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    };
+    const getStored = () => parseInt(localStorage.getItem(todayKey()) || '0', 10);
+    const saveStored = (s) => localStorage.setItem(todayKey(), String(s));
+
+    let totalDetik = getStored();
+    let startTime = null; let intervalId = null; let isActive = false;
+
+    const fmt = (s) => {
+        const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+        if (h>0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+        return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    };
+    const fmtVerbose = (s) => {
+        if (s<60) return `${s} detik`;
+        const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+        let str='';
+        if(h>0) str+=`${h} jam `;
+        if(m>0) str+=`${m} menit `;
+        if(sec>0&&h===0) str+=`${sec} detik`;
+        return str.trim();
+    };
+
+    const updateUI = () => {
+        const el = document.getElementById('waktuTeks');
+        const widget = document.getElementById('waktuWidget');
+        const detail = document.getElementById('waktuTooltipDetail');
+        if (!el) return;
+        el.textContent = fmt(totalDetik);
+        if (detail) {
+            const tgl = new Date();
+            const tglStr = tgl.toLocaleDateString('id-ID', {weekday:'long',day:'numeric',month:'long'});
+            detail.textContent = `${fmtVerbose(totalDetik)} — ${tglStr}`;
+        }
+        if (widget) {
+            if (totalDetik >= 7200) {
+                widget.style.background='#fff7ed'; widget.style.borderColor='#fed7aa'; widget.style.color='#c2410c';
+            } else if (totalDetik >= 3600) {
+                widget.style.background='#ecfdf5'; widget.style.borderColor='#a7f3d0'; widget.style.color='#065f46';
+            } else {
+                widget.style.background=''; widget.style.borderColor=''; widget.style.color='';
+            }
+        }
+    };
+
+    const mulai = () => {
+        if (isActive) return; isActive = true; startTime = Date.now();
+        const w = document.getElementById('waktuWidget');
+        if (w) w.classList.remove('paused');
+        intervalId = setInterval(() => {
+            totalDetik = getStored() + Math.floor((Date.now()-startTime)/1000);
+            updateUI();
+        }, 1000);
+    };
+
+    const jeda = () => {
+        if (!isActive) return; isActive = false;
+        totalDetik = getStored() + Math.floor((Date.now()-startTime)/1000);
+        saveStored(totalDetik); clearInterval(intervalId); startTime = null;
+        const w = document.getElementById('waktuWidget');
+        if (w) w.classList.add('paused');
+        updateUI();
+    };
+
+    document.addEventListener('visibilitychange', () => { if(document.hidden) jeda(); else mulai(); });
+    window.addEventListener('beforeunload', jeda);
+    window.addEventListener('pagehide', jeda);
+    updateUI(); mulai();
+})();
+
 </script>
 </body>
 </html>
