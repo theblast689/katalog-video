@@ -9,7 +9,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1877f2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -46,29 +46,46 @@
             top: 0;
             z-index: 100;
             padding: 0 20px;
+            box-shadow: 0 1px 8px rgba(0,0,0,0.06);
         }
         .topbar-inner {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            height: 54px;
-            gap: 16px;
+            height: 56px;
+            gap: 14px;
         }
-        .logo { font-weight: 700; font-size: 16px; color: var(--blue); white-space: nowrap; }
-        .nav-links { display: flex; gap: 6px; flex-wrap: wrap; }
+        .logo {
+            font-weight: 800;
+            font-size: 16px;
+            color: var(--blue);
+            white-space: nowrap;
+            letter-spacing: -0.3px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 4px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .nav-links::-webkit-scrollbar { display: none; }
         .nav-link {
-            padding: 6px 14px;
+            padding: 6px 12px;
             border-radius: 20px;
             text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-            transition: opacity .2s;
+            font-size: 12.5px;
+            font-weight: 700;
+            transition: all .2s;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
-        .nav-link:hover { opacity: .8; }
+        .nav-link:hover { opacity: .82; transform: translateY(-1px); }
+        .nav-link.active { background: var(--blue) !important; color: #fff !important; }
 
-        /* ── BOTTOM NAV (mobile only) ── */
+        /* ── BOTTOM NAV (mobile) ── */
         .bottom-nav {
             display: none;
             position: fixed;
@@ -77,41 +94,53 @@
             border-top: 1px solid var(--border);
             z-index: 200;
             padding: 0 0 env(safe-area-inset-bottom);
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
         }
         .bottom-nav-inner {
             display: flex;
             justify-content: space-around;
-            height: 56px;
+            height: 54px;
+            overflow-x: auto;
+            scrollbar-width: none;
         }
+        .bottom-nav-inner::-webkit-scrollbar { display: none; }
         .bnav-item {
             flex: 1;
+            min-width: 44px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 700;
             color: var(--muted);
-            gap: 3px;
+            gap: 2px;
             transition: color .15s;
+            padding: 0 2px;
         }
         .bnav-item.active { color: var(--blue); }
-        .bnav-item span:first-child { font-size: 20px; line-height: 1; }
+        .bnav-item span:first-child { font-size: 17px; line-height: 1; }
 
         /* ── MAIN LAYOUT ── */
-        .main { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+        .main { max-width: 1200px; margin: 0 auto; padding: 24px 20px 70px; }
 
         /* ── PANEL ── */
         .panel {
             background: var(--surface);
             border-radius: var(--radius);
             border: 1px solid var(--border);
-            padding: 22px 24px;
-            margin-bottom: 20px;
+            padding: 20px 22px;
+            margin-bottom: 18px;
             box-shadow: var(--shadow);
         }
-        .panel-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+        .panel-title {
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            color: var(--text);
+            letter-spacing: -0.2px;
+        }
 
         /* ── FORM ELEMENTS ── */
         input[type="text"], input[type="url"], textarea {
@@ -132,27 +161,59 @@
             box-shadow: 0 0 0 3px rgba(24,119,242,0.1);
         }
 
-        .flex-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+        .flex-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; align-items: flex-start; }
 
         .btn {
-            padding: 10px 20px;
+            padding: 10px 18px;
             border-radius: var(--radius-sm);
             border: none;
             font-family: inherit;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 13.5px;
+            font-weight: 700;
             cursor: pointer;
             transition: background .2s, transform .1s, box-shadow .2s;
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
         }
         .btn:active { transform: scale(0.97); }
         .btn-primary { background: var(--blue); color: #fff; }
         .btn-primary:hover { background: var(--blue-dark); box-shadow: 0 4px 14px rgba(24,119,242,0.35); }
         .btn-secondary { background: #e4e6eb; color: var(--text); }
         .btn-secondary:hover { background: #d8dadf; }
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        /* ── PLATFORM BADGE ── */
+        .platform-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 5px;
+            margin-bottom: 2px;
+        }
+        .plat-youtube { background: #fce8e8; color: #c00; }
+        .plat-tiktok  { background: #e8f5fe; color: #010101; }
+        .plat-instagram { background: #fce4f3; color: #c13584; }
+        .plat-vimeo   { background: #e8f0fd; color: #1ab7ea; }
+        .plat-twitch  { background: #f0e8fe; color: #6441a5; }
+        .plat-facebook { background: #e7f0ff; color: #1877f2; }
+        .plat-twitter { background: #e8f4fd; color: #1da1f2; }
+        .plat-vidio   { background: #fff0e0; color: #f37021; }
+        .plat-other   { background: #f0f2f5; color: #65676b; }
+
+        /* ── SOURCE DETECT HINT ── */
+        #sourceHint {
+            font-size: 11.5px;
+            font-weight: 600;
+            margin-top: 6px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            display: none;
+        }
+        #sourceHint.show { display: block; }
 
         /* ── KATEGORI CHIPS ── */
         .wadah-kategori {
@@ -242,7 +303,7 @@
             background: var(--surface);
             font-family: inherit;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: background .15s, border-color .15s, color .15s;
             color: var(--muted);
@@ -264,31 +325,7 @@
             border: 1.5px solid var(--border);
             font-family: inherit;
             font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            outline: none;
-            background: var(--surface);
-        }
-            font-weight: 600;
-            cursor: pointer;
-            transition: background .15s, border-color .15s, color .15s;
-            color: var(--muted);
-        }
-        .filter-btn:hover { border-color: var(--blue); color: var(--blue); }
-        .filter-btn.aktif { background: var(--blue); color: #fff; border-color: var(--blue); }
-        .filter-sort {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .filter-sort select {
-            padding: 6px 10px;
-            border-radius: var(--radius-sm);
-            border: 1.5px solid var(--border);
-            font-family: inherit;
-            font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             outline: none;
             background: var(--surface);
@@ -298,7 +335,7 @@
         .rak-katalog {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-            gap: 20px;
+            gap: 18px;
             margin-bottom: 28px;
         }
 
@@ -341,7 +378,6 @@
             opacity: 0;
             transition: opacity .2s;
         }
-        /* Always show play overlay on touch devices */
         @media (hover: none) {
             .thumbnail-overlay { opacity: 1; background: rgba(0,0,0,0.18); }
         }
@@ -367,7 +403,7 @@
             padding: 2px 7px;
             border-radius: 5px;
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
         }
         .status-badge {
             position: absolute;
@@ -403,9 +439,9 @@
         }
         .btn-hapus-video:hover { background: var(--red); transform: scale(1.1); }
 
-        .konten-kartu { padding: 14px 16px 16px; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; }
+        .konten-kartu { padding: 14px 16px 16px; flex-grow: 1; display: flex; flex-direction: column; gap: 9px; }
 
-        .tags-row { display: flex; flex-wrap: wrap; gap: 5px; }
+        .tags-row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
         .tag-badge {
             background: var(--blue-light);
             color: var(--blue);
@@ -415,7 +451,8 @@
             font-weight: 700;
         }
 
-        .judul-video { font-size: 13.5px; font-weight: 700; line-height: 1.4; color: var(--text); }
+        .judul-video { font-size: 13px; font-weight: 700; line-height: 1.4; color: var(--text); }
+        .channel-video { font-size: 11.5px; color: var(--muted); font-weight: 500; }
 
         .progress-wrap label { font-size: 11px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 4px; }
         .progress-wrap input { font-size: 12px; padding: 8px 10px; }
@@ -433,7 +470,7 @@
             background: transparent;
             font-size: 12px;
             resize: vertical;
-            min-height: 48px;
+            min-height: 44px;
             outline: none;
             font-family: inherit;
             color: var(--text);
@@ -464,7 +501,8 @@
             border-radius: 8px;
         }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        @keyframes spin { 0% { transform: translateY(-50%) rotate(0deg); } 100% { transform: translateY(-50%) rotate(360deg); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spinY { 0% { transform: translateY(-50%) rotate(0deg); } 100% { transform: translateY(-50%) rotate(360deg); } }
         .skeleton-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
         .skeleton-thumb { height: 172px; }
         .skeleton-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
@@ -482,7 +520,7 @@
             cursor: pointer;
             font-family: inherit;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 700;
             transition: background .15s, border-color .15s;
         }
         .page-btn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
@@ -515,15 +553,16 @@
         #loading-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(240,242,245,0.85);
+            background: rgba(240,242,245,0.9);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 999;
             gap: 12px;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--blue);
+            font-size: 14px;
         }
         .spinner {
             width: 36px;
@@ -532,60 +571,6 @@
             border-top-color: var(--blue);
             border-radius: 50%;
             animation: spin .7s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        /* ── MOBILE RESPONSIVE ── */
-        @media (max-width: 640px) {
-            /* Hide desktop nav, show bottom nav */
-            .nav-links { display: none; }
-            .bottom-nav { display: block; }
-
-            /* Adjust main padding for bottom nav */
-            .main { padding: 16px 12px 80px; }
-            .topbar { padding: 0 14px; }
-
-            /* Compact panels */
-            .panel { padding: 16px 14px; margin-bottom: 14px; }
-            .panel-title { font-size: 14px; margin-bottom: 12px; }
-
-            /* Form stacked vertically */
-            .flex-row { flex-direction: column; gap: 8px; margin-top: 10px; }
-            .flex-row input, .flex-row button { width: 100%; }
-            #tombolSimpan { padding: 13px; font-size: 15px; }
-
-            /* Link input full row */
-            #linkVideo { font-size: 15px; padding: 13px 14px; }
-            #inputDurasi { font-size: 15px; }
-
-            /* Kategori chips compact */
-            .wadah-kategori { padding: 10px; gap: 6px; }
-            .kat-label { font-size: 13px; padding: 7px 12px; }
-
-            /* Grid 1 column */
-            .rak-katalog { grid-template-columns: 1fr; gap: 14px; }
-
-            /* Search full width */
-            .search-wrap input { font-size: 15px; padding: 13px 14px 13px 42px; }
-
-            /* Kartu bigger touch targets */
-            .konten-kartu { padding: 12px 14px 14px; gap: 9px; }
-            .judul-video { font-size: 14px; }
-            .btn-simpan, .btn-tonton {
-                padding: 11px 8px;
-                font-size: 13px;
-            }
-            .progress-wrap input { padding: 10px 12px; font-size: 14px; }
-            .teks-catatan { font-size: 13px; }
-
-            /* Bigger hapus button for touch */
-            .btn-hapus-video { width: 34px; height: 34px; font-size: 14px; }
-
-            /* Toast adjust for bottom nav */
-            #toast-container { bottom: 68px; right: 12px; left: 12px; }
-            .toast { max-width: 100%; }
-
-            /* Pagination compact */
-            .page-btn { padding: 9px 12px; font-size: 13px; }
         }
 
         /* ── TIME TRACKER WIDGET ── */
@@ -612,15 +597,8 @@
             animation: blink-dot 1.4s ease-in-out infinite;
             flex-shrink: 0;
         }
-        .waktu-hari-ini.paused .dot-live {
-            background: var(--yellow);
-            animation: none;
-        }
-        @keyframes blink-dot {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-        /* Tooltip on hover */
+        .waktu-hari-ini.paused .dot-live { background: var(--yellow); animation: none; }
+        @keyframes blink-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         .waktu-wrap { position: relative; flex-shrink: 0; }
         .waktu-tooltip {
             display: none;
@@ -647,23 +625,11 @@
         }
         .waktu-wrap:hover .waktu-tooltip { display: block; }
 
-        /* ── Streak bar ── */
-        .waktu-streak {
-            font-size: 10px;
-            color: var(--muted);
-            margin-top: 2px;
-        }
-
-        @media (max-width: 640px) {
-            .waktu-hari-ini { font-size: 11px; padding: 4px 10px; }
-            .waktu-tooltip { right: -8px; }
-        }
-
         /* FAB scroll-to-top */
         .fab-top {
             display: none;
             position: fixed;
-            bottom: 72px;
+            bottom: 68px;
             right: 16px;
             width: 44px; height: 44px;
             border-radius: 50%;
@@ -680,6 +646,36 @@
             transition: opacity .25s;
         }
         @media (max-width: 640px) { .fab-top { display: flex; } }
+
+        /* ── MOBILE RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .bottom-nav { display: block; }
+            .main { padding: 16px 12px 72px; }
+            .topbar { padding: 0 14px; }
+            .topbar-inner { height: 50px; }
+            .panel { padding: 16px 14px; margin-bottom: 14px; }
+            .panel-title { font-size: 13.5px; margin-bottom: 12px; }
+            .flex-row { flex-direction: column; gap: 8px; margin-top: 10px; }
+            .flex-row input, .flex-row button { width: 100%; }
+            #tombolSimpan { padding: 13px; font-size: 15px; }
+            #linkVideo { font-size: 15px; padding: 13px 14px; }
+            #inputDurasi { font-size: 15px; }
+            .wadah-kategori { padding: 10px; gap: 6px; }
+            .kat-label { font-size: 13px; padding: 7px 12px; }
+            .rak-katalog { grid-template-columns: 1fr; gap: 14px; }
+            .search-wrap input { font-size: 15px; padding: 13px 14px 13px 42px; }
+            .konten-kartu { padding: 12px 14px 14px; gap: 8px; }
+            .judul-video { font-size: 13.5px; }
+            .btn-simpan, .btn-tonton { padding: 11px 8px; font-size: 13px; }
+            .progress-wrap input { padding: 10px 12px; font-size: 14px; }
+            .teks-catatan { font-size: 13px; }
+            .btn-hapus-video { width: 34px; height: 34px; font-size: 14px; }
+            #toast-container { bottom: 66px; right: 12px; left: 12px; }
+            .toast { max-width: 100%; }
+            .page-btn { padding: 9px 12px; font-size: 13px; }
+            .waktu-hari-ini { font-size: 11px; padding: 4px 10px; }
+        }
     </style>
 </head>
 <body>
@@ -697,12 +693,14 @@
 <!-- Bottom Navigation (mobile) -->
 <nav class="bottom-nav">
     <div class="bottom-nav-inner">
-        <a href="index.html"    class="bnav-item active"><span>🎥</span><span>Video</span></a>
-        <a href="course.html"   class="bnav-item"><span>📚</span><span>Course</span></a>
-        <a href="web.html"      class="bnav-item"><span>🌐</span><span>Web</span></a>
-        <a href="habit.html"    class="bnav-item"><span>⏳</span><span>Fokus</span></a>
-        <a href="keuangan.html" class="bnav-item"><span>💰</span><span>Duit</span></a>
-        <a href="idol.html"     class="bnav-item"><span>🌸</span><span>Idol</span></a>
+        <a href="index.html"     class="bnav-item active"><span>🎥</span><span>Video</span></a>
+        <a href="course.html"    class="bnav-item"><span>📚</span><span>Course</span></a>
+        <a href="web.html"       class="bnav-item"><span>🌐</span><span>Web</span></a>
+        <a href="habit.html"     class="bnav-item"><span>⏳</span><span>Fokus</span></a>
+        <a href="keuangan.html"  class="bnav-item"><span>💰</span><span>Duit</span></a>
+        <a href="idol.html"      class="bnav-item"><span>🌸</span><span>Idol</span></a>
+        <a href="indonesia.html" class="bnav-item"><span>🇮🇩</span><span>Indo</span></a>
+        <a href="jepang.html"    class="bnav-item"><span>🇯🇵</span><span>Jepang</span></a>
     </div>
 </nav>
 
@@ -713,20 +711,22 @@
         <div class="waktu-wrap">
             <div class="waktu-hari-ini" id="waktuWidget">
                 <span class="dot-live"></span>
-                <span id="waktuTeks">00:00:00</span>
+                <span id="waktuTeks">00:00</span>
             </div>
-            <div class="waktu-tooltip" id="waktuTooltip">
+            <div class="waktu-tooltip">
                 ⏱ Waktu di halaman ini hari ini<br>
                 <span id="waktuTooltipDetail" style="color:#aaa;font-weight:500;">Memuat...</span>
             </div>
         </div>
         <nav class="nav-links">
-            <a href="index.html"    class="nav-link" style="background:#1877f2;color:#fff;">🎥 Video</a>
-            <a href="course.html"   class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Course</a>
-            <a href="web.html"      class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Web</a>
-            <a href="habit.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">⏳ Fokus</a>
-            <a href="keuangan.html" class="nav-link" style="background:#e4e6eb;color:#050505;">💰 Duit</a>
-            <a href="idol.html"     class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
+            <a href="index.html"     class="nav-link active"  style="background:var(--blue);color:#fff;">🎥 Video</a>
+            <a href="course.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Course</a>
+            <a href="web.html"       class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Web</a>
+            <a href="habit.html"     class="nav-link" style="background:#e4e6eb;color:#050505;">⏳ Fokus</a>
+            <a href="keuangan.html"  class="nav-link" style="background:#e4e6eb;color:#050505;">💰 Duit</a>
+            <a href="idol.html"      class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
+            <a href="indonesia.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🇮🇩 Indo</a>
+            <a href="jepang.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">🇯🇵 Jepang</a>
         </nav>
     </div>
 </header>
@@ -743,25 +743,32 @@
         <div id="listKategoriDikelola" style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;"></div>
     </div>
 
-    <!-- Simpan Video -->
+    <!-- Simpan Video — multi-platform -->
     <div class="panel">
         <p class="panel-title">➕ Simpan Video Baru</p>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:500;">
+            Dukung: YouTube · TikTok · Instagram · Vimeo · Twitch · Facebook · X/Twitter · Vidio · dan lainnya
+        </p>
         <div class="flex-row">
-            <input type="url" id="linkVideo" placeholder="Paste link YouTube..." style="flex:2"
-                   onpaste="setTimeout(deteksiDurasiOtomatis, 80)" onblur="deteksiDurasiOtomatis()">
+            <input type="url" id="linkVideo" placeholder="Paste link video dari platform apa saja..."
+                   style="flex:2"
+                   oninput="onLinkInput()"
+                   onpaste="setTimeout(onLinkInput, 80)"
+                   onblur="deteksiDurasiOtomatis()">
             <div style="flex:1;min-width:120px;position:relative;">
                 <input type="text" id="inputDurasi" placeholder="Durasi (15:30)" style="width:100%;padding-right:32px;">
-                <span id="durasi-spinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:14px;animation:spin 1s linear infinite;">⏳</span>
+                <span id="durasi-spinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:14px;animation:spinY 1s linear infinite;">⏳</span>
             </div>
             <button id="tombolSimpan" class="btn btn-primary" onclick="simpanVideo()">💾 Simpan</button>
         </div>
+        <div id="sourceHint" class="show" style="display:none;"></div>
         <div id="wadahPilihKategori" class="wadah-kategori"></div>
     </div>
 
     <!-- Search -->
     <div class="search-wrap">
         <span class="search-icon">🔍</span>
-        <input type="text" id="inputCari" placeholder="Cari judul, kategori, atau catatan..." onkeyup="resetKeHalamanSatu()">
+        <input type="text" id="inputCari" placeholder="Cari judul, platform, kategori, atau catatan..." onkeyup="resetKeHalamanSatu()">
     </div>
 
     <!-- Filter + Sort -->
@@ -833,46 +840,150 @@ function _ambilDurasi(ytId) {
                                     : `${m}:${String(s).padStart(2,'0')}`;
                                 settle(str);
                             } else {
-                                settle(null); // live stream → durasi tak terhingga
+                                settle(null);
                             }
                         },
                         onError: () => settle(null)
                     }
                 });
             } catch(e) { settle(null); }
-
-            setTimeout(() => settle(null), 12000); // timeout 12 detik
+            setTimeout(() => settle(null), 12000);
         };
-
         if (_ytReady) run();
         else _ytQueue.push(run);
     });
 }
 
+// ── PLATFORM HELPERS ──────────────────────────────────
+function getYtId(url) {
+    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/)|youtu\.be\/)([^#&?]+)/);
+    return m ? m[1] : null;
+}
+
+function getPlatform(url) {
+    try {
+        const h = new URL(url).hostname.replace('www.', '');
+        if (h.includes('youtube.com') || h.includes('youtu.be')) return 'YouTube';
+        if (h.includes('tiktok.com')) return 'TikTok';
+        if (h.includes('instagram.com')) return 'Instagram';
+        if (h.includes('twitter.com') || h.includes('x.com')) return 'X/Twitter';
+        if (h.includes('facebook.com') || h.includes('fb.watch')) return 'Facebook';
+        if (h.includes('vimeo.com')) return 'Vimeo';
+        if (h.includes('twitch.tv')) return 'Twitch';
+        if (h.includes('vidio.com')) return 'Vidio';
+        if (h.includes('dailymotion.com')) return 'Dailymotion';
+        if (h.includes('bilibili.com')) return 'Bilibili';
+        if (h.includes('niconico')) return 'Niconico';
+        // Fallback: capitalize first segment
+        const seg = h.split('.')[0];
+        return seg.charAt(0).toUpperCase() + seg.slice(1);
+    } catch { return 'Video'; }
+}
+
+function getPlatformClass(platform) {
+    const map = {
+        'YouTube':   'plat-youtube',
+        'TikTok':    'plat-tiktok',
+        'Instagram': 'plat-instagram',
+        'Vimeo':     'plat-vimeo',
+        'Twitch':    'plat-twitch',
+        'Facebook':  'plat-facebook',
+        'X/Twitter': 'plat-twitter',
+        'Vidio':     'plat-vidio',
+    };
+    return map[platform] || 'plat-other';
+}
+
+function getPlatformIcon(platform) {
+    const icons = {
+        'YouTube':   '▶',
+        'TikTok':    '♪',
+        'Instagram': '📷',
+        'Vimeo':     '🎬',
+        'Twitch':    '🎮',
+        'Facebook':  '📘',
+        'X/Twitter': '𝕏',
+        'Vidio':     '📺',
+        'Dailymotion':'🎞',
+        'Bilibili':  '📺',
+    };
+    return icons[platform] || '🔗';
+}
+
+function generateThumbnail(url, noembedThumb) {
+    const ytId = getYtId(url);
+    if (ytId) return `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
+
+    try {
+        const h = new URL(url).hostname.replace('www.', '');
+        // Vimeo thumbnail via noembed (async, handled separately)
+        if (noembedThumb) return noembedThumb;
+        // Colored placeholder by platform
+        const colors = {
+            'tiktok.com':    'e8f5fe/010101',
+            'instagram.com': 'fce4f3/c13584',
+            'facebook.com':  'e7f0ff/1877f2',
+            'twitter.com':   'e8f4fd/1da1f2',
+            'x.com':         'e8f4fd/1da1f2',
+            'vimeo.com':     'e8f0fd/1ab7ea',
+            'twitch.tv':     'f0e8fe/6441a5',
+            'vidio.com':     'fff0e0/f37021',
+        };
+        for (const [domain, color] of Object.entries(colors)) {
+            if (h.includes(domain)) {
+                const label = getPlatform(url);
+                return `https://placehold.co/320x172/${color}?text=${encodeURIComponent(label)}`;
+            }
+        }
+        return `https://placehold.co/320x172/e0e3e8/65676b?text=${encodeURIComponent(getPlatform(url))}`;
+    } catch {
+        return 'https://placehold.co/320x172/e0e3e8/65676b?text=Video';
+    }
+}
+
+// ── ON LINK INPUT — auto-detect & show hint ─────────
+window.onLinkInput = () => {
+    const url = document.getElementById('linkVideo').value.trim();
+    const hint = document.getElementById('sourceHint');
+    if (!url) { hint.style.display = 'none'; return; }
+
+    try { new URL(url); } catch {
+        hint.style.display = 'none';
+        return;
+    }
+
+    const platform = getPlatform(url);
+    const cls = getPlatformClass(platform);
+    const icon = getPlatformIcon(platform);
+    hint.style.display = 'block';
+    hint.style.cssText = `display:block;font-size:12px;font-weight:700;margin-top:6px;padding:5px 10px;border-radius:6px;`;
+
+    const embedable = ['YouTube', 'Vimeo', 'Dailymotion', 'Bilibili'].includes(platform);
+    if (embedable) {
+        hint.style.background = '#ecfdf5';
+        hint.style.color = '#065f46';
+        hint.textContent = `${icon} ${platform} — bisa diputar langsung di kartu ✓`;
+    } else {
+        hint.style.background = '#fff7ed';
+        hint.style.color = '#92400e';
+        hint.textContent = `${icon} ${platform} — akan disimpan, tonton lewat tombol ↗`;
+    }
+};
+
 window.deteksiDurasiOtomatis = async () => {
     const url = document.getElementById('linkVideo').value.trim();
     if (!url) return;
-
-    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/)|youtu\.be\/)([^#&?]+)/);
-    if (!match) return;
-
+    const ytId = getYtId(url);
+    if (!ytId) return; // Only auto-detect for YouTube
     const inputDurasi = document.getElementById('inputDurasi');
     const spinner = document.getElementById('durasi-spinner');
-
-    // Tampilkan spinner, kosongkan input
     inputDurasi.value = '';
     inputDurasi.placeholder = 'Mendeteksi...';
     spinner.style.display = 'block';
-
-    const durasi = await _ambilDurasi(match[1]);
-
+    const durasi = await _ambilDurasi(ytId);
     spinner.style.display = 'none';
-    if (durasi) {
-        inputDurasi.value = durasi;
-        inputDurasi.placeholder = 'Durasi (15:30)';
-    } else {
-        inputDurasi.placeholder = 'Live / tidak terdeteksi';
-    }
+    if (durasi) { inputDurasi.value = durasi; inputDurasi.placeholder = 'Durasi (15:30)'; }
+    else { inputDurasi.placeholder = 'Live / tidak terdeteksi'; }
 };
 </script>
 
@@ -1008,19 +1119,16 @@ window.resetFilter = () => {
     renderRak();
 };
 
-// ── SIMPAN VIDEO ──────────────────────────────────
+// ── SIMPAN VIDEO (multi-platform) ─────────────────
 window.simpanVideo = async () => {
     const url = document.getElementById('linkVideo').value.trim();
     const durasiManual = document.getElementById('inputDurasi').value.trim() || '--:--';
     let kats = Array.from(document.querySelectorAll('.cek-kat:checked')).map(c => c.value);
 
-    if (!url) return toast('Link YouTube wajib diisi!', 'error');
+    if (!url) return toast('Link video wajib diisi!', 'error');
 
-    // Validasi URL YouTube (termasuk Shorts, Live & youtu.be)
-    const validYT = /(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/)|youtu\.be\/)([^#&?]+)/;
-    const idMatch = url.match(validYT);
-    if (!idMatch) return toast('Link tidak valid! Hanya YouTube yang didukung.', 'error');
-    const ytId = idMatch[1];
+    // Validasi URL minimal
+    try { new URL(url); } catch { return toast('URL tidak valid!', 'error'); }
 
     // Cek duplikat
     if (Object.values(dataVideo).some(v => v.link === url)) {
@@ -1029,18 +1137,26 @@ window.simpanVideo = async () => {
         return;
     }
 
+    const platform = getPlatform(url);
     const tombol = document.getElementById('tombolSimpan');
     tombol.disabled = true;
     tombol.textContent = '⏳ Mengambil data...';
 
     try {
-        let judul = 'Live Stream';
-        let channel = 'Unknown';
+        let judul = platform + ' Video';
+        let channel = '';
+        let thumbnail = '';
+
+        // Coba ambil metadata via noembed (mendukung YouTube, Vimeo, dll.)
         try {
             const meta = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`).then(r => r.json());
-            judul = meta.title || 'Live Stream';
-            channel = meta.author_name || 'Unknown';
-        } catch (_) { /* noembed gagal untuk live stream aktif, pakai nilai default */ }
+            if (meta.title) judul = meta.title;
+            if (meta.author_name) channel = meta.author_name;
+            if (meta.thumbnail_url) thumbnail = meta.thumbnail_url;
+        } catch (_) {}
+
+        // Fallback thumbnail
+        if (!thumbnail) thumbnail = generateThumbnail(url, null);
 
         if (kats.length === 0) {
             kats = tebakKategori(judul);
@@ -1057,8 +1173,9 @@ window.simpanVideo = async () => {
         await push(ref(db, 'videos'), {
             judul,
             channel,
+            platform,
             link: url,
-            thumbnail: `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`,
+            thumbnail,
             kategori: kats,
             durasi: durasiManual,
             lastWatch: '',
@@ -1069,6 +1186,7 @@ window.simpanVideo = async () => {
 
         document.getElementById('linkVideo').value = '';
         document.getElementById('inputDurasi').value = '';
+        document.getElementById('sourceHint').style.display = 'none';
         document.querySelectorAll('.cek-kat').forEach(c => c.checked = false);
         toast(`"${judul}" berhasil disimpan!`, 'success');
     } catch (e) {
@@ -1087,29 +1205,27 @@ window.renderRak = () => {
 
     let videos = Object.entries(dataVideo).map(([id, v]) => ({ id, ...v }));
 
-    // Filter pencarian
     if (cari) {
         videos = videos.filter(v =>
             v.judul?.toLowerCase().includes(cari) ||
+            (v.platform || '').toLowerCase().includes(cari) ||
+            (v.channel || '').toLowerCase().includes(cari) ||
             (v.kategori || []).some(k => k.toLowerCase().includes(cari)) ||
             (v.catatan || '').toLowerCase().includes(cari)
         );
     }
 
-    // Filter kategori
     if (filterAktif.length > 0) {
         videos = videos.filter(v => (v.kategori || []).some(k => filterAktif.includes(k)));
     }
 
-    // Filter status (sorting by selesai)
     if (sort === 'belum') videos = videos.filter(v => !v.selesai);
     if (sort === 'selesai') videos = videos.filter(v => v.selesai);
 
-    // Sort
     if (sort === 'terbaru') videos.sort((a, b) => (b.waktuSimpan || 0) - (a.waktuSimpan || 0));
     else if (sort === 'terlama') videos.sort((a, b) => (a.waktuSimpan || 0) - (b.waktuSimpan || 0));
-    else if (sort === 'az') videos.sort((a, b) => a.judul?.localeCompare(b.judul));
-    else if (sort === 'za') videos.sort((a, b) => b.judul?.localeCompare(a.judul));
+    else if (sort === 'az') videos.sort((a, b) => (a.judul || '').localeCompare(b.judul || ''));
+    else if (sort === 'za') videos.sort((a, b) => (b.judul || '').localeCompare(a.judul || ''));
 
     const total = Math.ceil(videos.length / itemPerHalaman);
     if (halamanSaatIni > total && total > 0) halamanSaatIni = total;
@@ -1117,7 +1233,6 @@ window.renderRak = () => {
     const start = (halamanSaatIni - 1) * itemPerHalaman;
     const ditampilkan = videos.slice(start, start + itemPerHalaman);
 
-    // Build HTML string (satu kali set, tidak di dalam loop)
     if (ditampilkan.length === 0) {
         rak.innerHTML = `
             <div class="empty-state">
@@ -1127,26 +1242,35 @@ window.renderRak = () => {
             </div>`;
     } else {
         const html = ditampilkan.map(v => {
+            const platform = v.platform || (getYtId(v.link) ? 'YouTube' : 'Video');
+            const platClass = getPlatformClass(platform);
+            const platIcon  = getPlatformIcon(platform);
             const tagHtml = (v.kategori || []).map(k => `<span class="tag-badge">${k}</span>`).join('');
             const statusBadge = v.selesai
                 ? `<span class="status-badge status-selesai">✓ Selesai</span>`
                 : v.lastWatch
                 ? `<span class="status-badge status-proses">▶ Dalam proses</span>`
                 : '';
-            const fallbackThumb = `https://img.youtube.com/vi/${v.link?.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/)|youtu\.be\/)([^#&?]+)/)?.[1]}/mqdefault.jpg`;
+            const isYoutube = platform === 'YouTube';
+            const thumb = v.thumbnail || generateThumbnail(v.link, null);
+
             return `
             <div class="kartu-video">
                 <button class="btn-hapus-video" onclick="hapusVideo('${v.id}')" title="Hapus">✕</button>
-                <div class="thumbnail-container" onclick="putarVideo('player-${v.id}', '${v.link}')">
-                    <img id="player-${v.id}" src="${v.thumbnail || fallbackThumb}" class="thumbnail" loading="lazy"
+                <div class="thumbnail-container" onclick="putarVideo('${v.id}', '${v.link}', '${platform}')">
+                    <img src="${thumb}" class="thumbnail" loading="lazy"
                          onerror="this.src='https://placehold.co/320x172/e0e3e8/999?text=No+Thumbnail'">
                     ${statusBadge}
-                    <div class="thumbnail-overlay"><div class="play-btn">▶</div></div>
+                    <div class="thumbnail-overlay"><div class="play-btn">${isYoutube ? '▶' : '↗'}</div></div>
                     <span class="durasi-label">${v.durasi || '--:--'}</span>
                 </div>
                 <div class="konten-kartu">
-                    <div class="tags-row">${tagHtml}</div>
+                    <div class="tags-row">
+                        <span class="platform-badge ${platClass}">${platIcon} ${platform}</span>
+                        ${tagHtml}
+                    </div>
                     <p class="judul-video">${v.judul || 'Tanpa Judul'}</p>
+                    ${v.channel ? `<p class="channel-video">👤 ${v.channel}</p>` : ''}
                     <div class="progress-wrap">
                         <label>⏱ Progress nonton</label>
                         <input type="text" id="last-${v.id}" value="${v.lastWatch || ''}" placeholder="cth: 12:30">
@@ -1156,12 +1280,10 @@ window.renderRak = () => {
                         <textarea id="note-${v.id}" class="teks-catatan" placeholder="Tulis catatan...">${v.catatan || ''}</textarea>
                     </div>
                     <div class="aksi-bawah">
-                        <button class="btn-simpan" onclick="updateProgress('${v.id}', ${v.selesai})">
-                            ${v.selesai ? '🔄 Reset' : '💾 Simpan'}
-                        </button>
-                        <a href="${v.link}" target="_blank" rel="noopener noreferrer" class="btn-tonton">📺 Tonton</a>
+                        <button class="btn-simpan" onclick="updateProgress('${v.id}')">💾 Simpan</button>
+                        <a href="${v.link}" target="_blank" rel="noopener noreferrer" class="btn-tonton">↗ Tonton</a>
                     </div>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;margin-top:8px;cursor:pointer;color:var(--muted)">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;margin-top:6px;cursor:pointer;color:var(--muted)">
                         <input type="checkbox" ${v.selesai ? 'checked' : ''} onchange="tandaiSelesai('${v.id}', this.checked)"> Tandai selesai
                     </label>
                 </div>
@@ -1174,7 +1296,7 @@ window.renderRak = () => {
 };
 
 // ── ACTIONS ───────────────────────────────────────
-window.updateProgress = (id, selesaiSkrg) => {
+window.updateProgress = (id) => {
     const lastWatch = document.getElementById(`last-${id}`)?.value || '';
     const catatan   = document.getElementById(`note-${id}`)?.value || '';
     update(ref(db, `videos/${id}`), { lastWatch, catatan })
@@ -1193,17 +1315,23 @@ window.hapusVideo = (id) => {
         .then(() => toast('Video dihapus.', 'info'));
 };
 
-window.putarVideo = (containerId, url) => {
-    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/)|youtu\.be\/)([^#&?]+)/);
-    const ytId = match ? match[1] : null;
-    if (!ytId) return;
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    // Replace img tag only (keep overlay etc. intact by replacing whole container content)
-    const parent = container.closest('.thumbnail-container');
-    parent.onclick = null;
-    parent.style.aspectRatio = '16/9';
-    parent.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&cc_load_policy=0" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen style="display:block;border-radius:0;"></iframe>`;
+// Putar video: YouTube → embed inline; lainnya → buka tab baru
+window.putarVideo = (id, url, platform) => {
+    const ytId = getYtId(url);
+    if (ytId) {
+        // Inline YouTube embed
+        const parent = document.querySelector(`[onclick*="putarVideo('${id}'"]`)?.closest('.thumbnail-container');
+        if (!parent) { window.open(url, '_blank'); return; }
+        parent.onclick = null;
+        parent.style.aspectRatio = '16/9';
+        parent.innerHTML = `<iframe width="100%" height="100%"
+            src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3"
+            frameborder="0" allow="autoplay; encrypted-media; fullscreen"
+            allowfullscreen style="display:block;border-radius:0;"></iframe>`;
+    } else {
+        // Non-YouTube: open in new tab
+        window.open(url, '_blank', 'noopener,noreferrer');
+    }
 };
 
 window.resetKeHalamanSatu = () => { halamanSaatIni = 1; renderRak(); };
@@ -1257,8 +1385,6 @@ window.addEventListener('scroll', () => {
         const d = new Date();
         return `${PAGE_KEY}_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     };
-
-    // Ambil detik tersimpan hari ini
     const getStored = () => parseInt(localStorage.getItem(todayKey()) || '0', 10);
     const saveStored = (s) => localStorage.setItem(todayKey(), String(s));
 
@@ -1292,23 +1418,18 @@ window.addEventListener('scroll', () => {
         const widget = document.getElementById('waktuWidget');
         const detail = document.getElementById('waktuTooltipDetail');
         if (!el) return;
-
         el.textContent = fmt(totalDetik);
-
-        // Verbose di tooltip
         if (detail) {
             const tgl = new Date();
             const tglStr = tgl.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long' });
             detail.textContent = `${fmtVerbose(totalDetik)} — ${tglStr}`;
         }
-
-        // Warna berubah sesuai durasi
         if (widget) {
-            if (totalDetik >= 7200) {          // ≥ 2 jam → oranye
+            if (totalDetik >= 7200) {
                 widget.style.background = '#fff7ed';
                 widget.style.borderColor = '#fed7aa';
                 widget.style.color = '#c2410c';
-            } else if (totalDetik >= 3600) {   // ≥ 1 jam → hijau muda
+            } else if (totalDetik >= 3600) {
                 widget.style.background = '#ecfdf5';
                 widget.style.borderColor = '#a7f3d0';
                 widget.style.color = '#065f46';
@@ -1326,7 +1447,6 @@ window.addEventListener('scroll', () => {
         startTime = Date.now();
         const widget = document.getElementById('waktuWidget');
         if (widget) widget.classList.remove('paused');
-
         intervalId = setInterval(() => {
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
             totalDetik = getStored() + elapsed;
@@ -1342,33 +1462,20 @@ window.addEventListener('scroll', () => {
         saveStored(totalDetik);
         clearInterval(intervalId);
         startTime = null;
-
         const widget = document.getElementById('waktuWidget');
         if (widget) widget.classList.add('paused');
         updateUI();
     };
 
-    // Page Visibility API — jeda saat tab tidak aktif
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) jeda();
-        else mulai();
-    });
-
-    // Simpan saat user menutup / navigasi
+    document.addEventListener('visibilitychange', () => { if (document.hidden) jeda(); else mulai(); });
     window.addEventListener('beforeunload', jeda);
     window.addEventListener('pagehide', jeda);
 
-    // Reset otomatis hari baru (cek tiap menit)
     setInterval(() => {
         const stored = getStored();
-        // Jika key berbeda (hari berganti), totalDetik akan dari 0
-        if (stored === 0 && totalDetik > 60) {
-            totalDetik = 0;
-            updateUI();
-        }
+        if (stored === 0 && totalDetik > 60) { totalDetik = 0; updateUI(); }
     }, 60000);
 
-    // Init
     updateUI();
     mulai();
 })();

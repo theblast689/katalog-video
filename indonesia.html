@@ -32,7 +32,7 @@
         .topbar { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; padding: 0 20px; }
         .topbar-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 54px; gap: 16px; }
         .logo { font-weight: 700; font-size: 16px; color: var(--primary); white-space: nowrap; }
-        .nav-links { display: flex; gap: 6px; flex-wrap: wrap; }
+        .nav-links { display: flex; gap: 4px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
         .nav-link { padding: 6px 14px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; transition: opacity .2s; }
         .nav-link:hover { opacity: .8; }
         .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); z-index: 200; padding: 0 0 env(safe-area-inset-bottom); }
@@ -159,12 +159,14 @@
 
 <nav class="bottom-nav">
     <div class="bottom-nav-inner">
-        <a href="index.html"     class="bnav-item"><span>🎥</span><span>Video</span></a>
-        <a href="indonesia.html" class="bnav-item active"><span>🇮🇩</span><span>Indonesia</span></a>
-        <a href="jepang.html"    class="bnav-item"><span>🇯🇵</span><span>Jepang</span></a>
-        <a href="course.html"    class="bnav-item"><span>📚</span><span>Course</span></a>
-        <a href="habit.html"     class="bnav-item"><span>⏳</span><span>Fokus</span></a>
-        <a href="idol.html"      class="bnav-item"><span>🌸</span><span>Idol</span></a>
+        <a href="index.html" class="bnav-item"><span>🎥</span><span>Video</span></a>
+        <a href="course.html" class="bnav-item"><span>📚</span><span>Course</span></a>
+        <a href="web.html" class="bnav-item"><span>🌐</span><span>Web</span></a>
+        <a href="habit.html" class="bnav-item"><span>⏳</span><span>Fokus</span></a>
+        <a href="keuangan.html" class="bnav-item"><span>💰</span><span>Duit</span></a>
+        <a href="idol.html" class="bnav-item"><span>🌸</span><span>Idol</span></a>
+        <a href="indonesia.html" class="bnav-item active"><span>🇮🇩</span><span>Indo</span></a>
+        <a href="jepang.html" class="bnav-item"><span>🇯🇵</span><span>Jepang</span></a>
     </div>
 </nav>
 
@@ -172,12 +174,14 @@
     <div class="topbar-inner">
         <span class="logo">🇮🇩 Video Indonesia</span>
         <nav class="nav-links">
-            <a href="index.html"     class="nav-link" style="background:#e4e6eb;color:#050505;">🎥 Video</a>
-            <a href="indonesia.html" class="nav-link" style="background:#c0392b;color:#fff;">🇮🇩 Indonesia</a>
-            <a href="jepang.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">🇯🇵 Jepang</a>
-            <a href="course.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Course</a>
-            <a href="habit.html"     class="nav-link" style="background:#e4e6eb;color:#050505;">⏳ Fokus</a>
-            <a href="idol.html"      class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
+            <a href="index.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🎥 Video</a>
+            <a href="course.html" class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Course</a>
+            <a href="web.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Web</a>
+            <a href="habit.html" class="nav-link" style="background:#e4e6eb;color:#050505;">⏳ Fokus</a>
+            <a href="keuangan.html" class="nav-link" style="background:#e4e6eb;color:#050505;">💰 Duit</a>
+            <a href="idol.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
+            <a href="indonesia.html" class="nav-link" style="background:#1877f2;color:#fff;">🇮🇩 Indo</a>
+            <a href="jepang.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🇯🇵 Jepang</a>
         </nav>
     </div>
 </header>
