@@ -177,6 +177,49 @@
             border-bottom:5px solid #1c1c1e;
         }
         .waktu-wrap:hover .waktu-tooltip { display: block; }
+
+        /* ── CINEMA MODE ── */
+        .cinema-overlay { position:fixed;inset:0;z-index:600;background:#05050a;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .3s ease; }
+        .cinema-overlay.aktif { opacity:1;pointer-events:all; }
+        .cinema-topbar { display:flex;align-items:center;justify-content:space-between;padding:10px 20px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.06); }
+        .cinema-logo { font-size:13px;font-weight:800;color:rgba(255,255,255,0.35);letter-spacing:1px;text-transform:uppercase; }
+        .cinema-timer-wrap { display:flex;align-items:center;gap:10px; }
+        .cinema-timer { font-size:18px;font-weight:800;color:rgba(255,255,255,0.7);font-variant-numeric:tabular-nums;letter-spacing:2px; }
+        .timer-btn { background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s; }
+        .timer-btn:hover { background:rgba(255,255,255,0.15); }
+        .cinema-close { background:rgba(229,57,53,0.15);border:1px solid rgba(229,57,53,0.25);color:#e53935;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;display:flex;align-items:center;gap:6px; }
+        .cinema-close:hover { background:rgba(229,57,53,0.3); }
+        .cinema-body { flex:1;display:flex;overflow:hidden; }
+        .cinema-video-area { flex:1;display:flex;align-items:center;justify-content:center;background:#000;position:relative;overflow:hidden; }
+        .cinema-aspect { width:100%;max-width:100%;position:relative;padding-bottom:56.25%; }
+        .cinema-iframe { position:absolute;inset:0;width:100%;height:100%;border:none;display:block; }
+        .cinema-panel { width:300px;min-width:260px;background:#0f0f14;border-left:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0; }
+        .cp-title { font-size:15px;font-weight:700;color:#fff;line-height:1.45;padding:18px 18px 0; }
+        .cp-meta { font-size:12px;color:rgba(255,255,255,0.4);padding:6px 18px 0; }
+        .cp-divider { height:1px;background:rgba(255,255,255,0.07);margin:14px 18px; }
+        .cp-section { padding:0 18px; }
+        .cp-label { font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:6px;display:block; }
+        .cp-input { width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;outline:none;transition:border-color .2s;box-sizing:border-box; }
+        .cp-input:focus { border-color:rgba(255,255,255,0.3); }
+        .cp-textarea { width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:9px 12px;color:#fff;font-family:inherit;font-size:13px;outline:none;resize:vertical;min-height:80px;transition:border-color .2s;box-sizing:border-box; }
+        .cp-textarea:focus { border-color:rgba(255,255,255,0.3); }
+        .cp-checkbox-row { display:flex;align-items:center;gap:8px;padding:0 18px;font-size:13px;color:rgba(255,255,255,0.6);cursor:pointer; }
+        .cp-checkbox-row input { accent-color:#10b981; }
+        .cp-save-btn { margin:14px 18px;padding:11px;background:#10b981;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s;width:calc(100% - 36px); }
+        .cp-save-btn:hover { background:#059669; }
+        .cp-open-btn { display:block;margin:0 18px 14px;padding:10px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;transition:background .2s; }
+        .cp-open-btn:hover { background:rgba(255,255,255,0.12); }
+        .yt-cover-bl { position:absolute;bottom:0;left:0;width:120px;height:38px;pointer-events:none;z-index:5;background:linear-gradient(135deg,rgba(0,0,0,0.9) 40%,transparent 100%); }
+        .yt-cover-tl { position:absolute;top:0;left:0;width:120px;height:36px;pointer-events:none;z-index:5;background:linear-gradient(135deg,rgba(0,0,0,0.85) 30%,transparent 100%); }
+        .yt-end-block { position:absolute;inset:0;background:#000;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;opacity:0;pointer-events:none;transition:opacity .3s; }
+        .yt-end-block.aktif { opacity:1;pointer-events:all; }
+        .yt-end-msg { font-size:20px;font-weight:800;color:#fff; }
+        .yt-end-sub { font-size:13px;color:rgba(255,255,255,0.5);text-align:center;max-width:280px; }
+        .yt-end-actions { display:flex;gap:10px; }
+        .yt-end-btn { padding:10px 22px;border-radius:8px;border:none;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer; }
+        .yt-end-btn.primary { background:#10b981;color:#fff; }
+        .yt-end-btn.secondary { background:rgba(255,255,255,0.1);color:#fff; }
+        @media (max-width:720px) { .cinema-panel { display:none; } }
         </style>
 </head>
 <body>
@@ -187,6 +230,57 @@
 </div>
 <div id="toast-container"></div>
 <button class="fab-top" id="fabTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- ══ CINEMA MODE ══ -->
+<div class="cinema-overlay" id="cinemaOverlay">
+    <div class="cinema-topbar">
+        <span class="cinema-logo">🇮🇩 Mode Fokus</span>
+        <div class="cinema-timer-wrap">
+            <div class="cinema-timer" id="cinemaTimer">00:00:00</div>
+            <button class="timer-btn" id="timerToggle" onclick="toggleTimer()">▶ Mulai</button>
+            <button class="timer-btn" onclick="resetTimer()">↺ Reset</button>
+        </div>
+        <button class="cinema-close" onclick="tutupCinema()">✕ Tutup <small style="opacity:.6;font-size:10px">[ESC]</small></button>
+    </div>
+    <div class="cinema-body">
+        <div class="cinema-video-area">
+            <div class="cinema-aspect">
+                <iframe class="cinema-iframe" id="cinemaFrame" src="about:blank" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>
+                <div class="yt-cover-bl"></div>
+                <div class="yt-cover-tl"></div>
+                <div class="yt-end-block" id="ytEndBlock">
+                    <div class="yt-end-msg">✅ Video Selesai!</div>
+                    <div class="yt-end-sub">Rekomendasi YouTube disembunyikan agar tetap fokus</div>
+                    <div class="yt-end-actions">
+                        <button class="yt-end-btn primary" onclick="ulangVideo()">↺ Ulangi</button>
+                        <button class="yt-end-btn secondary" onclick="tutupCinema()">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="cinema-panel">
+            <p class="cp-title" id="cpTitle"></p>
+            <p class="cp-meta" id="cpMeta"></p>
+            <div class="cp-divider"></div>
+            <div class="cp-section">
+                <span class="cp-label">⏱ Progress Nonton</span>
+                <input type="text" class="cp-input" id="cpLastWatch" placeholder="Cth: 24:30">
+            </div>
+            <div class="cp-divider"></div>
+            <div class="cp-section">
+                <span class="cp-label">📝 Catatan</span>
+                <textarea class="cp-textarea" id="cpCatatan" placeholder="Tulis catatanmu..."></textarea>
+            </div>
+            <div class="cp-divider"></div>
+            <label class="cp-checkbox-row">
+                <input type="checkbox" id="cpSelesai"> Tandai sudah selesai
+            </label>
+            <div class="cp-divider"></div>
+            <button class="cp-save-btn" onclick="simpanProgressCinema()">💾 Simpan Progress</button>
+            <a class="cp-open-btn" id="cpOpenLink" href="#" target="_blank" rel="noopener">↗ Buka di Tab Baru</a>
+        </div>
+    </div>
+</div>
 
 <nav class="bottom-nav">
     <div class="bottom-nav-inner">
@@ -386,6 +480,17 @@ let halamanSaatIni = 1;
 const itemPerHalaman = 12;
 let filterAktif = [];
 
+// ── URL NORMALIZATION (anti-duplikat) ──
+function normalizeUrl(url) {
+    try {
+        const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/)|youtu\.be\/)([^#&?]+)/);
+        if (ytMatch) return 'yt:' + ytMatch[1];
+        const u = new URL(url);
+        ['utm_source','utm_medium','utm_campaign','utm_term','utm_content','fbclid','ref','si','feature'].forEach(p => u.searchParams.delete(p));
+        return u.toString().replace(/\/$/, '');
+    } catch { return url.trim(); }
+}
+
 function toast(msg, type = 'info') {
     const icons = { success: '✅', error: '❌', info: 'ℹ️' };
     const el = document.createElement('div');
@@ -496,9 +601,10 @@ window.simpanVideo = async () => {
     if (!url) return toast('Link video wajib diisi!', 'error');
     try { new URL(url); } catch { return toast('Link tidak valid! Pastikan dimulai dengan https://', 'error'); }
 
-    if (Object.values(dataVideo).some(v => v.link === url)) {
-        toast('Video ini sudah ada di katalog!', 'error');
-        document.getElementById('linkVideo').value = '';
+    const normUrl = normalizeUrl(url);
+    if (Object.values(dataVideo).some(v => normalizeUrl(v.link || '') === normUrl)) {
+        toast('⚠️ Video ini sudah ada di katalog! Link duplikat ditolak.', 'error');
+        document.getElementById('linkVideo').select();
         return;
     }
 
@@ -582,7 +688,7 @@ window.renderRak = () => {
             return `
             <div class="kartu-video">
                 <button class="btn-hapus-video" onclick="hapusVideo('${v.id}')" title="Hapus">✕</button>
-                <div class="thumbnail-container" onclick="putarVideo('player-${v.id}','${v.link}',${isYT})">
+                <div class="thumbnail-container" onclick="bukaCinema('${v.id}')">
                     <img id="player-${v.id}" src="${thumb}" class="thumbnail" loading="lazy"
                          onerror="this.src='https://placehold.co/320x172/fdecea/c0392b?text=No+Thumbnail'">
                     ${statusBadge}
@@ -634,23 +740,96 @@ window.hapusVideo = (id) => {
 };
 
 window.putarVideo = (containerId, url, isYT) => {
+    // Now replaced by cinema mode - open in cinema instead
+    const videoId = Object.keys(dataVideo).find(id => (dataVideo[id].link||'') === url);
+    if (videoId) { window.bukaCinema(videoId); return; }
     if (isYT) {
         const ytId = getYtId(url);
         if (!ytId) return;
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        const parent = container.closest('.thumbnail-container');
-        parent.onclick = null;
-        parent.style.aspectRatio = '16/9';
-        parent.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&iv_load_policy=3&cc_load_policy=0" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen style="display:block;border-radius:0;"></iframe>`;
-    } else {
-        window.open(url,'_blank','noopener,noreferrer');
-    }
+        const parent = document.getElementById(containerId)?.closest?.('.thumbnail-container');
+        if (parent) parent.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1" frameborder="0" allowfullscreen style="display:block;"></iframe>`;
+    } else { window.open(url,'_blank','noopener,noreferrer'); }
 };
 
 window.resetKeHalamanSatu = () => { halamanSaatIni = 1; renderRak(); };
 
 window.gantiHalaman = (n) => { halamanSaatIni = n; renderRak(); window.scrollTo({top:0,behavior:'smooth'}); };
+
+// ── CINEMA MODE ──
+let _cinemaId = null, _cinemaUrl = '';
+let _timerSec = 0, _timerInterval = null, _timerRunning = false;
+
+function getEmbedUrlCinema(url, autoplay = false) {
+    const ap = autoplay ? 1 : 0;
+    if (/youtube\.com|youtu\.be/.test(url)) {
+        const m = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([^#&?]+)/);
+        if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=${ap}&rel=0&modestbranding=1&iv_load_policy=3&cc_load_policy=0&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
+    }
+    if (/vimeo\.com/.test(url)) {
+        const m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+        if (m) return `https://player.vimeo.com/video/${m[1]}?autoplay=${ap}&title=0&byline=0&portrait=0`;
+    }
+    return url;
+}
+
+window.bukaCinema = (id) => {
+    const v = dataVideo[id];
+    if (!v) return;
+    _cinemaId = id; _cinemaUrl = v.link || '';
+    document.getElementById('cpTitle').textContent = v.judul || 'Tanpa Judul';
+    document.getElementById('cpMeta').textContent = v.platform || '';
+    document.getElementById('cpLastWatch').value = v.lastWatch || '';
+    document.getElementById('cpCatatan').value = v.catatan || '';
+    document.getElementById('cpSelesai').checked = !!v.selesai;
+    document.getElementById('cpOpenLink').href = _cinemaUrl;
+    document.getElementById('cinemaFrame').src = getEmbedUrlCinema(_cinemaUrl, true);
+    document.getElementById('ytEndBlock').classList.remove('aktif');
+    document.getElementById('cinemaOverlay').classList.add('aktif');
+    document.body.style.overflow = 'hidden';
+    if (!_timerRunning) startTimer();
+};
+
+window.tutupCinema = () => {
+    document.getElementById('cinemaOverlay').classList.remove('aktif');
+    document.getElementById('cinemaFrame').src = 'about:blank';
+    document.getElementById('ytEndBlock').classList.remove('aktif');
+    document.body.style.overflow = '';
+    pauseTimer(); _cinemaId = null;
+};
+
+window.ulangVideo = () => {
+    document.getElementById('ytEndBlock').classList.remove('aktif');
+    document.getElementById('cinemaFrame').src = getEmbedUrlCinema(_cinemaUrl, true);
+};
+
+window.simpanProgressCinema = () => {
+    if (!_cinemaId) return;
+    const lastWatch = document.getElementById('cpLastWatch').value;
+    const catatan = document.getElementById('cpCatatan').value;
+    const selesai = document.getElementById('cpSelesai').checked;
+    update(ref(db,`${DB_VIDEOS}/${_cinemaId}`),{lastWatch,catatan,selesai})
+        .then(()=>toast('Progress disimpan! ✅','success'))
+        .catch(()=>toast('Gagal menyimpan','error'));
+};
+
+window.toggleTimer = () => { _timerRunning ? pauseTimer() : startTimer(); };
+function startTimer() {
+    _timerRunning=true; document.getElementById('timerToggle').textContent='⏸ Pause';
+    _timerInterval=setInterval(()=>{ _timerSec++;
+        const h=Math.floor(_timerSec/3600),m=Math.floor((_timerSec%3600)/60),s=_timerSec%60;
+        document.getElementById('cinemaTimer').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    },1000);
+}
+function pauseTimer() {
+    _timerRunning=false; clearInterval(_timerInterval);
+    document.getElementById('timerToggle').textContent='▶ Mulai';
+}
+window.resetTimer = ()=>{ pauseTimer(); _timerSec=0; document.getElementById('cinemaTimer').textContent='00:00:00'; };
+
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') tutupCinema(); });
+window.addEventListener('message',e=>{
+    try { const d=typeof e.data==='string'?JSON.parse(e.data):e.data; if(d?.event==='onStateChange'&&d?.info===0) document.getElementById('ytEndBlock').classList.add('aktif'); } catch(_){}
+});
 
 window.renderPaginasi = (total) => {
     const k = document.getElementById('paginasiKontainer');
