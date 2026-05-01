@@ -482,6 +482,55 @@
         .btn-tonton { flex: 1; background: #e4e6eb; color: var(--text); font-size: 12px; padding: 8px 10px; border-radius: var(--radius-sm); border: none; font-family: inherit; font-weight: 700; cursor: pointer; text-decoration: none; text-align: center; transition: background .2s; }
         .btn-tonton:hover { background: #d8dadf; }
 
+        /* ── STATS BAR ── */
+        .stats-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .stat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12.5px;
+            font-weight: 700;
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+            white-space: nowrap;
+        }
+        .stat-chip .stat-num {
+            font-size: 14px;
+            font-weight: 800;
+        }
+        .stat-chip.total  { border-color: var(--blue); background: var(--blue-light); color: var(--blue); }
+        .stat-chip.selesai { border-color: #a7f3d0; background: #ecfdf5; color: #065f46; }
+        .stat-chip.proses  { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+        .stat-chip.belum   { border-color: var(--border); background: #f9fafb; color: var(--muted); }
+        .btn-export-csv {
+            margin-left: auto;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1.5px solid #a7f3d0;
+            background: #ecfdf5;
+            color: #065f46;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: background .15s, box-shadow .15s;
+            flex-shrink: 0;
+        }
+        .btn-export-csv:hover { background: #d1fae5; box-shadow: 0 2px 8px rgba(16,185,129,.2); }
+        .btn-export-csv:active { transform: scale(0.97); }
+
         /* ── EMPTY STATE ── */
         .empty-state {
             grid-column: 1 / -1;
@@ -675,6 +724,9 @@
             .toast { max-width: 100%; }
             .page-btn { padding: 9px 12px; font-size: 13px; }
             .waktu-hari-ini { font-size: 11px; padding: 4px 10px; }
+            .stats-bar { gap: 7px; margin-bottom: 12px; }
+            .stat-chip { font-size: 11.5px; padding: 5px 11px; }
+            .btn-export-csv { font-size: 11.5px; padding: 5px 11px; margin-left: 0; }
         }
     </style>
 </head>
@@ -769,6 +821,15 @@
     <div class="search-wrap">
         <span class="search-icon">🔍</span>
         <input type="text" id="inputCari" placeholder="Cari judul, platform, kategori, atau catatan..." onkeyup="resetKeHalamanSatu()">
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar" id="statsBar">
+        <div class="stat-chip total">🎥 <span class="stat-num" id="statTotal">0</span> Video Tersimpan</div>
+        <div class="stat-chip selesai">✅ <span class="stat-num" id="statSelesai">0</span> Selesai</div>
+        <div class="stat-chip proses">▶ <span class="stat-num" id="statProses">0</span> Dalam Proses</div>
+        <div class="stat-chip belum">⬜ <span class="stat-num" id="statBelum">0</span> Belum Ditonton</div>
+        <button class="btn-export-csv" onclick="eksporKeCSV()">⬇ Export CSV</button>
     </div>
 
     <!-- Filter + Sort -->
@@ -1197,8 +1258,67 @@ window.simpanVideo = async () => {
     }
 };
 
+// ── UPDATE STATS ──────────────────────────────────
+window.updateStats = () => {
+    const semua = Object.values(dataVideo);
+    const total   = semua.length;
+    const selesai = semua.filter(v => v.selesai).length;
+    const proses  = semua.filter(v => !v.selesai && v.lastWatch).length;
+    const belum   = semua.filter(v => !v.selesai && !v.lastWatch).length;
+
+    const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+    el('statTotal',   total);
+    el('statSelesai', selesai);
+    el('statProses',  proses);
+    el('statBelum',   belum);
+};
+
+// ── EXPORT CSV ────────────────────────────────────
+window.eksporKeCSV = () => {
+    const semua = Object.values(dataVideo);
+    if (semua.length === 0) return toast('Tidak ada video untuk diekspor!', 'error');
+
+    const headers = ['Judul', 'Platform', 'Channel', 'Kategori', 'Durasi', 'Progress', 'Selesai', 'Catatan', 'Link', 'Waktu Simpan'];
+
+    const esc = (str) => {
+        const s = String(str || '');
+        if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+            return `"${s.replace(/"/g, '""')}"`;
+        }
+        return s;
+    };
+
+    const rows = semua.map(v => [
+        esc(v.judul || ''),
+        esc(v.platform || ''),
+        esc(v.channel || ''),
+        esc((v.kategori || []).join('; ')),
+        esc(v.durasi || ''),
+        esc(v.lastWatch || ''),
+        esc(v.selesai ? 'Ya' : 'Tidak'),
+        esc(v.catatan || ''),
+        esc(v.link || ''),
+        esc(v.waktuSimpan ? new Date(v.waktuSimpan).toLocaleString('id-ID') : '')
+    ].join(','));
+
+    const csvContent = [headers.join(','), ...rows].join('\r\n');
+    const BOM = '\uFEFF'; // UTF-8 BOM agar Excel bisa baca karakter Indonesia
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const tgl = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `katalog-video-${tgl}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast(`✅ ${semua.length} video berhasil diekspor ke CSV!`, 'success');
+};
+
 // ── RENDER RAK ────────────────────────────────────
 window.renderRak = () => {
+    updateStats();
     const cari = document.getElementById('inputCari').value.toLowerCase();
     const sort = document.getElementById('sortPilihan').value;
     const rak = document.getElementById('rakVideo');
