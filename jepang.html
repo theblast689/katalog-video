@@ -32,7 +32,7 @@
         .topbar { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; padding: 0 20px; }
         .topbar-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 54px; gap: 16px; }
         .logo { font-weight: 700; font-size: 16px; color: var(--primary); white-space: nowrap; }
-        .nav-links { display: flex; gap: 4px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+        .nav-links { display: flex; gap: 6px; flex-wrap: wrap; }
         .nav-link { padding: 6px 14px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; transition: opacity .2s; }
         .nav-link:hover { opacity: .8; }
         .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); z-index: 200; padding: 0 0 env(safe-area-inset-bottom); }
@@ -103,6 +103,17 @@
         .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
         .empty-state p { font-size: 15px; font-weight: 600; }
         .empty-state span { font-size: 13px; }
+        /* ── STATS BAR ── */
+        .stats-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .stat-chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1.5px solid var(--border); background: var(--surface); white-space: nowrap; }
+        .stat-chip .stat-num { font-size: 13px; font-weight: 800; }
+        .stat-chip.total   { border-color: var(--primary); background: #e8f0ff; color: var(--primary); }
+        .stat-chip.selesai { border-color: #a7f3d0; background: #ecfdf5; color: #065f46; }
+        .stat-chip.proses  { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+        .stat-chip.belum   { border-color: var(--border); background: #f9fafb; color: var(--muted); }
+        .btn-export-csv { padding: 5px 12px; border-radius: 20px; border: 1.5px solid #a7f3d0; background: #ecfdf5; color: #065f46; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; transition: background .15s; margin-left: auto; flex-shrink: 0; }
+        .btn-export-csv:hover { background: #d1fae5; }
+        .btn-export-csv:active { transform: scale(0.97); }
         .paginasi { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-bottom: 40px; }
         .page-btn { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); padding: 7px 13px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: background .15s, border-color .15s; }
         .page-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
@@ -193,14 +204,12 @@
 
 <nav class="bottom-nav">
     <div class="bottom-nav-inner">
-        <a href="index.html" class="bnav-item"><span>🎥</span><span>Video</span></a>
+        <a href="index.html"  class="bnav-item"><span>🎥</span><span>Video</span></a>
         <a href="course.html" class="bnav-item"><span>📚</span><span>Course</span></a>
-        <a href="web.html" class="bnav-item"><span>🌐</span><span>Web</span></a>
-        <a href="habit.html" class="bnav-item"><span>⏳</span><span>Fokus</span></a>
-        <a href="keuangan.html" class="bnav-item"><span>💰</span><span>Duit</span></a>
-        <a href="idol.html" class="bnav-item"><span>🌸</span><span>Idol</span></a>
-        <a href="indonesia.html" class="bnav-item"><span>🇮🇩</span><span>Indo</span></a>
+        <a href="web.html"    class="bnav-item"><span>🌐</span><span>Web</span></a>
         <a href="jepang.html" class="bnav-item active"><span>🇯🇵</span><span>Jepang</span></a>
+        <a href="habit.html"  class="bnav-item"><span>⏳</span><span>Fokus</span></a>
+        <a href="idol.html"   class="bnav-item"><span>🌸</span><span>Idol</span></a>
     </div>
 </nav>
 
@@ -218,14 +227,12 @@
             </div>
         </div>
         <nav class="nav-links">
-            <a href="index.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🎥 Video</a>
+            <a href="index.html"  class="nav-link" style="background:#e4e6eb;color:#050505;">🎥 Video</a>
             <a href="course.html" class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Course</a>
-            <a href="web.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Web</a>
-            <a href="habit.html" class="nav-link" style="background:#e4e6eb;color:#050505;">⏳ Fokus</a>
-            <a href="keuangan.html" class="nav-link" style="background:#e4e6eb;color:#050505;">💰 Duit</a>
-            <a href="idol.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
-            <a href="indonesia.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🇮🇩 Indo</a>
-            <a href="jepang.html" class="nav-link" style="background:#1877f2;color:#fff;">🇯🇵 Jepang</a>
+            <a href="web.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Web</a>
+            <a href="jepang.html" class="nav-link" style="background:#d62828;color:#fff;">🇯🇵 Jepang</a>
+            <a href="habit.html"  class="nav-link" style="background:#e4e6eb;color:#050505;">⏳ Fokus</a>
+            <a href="idol.html"   class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
         </nav>
     </div>
 </header>
@@ -259,6 +266,15 @@
     <div class="search-wrap">
         <span class="search-icon">🔍</span>
         <input type="text" id="inputCari" placeholder="Cari judul, kategori, atau catatan..." onkeyup="resetKeHalamanSatu()">
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-chip total">🎌 <span class="stat-num" id="statTotal">0</span> Tersimpan</div>
+        <div class="stat-chip selesai">✅ <span class="stat-num" id="statSelesai">0</span> Selesai</div>
+        <div class="stat-chip proses">▶ <span class="stat-num" id="statProses">0</span> Dalam Proses</div>
+        <div class="stat-chip belum">⬜ <span class="stat-num" id="statBelum">0</span> Belum</div>
+        <button class="btn-export-csv" onclick="eksporKeCSV()">⬇ Export CSV</button>
     </div>
 
     <div class="filter-bar">
@@ -468,6 +484,45 @@ window.updateUIKat = () => {
     });
 };
 
+// ── NORMALISASI URL (cegah duplikat beda format) ──
+function normalizeUrl(raw) {
+    let url = raw.trim().toLowerCase().replace(/\/+$/, '');
+    const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([a-z0-9_-]{11})/i);
+    if (ytMatch) return `https://www.youtube.com/watch?v=${ytMatch[1]}`;
+    try {
+        const u = new URL(url.startsWith('http') ? url : 'https://' + url);
+        ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','fbclid','gclid','ref','si'].forEach(p => u.searchParams.delete(p));
+        return u.origin + u.pathname + (u.search ? u.search : '');
+    } catch { return url; }
+}
+
+// ── UPDATE STATS ──
+window.updateStats = () => {
+    const semua = Object.values(dataVideo);
+    document.getElementById('statTotal').textContent  = semua.length;
+    document.getElementById('statSelesai').textContent = semua.filter(v => v.selesai).length;
+    document.getElementById('statProses').textContent  = semua.filter(v => !v.selesai && v.lastWatch).length;
+    document.getElementById('statBelum').textContent   = semua.filter(v => !v.selesai && !v.lastWatch).length;
+};
+
+// ── EXPORT CSV ──
+window.eksporKeCSV = () => {
+    const semua = Object.values(dataVideo);
+    if (!semua.length) return toast('Tidak ada video untuk diekspor!', 'error');
+    const esc = s => { const t = String(s||''); return (t.includes(',')||t.includes('"')||t.includes('\n')) ? `"${t.replace(/"/g,'""')}"` : t; };
+    const headers = ['Judul','Platform','Channel','Kategori','Durasi','Progress','Selesai','Catatan','Link','Waktu Simpan'];
+    const rows = semua.map(v => [
+        esc(v.judul), esc(v.platform), esc(v.channel),
+        esc((v.kategori||[]).join('; ')), esc(v.durasi), esc(v.lastWatch),
+        esc(v.selesai ? 'Ya' : 'Tidak'), esc(v.catatan), esc(v.link),
+        esc(v.waktuSimpan ? new Date(v.waktuSimpan).toLocaleString('id-ID') : '')
+    ].join(','));
+    const blob = new Blob(['\uFEFF' + [headers.join(','), ...rows].join('\r\n')], {type:'text/csv;charset=utf-8;'});
+    const a = Object.assign(document.createElement('a'), {href: URL.createObjectURL(blob), download: `video-jepang-${new Date().toISOString().slice(0,10)}.csv`});
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    toast(`✅ ${semua.length} video diekspor ke CSV!`, 'success');
+};
+
 window.renderFilter = () => {
     const kontainer = document.getElementById('filterKategori');
     kontainer.innerHTML = '';
@@ -494,8 +549,9 @@ window.simpanVideo = async () => {
     if (!url) return toast('Link video wajib diisi!', 'error');
     try { new URL(url); } catch { return toast('Link tidak valid! Pastikan dimulai dengan https://', 'error'); }
 
-    if (Object.values(dataVideo).some(v => v.link === url)) {
-        toast('Video ini sudah ada di katalog!', 'error');
+    const urlNorm = normalizeUrl(url);
+    if (Object.values(dataVideo).some(v => normalizeUrl(v.link) === urlNorm)) {
+        toast('⚠️ Video ini sudah ada di katalog! (URL duplikat terdeteksi)', 'error');
         document.getElementById('linkVideo').value = '';
         return;
     }
@@ -537,6 +593,7 @@ window.simpanVideo = async () => {
 };
 
 window.renderRak = () => {
+    updateStats();
     const cari = document.getElementById('inputCari').value.toLowerCase();
     const sort = document.getElementById('sortPilihan').value;
     const rak = document.getElementById('rakVideo');

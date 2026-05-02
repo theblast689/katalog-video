@@ -32,7 +32,7 @@
         .topbar { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; padding: 0 20px; }
         .topbar-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 54px; gap: 16px; }
         .logo { font-weight: 700; font-size: 16px; color: var(--primary); white-space: nowrap; }
-        .nav-links { display: flex; gap: 4px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+        .nav-links { display: flex; gap: 6px; flex-wrap: wrap; }
         .nav-link { padding: 6px 14px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; transition: opacity .2s; }
         .nav-link:hover { opacity: .8; }
         .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); z-index: 200; padding: 0 0 env(safe-area-inset-bottom); }
@@ -103,6 +103,17 @@
         .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
         .empty-state p { font-size: 15px; font-weight: 600; }
         .empty-state span { font-size: 13px; }
+        /* ── STATS BAR ── */
+        .stats-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .stat-chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; border: 1.5px solid var(--border); background: var(--surface); white-space: nowrap; }
+        .stat-chip .stat-num { font-size: 13px; font-weight: 800; }
+        .stat-chip.total   { border-color: var(--primary); background: #e8f0ff; color: var(--primary); }
+        .stat-chip.selesai { border-color: #a7f3d0; background: #ecfdf5; color: #065f46; }
+        .stat-chip.proses  { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+        .stat-chip.belum   { border-color: var(--border); background: #f9fafb; color: var(--muted); }
+        .btn-export-csv { padding: 5px 12px; border-radius: 20px; border: 1.5px solid #a7f3d0; background: #ecfdf5; color: #065f46; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; transition: background .15s; margin-left: auto; flex-shrink: 0; }
+        .btn-export-csv:hover { background: #d1fae5; }
+        .btn-export-csv:active { transform: scale(0.97); }
         .paginasi { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-bottom: 40px; }
         .page-btn { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); padding: 7px 13px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: background .15s, border-color .15s; }
         .page-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
@@ -146,38 +157,7 @@
             .page-btn { padding: 9px 12px; font-size: 13px; }
             .fab-top { display: flex; }
         }
-    
-        /* ── TIME TRACKER WIDGET ── */
-        .waktu-wrap { position: relative; flex-shrink: 0; }
-        .waktu-hari-ini {
-            display: flex; align-items: center; gap: 7px;
-            background: rgba(24,119,242,0.10);
-            border: 1.5px solid rgba(24,119,242,0.25);
-            border-radius: 20px; padding: 5px 13px;
-            font-size: 12px; font-weight: 700; color: #1877f2;
-            white-space: nowrap; cursor: default; user-select: none; flex-shrink: 0;
-            transition: background .3s, color .3s, border-color .3s;
-        }
-        .waktu-hari-ini .dot-live {
-            width: 7px; height: 7px; border-radius: 50%;
-            background: #10b981;
-            animation: blink-dot 1.4s ease-in-out infinite; flex-shrink: 0;
-        }
-        .waktu-hari-ini.paused .dot-live { background: #f59e0b; animation: none; }
-        @keyframes blink-dot { 0%,100%{opacity:1}50%{opacity:.3} }
-        .waktu-tooltip {
-            display: none; position: absolute; top: calc(100% + 8px); right: 0;
-            background: #1c1c1e; color: #fff; font-size: 11px; font-weight: 600;
-            padding: 8px 12px; border-radius: 10px; white-space: nowrap;
-            box-shadow: 0 4px 16px rgba(0,0,0,.25); z-index: 9999;
-        }
-        .waktu-tooltip::before {
-            content:''; position:absolute; top:-5px; right:16px;
-            border-left:5px solid transparent; border-right:5px solid transparent;
-            border-bottom:5px solid #1c1c1e;
-        }
-        .waktu-wrap:hover .waktu-tooltip { display: block; }
-        </style>
+    </style>
 </head>
 <body>
 
@@ -190,39 +170,25 @@
 
 <nav class="bottom-nav">
     <div class="bottom-nav-inner">
-        <a href="index.html" class="bnav-item"><span>🎥</span><span>Video</span></a>
-        <a href="course.html" class="bnav-item"><span>📚</span><span>Course</span></a>
-        <a href="web.html" class="bnav-item"><span>🌐</span><span>Web</span></a>
-        <a href="habit.html" class="bnav-item"><span>⏳</span><span>Fokus</span></a>
-        <a href="keuangan.html" class="bnav-item"><span>💰</span><span>Duit</span></a>
-        <a href="idol.html" class="bnav-item"><span>🌸</span><span>Idol</span></a>
-        <a href="indonesia.html" class="bnav-item active"><span>🇮🇩</span><span>Indo</span></a>
-        <a href="jepang.html" class="bnav-item"><span>🇯🇵</span><span>Jepang</span></a>
+        <a href="index.html"     class="bnav-item"><span>🎥</span><span>Video</span></a>
+        <a href="indonesia.html" class="bnav-item active"><span>🇮🇩</span><span>Indonesia</span></a>
+        <a href="jepang.html"    class="bnav-item"><span>🇯🇵</span><span>Jepang</span></a>
+        <a href="course.html"    class="bnav-item"><span>📚</span><span>Course</span></a>
+        <a href="habit.html"     class="bnav-item"><span>⏳</span><span>Fokus</span></a>
+        <a href="idol.html"      class="bnav-item"><span>🌸</span><span>Idol</span></a>
     </div>
 </nav>
 
 <header class="topbar">
     <div class="topbar-inner">
         <span class="logo">🇮🇩 Video Indonesia</span>
-        <div class="waktu-wrap">
-            <div class="waktu-hari-ini" id="waktuWidget">
-                <span class="dot-live"></span>
-                <span id="waktuTeks">00:00</span>
-            </div>
-            <div class="waktu-tooltip">
-                ⏱ Waktu di halaman ini hari ini<br>
-                <span id="waktuTooltipDetail" style="color:#aaa;font-weight:500;">Memuat...</span>
-            </div>
-        </div>
         <nav class="nav-links">
-            <a href="index.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🎥 Video</a>
-            <a href="course.html" class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Course</a>
-            <a href="web.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Web</a>
-            <a href="habit.html" class="nav-link" style="background:#e4e6eb;color:#050505;">⏳ Fokus</a>
-            <a href="keuangan.html" class="nav-link" style="background:#e4e6eb;color:#050505;">💰 Duit</a>
-            <a href="idol.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
-            <a href="indonesia.html" class="nav-link" style="background:#1877f2;color:#fff;">🇮🇩 Indo</a>
-            <a href="jepang.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🇯🇵 Jepang</a>
+            <a href="index.html"     class="nav-link" style="background:#e4e6eb;color:#050505;">🎥 Video</a>
+            <a href="indonesia.html" class="nav-link" style="background:#c0392b;color:#fff;">🇮🇩 Indonesia</a>
+            <a href="jepang.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">🇯🇵 Jepang</a>
+            <a href="course.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Course</a>
+            <a href="habit.html"     class="nav-link" style="background:#e4e6eb;color:#050505;">⏳ Fokus</a>
+            <a href="idol.html"      class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
         </nav>
     </div>
 </header>
@@ -256,6 +222,15 @@
     <div class="search-wrap">
         <span class="search-icon">🔍</span>
         <input type="text" id="inputCari" placeholder="Cari judul, kategori, atau catatan..." onkeyup="resetKeHalamanSatu()">
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-chip total">🎥 <span class="stat-num" id="statTotal">0</span> Tersimpan</div>
+        <div class="stat-chip selesai">✅ <span class="stat-num" id="statSelesai">0</span> Selesai</div>
+        <div class="stat-chip proses">▶ <span class="stat-num" id="statProses">0</span> Dalam Proses</div>
+        <div class="stat-chip belum">⬜ <span class="stat-num" id="statBelum">0</span> Belum</div>
+        <button class="btn-export-csv" onclick="eksporKeCSV()">⬇ Export CSV</button>
     </div>
 
     <div class="filter-bar">
@@ -470,6 +445,47 @@ window.updateUIKat = () => {
     });
 };
 
+// ── NORMALISASI URL (cegah duplikat beda format) ──
+function normalizeUrl(raw) {
+    let url = raw.trim().toLowerCase().replace(/\/+$/, '');
+    // YouTube: semua format → canonical ?v=ID
+    const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([a-z0-9_-]{11})/i);
+    if (ytMatch) return `https://www.youtube.com/watch?v=${ytMatch[1]}`;
+    // Hapus tracking params umum
+    try {
+        const u = new URL(url.startsWith('http') ? url : 'https://' + url);
+        ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','fbclid','gclid','ref','si'].forEach(p => u.searchParams.delete(p));
+        return u.origin + u.pathname + (u.search ? u.search : '');
+    } catch { return url; }
+}
+
+// ── UPDATE STATS ──
+window.updateStats = () => {
+    const semua = Object.values(dataVideo);
+    document.getElementById('statTotal').textContent  = semua.length;
+    document.getElementById('statSelesai').textContent = semua.filter(v => v.selesai).length;
+    document.getElementById('statProses').textContent  = semua.filter(v => !v.selesai && v.lastWatch).length;
+    document.getElementById('statBelum').textContent   = semua.filter(v => !v.selesai && !v.lastWatch).length;
+};
+
+// ── EXPORT CSV ──
+window.eksporKeCSV = () => {
+    const semua = Object.values(dataVideo);
+    if (!semua.length) return toast('Tidak ada video untuk diekspor!', 'error');
+    const esc = s => { const t = String(s||''); return (t.includes(',')||t.includes('"')||t.includes('\n')) ? `"${t.replace(/"/g,'""')}"` : t; };
+    const headers = ['Judul','Platform','Channel','Kategori','Durasi','Progress','Selesai','Catatan','Link','Waktu Simpan'];
+    const rows = semua.map(v => [
+        esc(v.judul), esc(v.platform), esc(v.channel),
+        esc((v.kategori||[]).join('; ')), esc(v.durasi), esc(v.lastWatch),
+        esc(v.selesai ? 'Ya' : 'Tidak'), esc(v.catatan), esc(v.link),
+        esc(v.waktuSimpan ? new Date(v.waktuSimpan).toLocaleString('id-ID') : '')
+    ].join(','));
+    const blob = new Blob(['\uFEFF' + [headers.join(','), ...rows].join('\r\n')], {type:'text/csv;charset=utf-8;'});
+    const a = Object.assign(document.createElement('a'), {href: URL.createObjectURL(blob), download: `video-indonesia-${new Date().toISOString().slice(0,10)}.csv`});
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    toast(`✅ ${semua.length} video diekspor ke CSV!`, 'success');
+};
+
 window.renderFilter = () => {
     const kontainer = document.getElementById('filterKategori');
     kontainer.innerHTML = '';
@@ -496,8 +512,9 @@ window.simpanVideo = async () => {
     if (!url) return toast('Link video wajib diisi!', 'error');
     try { new URL(url); } catch { return toast('Link tidak valid! Pastikan dimulai dengan https://', 'error'); }
 
-    if (Object.values(dataVideo).some(v => v.link === url)) {
-        toast('Video ini sudah ada di katalog!', 'error');
+    const urlNorm = normalizeUrl(url);
+    if (Object.values(dataVideo).some(v => normalizeUrl(v.link) === urlNorm)) {
+        toast('⚠️ Video ini sudah ada di katalog! (URL duplikat terdeteksi)', 'error');
         document.getElementById('linkVideo').value = '';
         return;
     }
@@ -543,6 +560,7 @@ window.simpanVideo = async () => {
 };
 
 window.renderRak = () => {
+    updateStats();
     const cari = document.getElementById('inputCari').value.toLowerCase();
     const sort = document.getElementById('sortPilihan').value;
     const rak = document.getElementById('rakVideo');
@@ -675,83 +693,6 @@ if ('serviceWorker' in navigator) {
 }
 const fab = document.getElementById('fabTop');
 window.addEventListener('scroll', () => { if(fab) fab.style.opacity = window.scrollY>320?'1':'0'; }, {passive:true});
-</script>
-<script>
-// ── TIME TRACKER ─────────────────────────────────────────
-(function() {
-    const PAGE_KEY = 'waktu_halaman_indonesia';
-    const todayKey = () => {
-        const d = new Date();
-        return `${PAGE_KEY}_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    };
-    const getStored  = () => parseInt(localStorage.getItem(todayKey()) || '0', 10);
-    const saveStored = (s) => localStorage.setItem(todayKey(), String(s));
-
-    let totalDetik = getStored();
-    let startTime = null, intervalId = null, isActive = false;
-
-    const fmt = (s) => {
-        const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
-        if (h > 0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-        return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-    };
-    const fmtVerbose = (s) => {
-        if (s < 60) return `${s} detik`;
-        const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
-        let str = '';
-        if (h > 0) str += `${h} jam `;
-        if (m > 0) str += `${m} menit `;
-        if (sec > 0 && h === 0) str += `${sec} detik`;
-        return str.trim();
-    };
-
-    const updateUI = () => {
-        const el     = document.getElementById('waktuTeks');
-        const widget = document.getElementById('waktuWidget');
-        const detail = document.getElementById('waktuTooltipDetail');
-        if (!el) return;
-        el.textContent = fmt(totalDetik);
-        if (detail) {
-            const tgl = new Date();
-            const tglStr = tgl.toLocaleDateString('id-ID', {weekday:'long',day:'numeric',month:'long'});
-            detail.textContent = `${fmtVerbose(totalDetik)} — ${tglStr}`;
-        }
-        if (widget) {
-            if (totalDetik >= 7200) {
-                widget.style.background='#fff7ed'; widget.style.borderColor='#fed7aa'; widget.style.color='#c2410c';
-            } else if (totalDetik >= 3600) {
-                widget.style.background='#ecfdf5'; widget.style.borderColor='#a7f3d0'; widget.style.color='#065f46';
-            } else {
-                widget.style.background=''; widget.style.borderColor=''; widget.style.color='';
-            }
-        }
-    };
-
-    const mulai = () => {
-        if (isActive) return; isActive = true; startTime = Date.now();
-        const w = document.getElementById('waktuWidget');
-        if (w) w.classList.remove('paused');
-        intervalId = setInterval(() => {
-            totalDetik = getStored() + Math.floor((Date.now()-startTime)/1000);
-            updateUI();
-        }, 1000);
-    };
-
-    const jeda = () => {
-        if (!isActive) return; isActive = false;
-        totalDetik = getStored() + Math.floor((Date.now()-startTime)/1000);
-        saveStored(totalDetik); clearInterval(intervalId); startTime = null;
-        const w = document.getElementById('waktuWidget');
-        if (w) w.classList.add('paused');
-        updateUI();
-    };
-
-    document.addEventListener('visibilitychange', () => { if (document.hidden) jeda(); else mulai(); });
-    window.addEventListener('beforeunload', jeda);
-    window.addEventListener('pagehide', jeda);
-
-    updateUI(); mulai();
-})();
 </script>
 </body>
 </html>
