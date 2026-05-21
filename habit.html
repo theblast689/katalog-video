@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Fokus — Deep Work System</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f0f0f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:        #0f0f0f;
+  --bg2:       #181818;
+  --surface:   #1f1f1f;
+  --surface2:  #262626;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.12);
+  --accent:    #c8974a;
+  --accent2:   #a87838;
+  --accent-glow: rgba(200,151,74,0.15);
+  --text:      #e2ddd8;
+  --text2:     #b8b4af;
+  --muted:     #5c5652;
+  --danger:    #d9534f;
+  --success:   #5aaa78;
+  --mono:      'Space Mono', monospace;
+  --sans:      'Figtree', sans-serif;
+  --radius:    12px;
+  --radius-sm: 8px;
+}
+
+html { scroll-behavior: smooth }
+
+body{
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── SUBTLE BG TEXTURE ─────────────────────────── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(200,151,74,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(200,151,74,0.03) 0%, transparent 50%);
+  pointer-events:none;z-index:0;
+}
+
+/* ─── TOPBAR ─────────────────────────────────────── */
+.topbar{
+  position:sticky;top:0;z-index:200;
+  background:rgba(15,15,15,0.92);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.topbar-inner{
+  max-width:1000px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  height:52px;padding:0 24px;gap:12px;
+}
+.logo{
+  font-family:var(--mono);
+  font-size:13px;font-weight:700;
+  color:var(--accent);
+  letter-spacing:1px;
+  white-space:nowrap;
+}
+.nav-links{display:flex;gap:4px}
+.nav-link{
+  padding:5px 12px;border-radius:6px;
+  text-decoration:none;font-size:12px;font-weight:600;
+  color:var(--muted);
+  transition:color .15s,background .15s;
+  letter-spacing:.2px;
+}
+.nav-link:hover{color:var(--text2);background:var(--surface)}
+.nav-link.active{color:var(--accent);background:rgba(200,151,74,0.08)}
+
+/* ─── BOTTOM NAV ─────────────────────────────────── */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(15,15,15,0.97);
+  backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+  z-index:300;
+  padding:0 0 env(safe-area-inset-bottom);
+}
+.bottom-nav-inner{display:flex;justify-content:space-around;height:56px}
+.bnav-item{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-decoration:none;font-size:9px;font-weight:700;
+  color:var(--muted);gap:2px;transition:color .15s;letter-spacing:.3px;
+}
+.bnav-item.active{color:var(--accent)}
+.bnav-item span:first-child{font-size:16px;line-height:1}
+
+/* ─── LAYOUT ─────────────────────────────────────── */
+.main{max-width:1000px;margin:0 auto;padding:32px 24px 100px;position:relative;z-index:1}
+
+/* ─── LOADING ─────────────────────────────────────── */
+#loading{
+  position:fixed;inset:0;background:var(--bg);z-index:800;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+}
+.load-logo{font-family:var(--mono);font-size:20px;color:var(--accent);letter-spacing:3px}
+.load-bar-wrap{width:160px;height:2px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.load-bar{
+  height:100%;background:var(--accent);border-radius:2px;
+  animation:loadAnim 1.4s ease infinite;
+}
+@keyframes loadAnim{
+  0%{width:0%;margin-left:0}
+  50%{width:50%;margin-left:25%}
+  100%{width:0%;margin-left:100%}
+}
+.load-txt{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.5px}
+
+/* ─── TOAST ──────────────────────────────────────── */
+#toast-wrap{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-left:3px solid var(--accent);
+  color:var(--text);
+  padding:11px 16px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:600;
+  box-shadow:0 8px 32px rgba(0,0,0,0.6);
+  animation:slideIn .25s ease;
+  display:flex;align-items:center;gap:10px;max-width:280px;
+}
+.toast.success{border-left-color:var(--success)}
+.toast.error{border-left-color:var(--danger)}
+.toast.gold{border-left-color:var(--accent)}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOut{to{transform:translateX(20px);opacity:0}}
+
+/* ─── STATS ROW ──────────────────────────────────── */
+.stats-row{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:28px;
+}
+@media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.stat-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px 16px;
+  position:relative;
+  overflow:hidden;
+}
+.stat-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  opacity:0;transition:opacity .3s;
+}
+.stat-card:hover::after{opacity:.5}
+.stat-card-val{
+  font-family:var(--mono);
+  font-size:24px;font-weight:700;
+  color:var(--accent);
+  line-height:1;margin-bottom:6px;
+}
+.stat-card-lbl{
+  font-size:10px;color:var(--muted);
+  font-weight:700;text-transform:uppercase;letter-spacing:1px;
+}
+.stat-card-sub{
+  font-size:11px;color:var(--text2);
+  font-weight:500;margin-top:4px;
+}
+
+/* ─── DAILY PROGRESS ─────────────────────────────── */
+.daily-progress{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px 24px;
+  margin-bottom:20px;
+  display:flex;align-items:center;gap:20px;
+}
+@media(max-width:560px){.daily-progress{flex-direction:column;align-items:flex-start}}
+.daily-time{
+  font-family:var(--mono);
+  font-size:36px;font-weight:700;
+  color:var(--text);
+  white-space:nowrap;
+}
+.daily-time span{font-size:14px;color:var(--muted);font-weight:400}
+.daily-right{flex:1;width:100%}
+.daily-label{
+  display:flex;justify-content:space-between;
+  font-size:11px;color:var(--muted);
+  font-weight:600;margin-bottom:8px;letter-spacing:.3px;
+}
+.progress-track{
+  height:6px;background:var(--surface2);
+  border-radius:3px;overflow:hidden;
+  width:100%;
+}
+.progress-fill{
+  height:100%;border-radius:3px;
+  background:var(--accent);
+  transition:width .8s cubic-bezier(.4,0,.2,1);
+  position:relative;
+}
+.progress-fill.complete{background:var(--success)}
+.daily-sub{font-size:12px;color:var(--muted);margin-top:8px;font-weight:500}
+
+/* ─── PANEL ──────────────────────────────────────── */
+.panel{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+  margin-bottom:20px;
+}
+.panel-title{
+  font-size:11px;font-weight:700;
+  color:var(--muted);
+  letter-spacing:1.2px;text-transform:uppercase;
+  margin-bottom:18px;
+  display:flex;align-items:center;gap:8px;
+}
+.panel-title::before{
+  content:'';width:16px;height:1px;
+  background:var(--accent);display:inline-block;
+}
+
+/* ─── TIMER SECTION ──────────────────────────────── */
+.timer-section{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:40px 32px;
+  margin-bottom:20px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.timer-section::before{
+  content:'';position:absolute;
+  top:0;left:50%;transform:translateX(-50%);
+  width:200px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  opacity:.4;
+}
+
+.timer-task-label{
+  font-size:11px;color:var(--muted);
+  font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;margin-bottom:12px;
+}
+.timer-task-name{
+  font-size:16px;font-weight:600;color:var(--text2);
+  margin-bottom:32px;min-height:24px;
+  transition:color .3s;
+}
+
+.timer-display{
+  font-family:var(--mono);
+  font-size:72px;font-weight:700;
+  color:var(--text);
+  letter-spacing:4px;
+  line-height:1;
+  margin-bottom:8px;
+  transition:color .3s;
+}
+@media(max-width:500px){.timer-display{font-size:48px;letter-spacing:2px}}
+
+.timer-mode{
+  font-size:10px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:32px;
+}
+
+/* Countdown ring */
+.ring-wrap{
+  position:relative;
+  width:180px;height:180px;
+  margin:0 auto 32px;
+  display:none;
+}
+.ring-wrap.visible{display:block}
+.ring-svg{width:180px;height:180px;transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:var(--surface2);stroke-width:4}
+.ring-progress{
+  fill:none;stroke:var(--accent);stroke-width:4;
+  stroke-linecap:round;
+  stroke-dasharray:502.65;
+  stroke-dashoffset:0;
+  transition:stroke-dashoffset .95s linear,stroke .3s;
+}
+.ring-progress.warn{stroke:var(--danger)}
+.ring-time{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:32px;font-weight:700;
+  color:var(--text);letter-spacing:2px;
+}
+
+.timer-presets{
+  display:flex;align-items:center;justify-content:center;
+  gap:8px;flex-wrap:wrap;margin-bottom:24px;
+}
+.preset-label{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-right:4px}
+.btn-preset{
+  padding:6px 14px;border-radius:6px;
+  border:1px solid var(--border2);
+  background:transparent;
+  color:var(--text2);
+  font-family:var(--sans);font-size:12px;font-weight:700;
+  cursor:pointer;transition:all .15s;
+  letter-spacing:.3px;
+}
+.btn-preset:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
+.btn-preset.selected{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
+
+.timer-actions{display:flex;gap:12px;justify-content:center;align-items:center}
+
+/* ─── BUTTONS ─────────────────────────────────────── */
+.btn{
+  padding:10px 22px;border-radius:var(--radius-sm);
+  border:none;font-family:var(--sans);
+  font-size:14px;font-weight:700;cursor:pointer;
+  transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+  white-space:nowrap;letter-spacing:.2px;
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{
+  background:var(--accent);color:#1a0e00;
+}
+.btn-primary:hover{background:#d4a356;box-shadow:0 4px 20px rgba(200,151,74,0.25)}
+.btn-ghost{
+  background:transparent;
+  border:1px solid var(--border2);
+  color:var(--text2);
+}
+.btn-ghost:hover{border-color:var(--border2);background:var(--surface);color:var(--text)}
+.btn-danger{background:transparent;border:1px solid rgba(217,83,79,0.3);color:var(--danger)}
+.btn-danger:hover{background:rgba(217,83,79,0.1)}
+.btn-sm{padding:7px 14px;font-size:12px}
+
+/* ─── INPUT ──────────────────────────────────────── */
+input[type=text],textarea,select{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:14px;
+  padding:10px 14px;
+  outline:none;
+  transition:border-color .15s;
+  width:100%;
+}
+input:focus,textarea:focus,select:focus{
+  border-color:rgba(200,151,74,0.4);
+}
+input::placeholder{color:var(--muted)}
+select option{background:var(--bg2);color:var(--text)}
+
+.input-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* ─── MISSION GRID ─────────────────────────────────── */
+.mission-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:12px;
+  margin-bottom:8px;
+}
+.mission-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px;
+  position:relative;
+  display:flex;flex-direction:column;gap:10px;
+  transition:border-color .2s;
+}
+.mission-card:hover{border-color:var(--border2)}
+.mission-name{
+  font-weight:700;font-size:14px;
+  line-height:1.4;padding-right:24px;
+  color:var(--text);
+}
+.mission-meta{
+  font-size:11px;color:var(--muted);
+  font-weight:600;font-family:var(--mono);
+}
+.btn-hapus{
+  position:absolute;top:14px;right:14px;
+  width:22px;height:22px;border-radius:4px;
+  background:transparent;
+  color:var(--muted);border:none;
+  cursor:pointer;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  transition:color .15s;padding:0;
+}
+.btn-hapus:hover{color:var(--danger)}
+.mission-controls{display:flex;gap:6px;flex-wrap:wrap}
+.btn-mulai{
+  flex:1;padding:8px;border-radius:var(--radius-sm);
+  background:rgba(200,151,74,0.1);
+  color:var(--accent);
+  border:1px solid rgba(200,151,74,0.2);
+  font-family:var(--sans);
+  font-size:12px;font-weight:700;cursor:pointer;
+  transition:all .15s;min-width:80px;text-align:center;
+}
+.btn-mulai:hover{background:rgba(200,151,74,0.18);border-color:var(--accent)}
+.btn-mulai.primary{background:var(--accent);color:#1a0e00;border-color:var(--accent)}
+.btn-mulai.primary:hover{background:#d4a356}
+.mission-time-presets{
+  display:flex;gap:5px;flex-wrap:wrap;
+  margin-top:2px;
+}
+.mission-preset{
+  padding:4px 8px;border-radius:5px;
+  border:1px solid var(--border);
+  background:transparent;color:var(--text2);
+  font-family:var(--sans);font-size:11px;font-weight:700;
+  cursor:pointer;transition:all .15s;
+}
+.mission-preset:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ─── DIVIDER ─────────────────────────────────────── */
+.section-divider{
+  height:1px;background:var(--border);
+  margin:28px 0;
+  position:relative;
+}
+.section-divider::after{
+  content:attr(data-label);
+  position:absolute;left:50%;transform:translateX(-50%);
+  top:-9px;background:var(--bg);
+  padding:0 12px;
+  font-size:10px;color:var(--muted);
+  font-weight:700;letter-spacing:1px;text-transform:uppercase;
+}
+
+/* ─── CHART ──────────────────────────────────────── */
+.chart-wrap{position:relative;height:180px}
+
+/* ─── HISTORY TABLE ──────────────────────────────── */
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.filter-row input,.filter-row select{
+  flex:1;min-width:140px;font-size:13px;padding:8px 12px;
+}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{
+  border-bottom:1px solid var(--border);
+  padding:10px 12px;color:var(--muted);
+  font-weight:700;text-align:left;
+  font-size:10px;text-transform:uppercase;letter-spacing:.8px;
+}
+tbody td{
+  padding:11px 12px;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+  color:var(--text2);
+}
+tbody tr:hover td{background:var(--surface);color:var(--text)}
+.exp-gain{
+  color:var(--accent);font-weight:700;
+  font-family:var(--mono);font-size:12px;
+}
+.table-scroll{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border)}
+
+/* ─── PAGINATION ─────────────────────────────────── */
+.paginasi{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:16px}
+.page-btn{
+  background:transparent;border:1px solid var(--border);
+  color:var(--muted);padding:6px 12px;
+  border-radius:6px;cursor:pointer;
+  font-family:var(--mono);font-size:11px;font-weight:700;
+  transition:all .15s;
+}
+.page-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.page-btn.aktif{background:var(--accent);color:#1a0e00;border-color:var(--accent)}
+.page-btn:disabled{opacity:.3;cursor:not-allowed}
+
+/* ─── TIMER MODAL (fullscreen) ───────────────────── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(10,10,10,0.98);
+  z-index:500;
+  justify-content:center;align-items:center;flex-direction:column;
+  gap:12px;
+}
+.modal-overlay.active{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.modal-tag{
+  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.modal-task{
+  font-size:14px;font-weight:600;
+  color:var(--text2);text-align:center;max-width:320px;
+  margin-bottom:8px;
+}
+.modal-timer{
+  font-family:var(--mono);
+  font-size:88px;font-weight:700;
+  color:var(--text);letter-spacing:6px;
+  line-height:1;margin:16px 0;
+  transition:color .3s;
+}
+@media(max-width:500px){.modal-timer{font-size:56px;letter-spacing:3px}}
+.modal-timer.warn{color:var(--danger)}
+
+.modal-ring-wrap{
+  position:relative;width:220px;height:220px;
+  margin-bottom:8px;display:none;
+}
+.modal-ring-wrap.visible{display:block}
+.modal-ring-svg{width:220px;height:220px;transform:rotate(-90deg)}
+.modal-ring-track{fill:none;stroke:var(--surface2);stroke-width:3}
+.modal-ring-progress{
+  fill:none;stroke:var(--accent);stroke-width:3;
+  stroke-linecap:round;
+  stroke-dasharray:659.73;
+  stroke-dashoffset:0;
+  transition:stroke-dashoffset .95s linear,stroke .3s;
+}
+.modal-ring-progress.warn{stroke:var(--danger)}
+.modal-ring-inner{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:4px;
+}
+.modal-ring-time{
+  font-family:var(--mono);
+  font-size:36px;font-weight:700;
+  color:var(--text);letter-spacing:2px;
+  transition:color .3s;
+}
+.modal-ring-time.warn{color:var(--danger)}
+.modal-ring-label{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px}
+
+.modal-tip{
+  font-size:12px;color:var(--muted);
+  max-width:280px;text-align:center;
+  line-height:1.6;margin-top:8px;
+}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+
+/* ─── NOTES ARCHIVE ──────────────────────────────── */
+.notes-wrap{display:flex;flex-direction:column;gap:10px}
+.note-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:14px 16px;
+  position:relative;
+}
+.note-card-header{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  margin-bottom:8px;
+}
+.note-card-title{font-size:13px;font-weight:700;color:var(--text);flex:1}
+.note-card-date{font-size:10px;color:var(--muted);font-family:var(--mono);white-space:nowrap;margin-left:12px}
+.note-card-body{font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.btn-hapus-note{
+  position:absolute;top:12px;right:12px;
+  background:transparent;border:none;
+  color:var(--muted);cursor:pointer;
+  font-size:13px;padding:2px;
+  transition:color .15s;
+}
+.btn-hapus-note:hover{color:var(--danger)}
+.note-input-wrap{display:flex;flex-direction:column;gap:8px}
+.note-input-wrap input{margin-bottom:0}
+.note-input-wrap textarea{resize:vertical;min-height:80px}
+
+/* ─── EMPTY STATE ─────────────────────────────────── */
+.empty{
+  grid-column:1/-1;text-align:center;
+  padding:40px 20px;color:var(--muted);
+}
+.empty-icon{font-size:28px;margin-bottom:8px;opacity:.4}
+.empty p{font-weight:600;font-size:13px}
+
+/* ─── SUMMARY STATS ──────────────────────────────── */
+.summary-stats{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));
+  gap:10px;margin-bottom:18px;
+}
+.s-stat{
+  text-align:center;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:12px 8px;
+}
+.s-stat-val{font-family:var(--mono);font-size:18px;color:var(--accent);font-weight:700}
+.s-stat-lbl{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-top:3px}
+
+/* ─── MOBILE ─────────────────────────────────────── */
+@media(max-width:640px){
+  .nav-links{display:none}
+  .bottom-nav{display:block}
+  .main{padding:20px 14px 80px}
+  .topbar-inner{padding:0 16px;height:48px}
+  .timer-section{padding:28px 16px}
+  .panel{padding:18px 14px}
+  .mission-grid{grid-template-columns:1fr}
+  #toast-wrap{bottom:68px;right:12px;left:12px}
+  .filter-row{flex-direction:column}
+  .stats-row{gap:8px}
+  .stat-card{padding:14px 12px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="load-logo">FOKUS</div>
+  <div class="load-bar-wrap"><div class="load-bar"></div></div>
+  <div class="load-txt">Memuat sistem deep work…</div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-wrap"></div>
+
+<!-- TIMER MODAL (fullscreen focus mode) -->
+<div id="timerModal" class="modal-overlay">
+  <div class="modal-tag" id="modalModeTag">⏱ STOPWATCH</div>
+  <div class="modal-task" id="modalTaskName">Misi Aktif…</div>
+
+  <!-- Countdown ring (hanya tampil saat countdown) -->
+  <div class="modal-ring-wrap" id="modalRingWrap">
+    <svg class="modal-ring-svg" viewBox="0 0 220 220">
+      <circle class="modal-ring-track" cx="110" cy="110" r="105"/>
+      <circle class="modal-ring-progress" id="ringProgress" cx="110" cy="110" r="105"
+        transform="rotate(-90 110 110)"/>
+    </svg>
+    <div class="modal-ring-inner">
+      <div class="modal-ring-time" id="ringTimeDisplay">00:00</div>
+      <div class="modal-ring-label">tersisa</div>
+    </div>
+  </div>
+
+  <!-- Stopwatch display (hanya tampil saat stopwatch) -->
+  <div class="modal-timer" id="timerDisplay">00:00:00</div>
+
+  <p class="modal-tip">Jauhkan HP. Tutup tab lain. Satu hal, satu sesi.</p>
+
+  <div class="modal-actions">
+    <button class="btn btn-primary" onclick="stopTimer()">✓ Selesai & Simpan</button>
+    <button class="btn btn-ghost btn-sm" onclick="batalTimer()">Batal</button>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="logo">▸ FOKUS</span>
+    <nav class="nav-links">
+      <a href="index.html"    class="nav-link">Video</a>
+      <a href="course.html"   class="nav-link">Course</a>
+      <a href="web.html"      class="nav-link">Web</a>
+      <a href="habit.html"    class="nav-link active">Fokus</a>
+      <a href="keuangan.html" class="nav-link">Duit</a>
+      <a href="idol.html"     class="nav-link">Idol</a>
+    </nav>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- DAILY PROGRESS -->
+  <div class="daily-progress" id="dailyProgress">
+    <div>
+      <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Fokus Hari Ini</div>
+      <div class="daily-time" id="todayTimeDisplay">0<span> mnt</span></div>
+    </div>
+    <div class="daily-right">
+      <div class="daily-label">
+        <span id="todayBarLabel">0 / 120 mnt</span>
+        <span id="todayBarPct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="todayBarFill" style="width:0%"></div>
+      </div>
+      <div class="daily-sub" id="todaySub">Mulai sesi pertamamu hari ini.</div>
+    </div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-card-val" id="statHariIni">0m</div>
+      <div class="stat-card-lbl">Hari Ini</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-val" id="statStreak">0</div>
+      <div class="stat-card-lbl">Hari Streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-val" id="statTotal">0</div>
+      <div class="stat-card-lbl">Total Jam</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-val" id="statSesi">0</div>
+      <div class="stat-card-lbl">Total Sesi</div>
+    </div>
+  </div>
+
+  <!-- TIMER SECTION -->
+  <div class="timer-section" id="timerSection">
+    <div class="timer-task-label">Sesi Deep Work</div>
+    <div class="timer-task-name" id="activeTaskName">—</div>
+
+    <!-- Countdown ring -->
+    <div class="ring-wrap" id="inlineRingWrap">
+      <svg class="ring-svg" viewBox="0 0 180 180">
+        <circle class="ring-track" cx="90" cy="90" r="80"/>
+        <circle class="ring-progress" id="inlineRingProgress" cx="90" cy="90" r="80"
+          transform="rotate(-90 90 90)"/>
+      </svg>
+      <div class="ring-time" id="inlineRingTime">00:00</div>
+    </div>
+
+    <!-- Stopwatch display -->
+    <div class="timer-display" id="inlineTimerDisplay">00:00:00</div>
+
+    <div class="timer-mode" id="timerModeLabel">Mode: Stopwatch Bebas</div>
+
+    <div class="timer-presets">
+      <span class="preset-label">Durasi:</span>
+      <button class="btn-preset" onclick="selectPreset(0)">Bebas</button>
+      <button class="btn-preset" onclick="selectPreset(25*60)">25m</button>
+      <button class="btn-preset" onclick="selectPreset(45*60)">45m</button>
+      <button class="btn-preset" onclick="selectPreset(60*60)">60m</button>
+      <button class="btn-preset" onclick="selectPreset(90*60)">90m</button>
+      <button class="btn-preset" onclick="selectCustomPreset()">Kustom</button>
+    </div>
+
+    <div class="timer-actions" id="timerActions">
+      <!-- Diisi oleh JS -->
+    </div>
+  </div>
+
+  <!-- ADD MISSION -->
+  <div class="panel">
+    <div class="panel-title">Tambah Misi</div>
+    <div class="input-row">
+      <input type="text" id="inputHabit" placeholder="Nama misi, cth: Belajar Kanji JLPT N3…" style="flex:1">
+      <button class="btn btn-primary btn-sm" onclick="tambahHabit()">+ Tambah</button>
+    </div>
+  </div>
+
+  <!-- MISSION BOARD -->
+  <div class="mission-grid" id="rakHabit"></div>
+
+  <div class="section-divider" data-label="Statistik"></div>
+
+  <!-- 30-DAY CHART -->
+  <div class="panel">
+    <div class="panel-title">Grafik Deep Work 30 Hari</div>
+    <div class="summary-stats" id="summaryStats"></div>
+    <div class="chart-wrap"><canvas id="habitChart"></canvas></div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="panel" id="panelRiwayat">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:18px">
+      <div class="panel-title" style="margin:0">Riwayat Sesi</div>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">↓ Export CSV</button>
+    </div>
+    <div class="filter-row">
+      <input type="text" id="filterNama" placeholder="Cari nama misi…" onkeyup="renderRiwayat()" style="flex:1;min-width:160px">
+      <select id="filterSort" onchange="renderRiwayat()" style="min-width:140px">
+        <option value="terbaru">Terbaru</option>
+        <option value="terlama">Terlama</option>
+        <option value="durasi">Durasi terpanjang</option>
+        <option value="exp">Poin terbesar</option>
+      </select>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr>
+          <th>Waktu</th><th>Misi</th><th>Durasi</th><th>Poin</th>
+        </tr></thead>
+        <tbody id="riwayatBody"></tbody>
+      </table>
+    </div>
+    <div id="paginasiRiwayat" class="paginasi"></div>
+  </div>
+
+  <!-- ARCHIVE / NOTES -->
+  <div class="panel">
+    <div class="panel-title">Arsip &amp; Catatan</div>
+    <div class="note-input-wrap" style="margin-bottom:14px">
+      <input type="text" id="noteTitle" placeholder="Judul catatan…">
+      <textarea id="noteBody" placeholder="Tulis catatan, insight, atau progres proyek di sini…"></textarea>
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="simpanNote()">+ Simpan Catatan</button>
+      </div>
+    </div>
+    <div class="notes-wrap" id="notesWrap">
+      <div class="empty"><div class="empty-icon">📝</div><p>Belum ada catatan.</p></div>
+    </div>
+  </div>
+
+</main>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a href="index.html"    class="bnav-item"><span>🎥</span><span>Video</span></a>
+    <a href="course.html"   class="bnav-item"><span>📚</span><span>Course</span></a>
+    <a href="web.html"      class="bnav-item"><span>🌐</span><span>Web</span></a>
+    <a href="habit.html"    class="bnav-item active"><span>⏱</span><span>Fokus</span></a>
+    <a href="keuangan.html" class="bnav-item"><span>💰</span><span>Duit</span></a>
+    <a href="idol.html"     class="bnav-item"><span>🌸</span><span>Idol</span></a>
+  </div>
+</nav>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getDatabase, ref, push, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+// ── FIREBASE CONFIG (tidak diubah) ──────────────────
+const firebaseConfig = {
+  apiKey:"AIzaSyBCHrlq5VIizVn42KzyvmUYH3OUs2G74rQ",
+  authDomain:"katalog-video.firebaseapp.com",
+  databaseURL:"https://katalog-video-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"katalog-video",
+  storageBucket:"katalog-video.firebasestorage.app",
+  messagingSenderId:"1035864136490",
+  appId:"1:1035864136490:web:9abe5dbf41e80b11ad5c53"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+// ── STATE ────────────────────────────────────────────
+let daftarHabit     = [];
+let totalPoin       = 0;
+let chartInst       = null;
+window.logsGlobal   = {};
+
+let halRiwayat      = 1;
+const perHal        = 30;
+
+// Timer state
+let intervalId      = null;
+let waktuMulai      = null;
+let idHabitAktif    = null;
+let namaHabitAktif  = '';
+let targetDetik     = 0;   // 0 = stopwatch
+let presetTerpilih  = 0;   // preset yang dipilih di timer section
+
+const RING_FULL     = 659.73;  // 2 * PI * 105 (modal ring)
+const RING_FULL_SM  = 502.65;  // 2 * PI * 80  (inline ring)
+
+// ── TOAST ─────────────────────────────────────────────
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${msg}</span>`;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(()=>{
+    el.style.animation='slideOut .25s ease forwards';
+    setTimeout(()=>el.remove(),250);
+  }, 3500);
+}
+
+// ── TODAY FOCUS ──────────────────────────────────────
+const TODAY_GOAL = 120;
+
+function updateTodayUI(logs) {
+  const todayStr  = new Date().toISOString().split('T')[0];
+  const todayMnt  = Object.values(logs)
+    .filter(l => l.dateString === todayStr)
+    .reduce((s, l) => s + l.durasiMenit, 0);
+
+  const jam  = Math.floor(todayMnt / 60);
+  const mnt  = todayMnt % 60;
+  const pct  = Math.min(Math.round((todayMnt / TODAY_GOAL) * 100), 100);
+
+  // Stat box
+  const statEl = document.getElementById('statHariIni');
+  if(statEl) statEl.textContent = jam > 0 ? `${jam}j${mnt}m` : `${mnt}m`;
+
+  // Daily banner
+  const dispEl = document.getElementById('todayTimeDisplay');
+  if(dispEl){
+    if(jam > 0) dispEl.innerHTML = `${jam}<span> jam</span> ${mnt}<span> mnt</span>`;
+    else        dispEl.innerHTML = `${todayMnt}<span> mnt</span>`;
+  }
+
+  const fillEl = document.getElementById('todayBarFill');
+  const lblEl  = document.getElementById('todayBarLabel');
+  const pctEl  = document.getElementById('todayBarPct');
+  const subEl  = document.getElementById('todaySub');
+
+  if(fillEl){
+    fillEl.style.width = pct+'%';
+    if(pct >= 100) fillEl.classList.add('complete');
+    else fillEl.classList.remove('complete');
+  }
+  if(lblEl) lblEl.textContent = `${todayMnt} / ${TODAY_GOAL} mnt`;
+  if(pctEl) pctEl.textContent = pct+'%';
+  if(subEl){
+    const sesi = Object.values(logs).filter(l=>l.dateString===todayStr).length;
+    if(todayMnt === 0)       subEl.textContent = 'Mulai sesi pertamamu hari ini.';
+    else if(pct >= 100)     subEl.textContent = `Target harian tercapai! ${sesi} sesi × deep work.`;
+    else                    subEl.textContent = `${sesi} sesi selesai · Kurang ${TODAY_GOAL-todayMnt} mnt lagi.`;
+  }
+}
+
+// ── STREAK ───────────────────────────────────────────
+function hitungStreak(logs) {
+  const days = new Set(Object.values(logs).map(l=>l.dateString));
+  let streak = 0;
+  const d = new Date();
+  while(true){
+    const ds = d.toISOString().split('T')[0];
+    if(!days.has(ds)) break;
+    streak++;
+    d.setDate(d.getDate()-1);
+  }
+  return streak;
+}
+
+function updateStatsUI(logs) {
+  const streak    = hitungStreak(logs);
+  const totalMnt  = Object.values(logs).reduce((s,l)=>s+l.durasiMenit,0);
+  const totalJam  = (totalMnt/60).toFixed(1);
+  const sesiCount = Object.keys(logs).length;
+
+  document.getElementById('statStreak').textContent = streak;
+  document.getElementById('statTotal').textContent  = totalJam;
+  document.getElementById('statSesi').textContent   = sesiCount;
+}
+
+// ── FIREBASE LISTENERS ───────────────────────────────
+onValue(ref(db,'rpgStats/totalExp'), snap=>{
+  totalPoin = snap.val()||0;
+});
+
+onValue(ref(db,'habits'), snap=>{
+  daftarHabit = [];
+  if(snap.val()) Object.entries(snap.val()).forEach(([id,v])=>daftarHabit.push({id,...v}));
+  window.renderHabit();
+});
+
+onValue(ref(db,'habitLogs'), snap=>{
+  window.logsGlobal = snap.val()||{};
+  updateTodayUI(window.logsGlobal);
+  updateStatsUI(window.logsGlobal);
+  renderGrafik(window.logsGlobal);
+  renderRiwayat();
+  document.getElementById('loading').style.display='none';
+});
+
+// ── NOTES (Firebase) ─────────────────────────────────
+onValue(ref(db,'notes'), snap=>{
+  const notes = snap.val()||{};
+  renderNotes(notes);
+});
+
+function renderNotes(notes){
+  const wrap = document.getElementById('notesWrap');
+  const arr  = Object.entries(notes).sort((a,b)=>b[1].timestamp-a[1].timestamp);
+  if(!arr.length){
+    wrap.innerHTML=`<div class="empty"><div class="empty-icon">📝</div><p>Belum ada catatan.</p></div>`;
+    return;
+  }
+  wrap.innerHTML = arr.map(([id,n])=>{
+    const d = new Date(n.timestamp);
+    const tgl = d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+    return `<div class="note-card">
+      <button class="btn-hapus-note" onclick="hapusNote('${id}')">✕</button>
+      <div class="note-card-header">
+        <div class="note-card-title">${n.judul||'Tanpa Judul'}</div>
+        <div class="note-card-date">${tgl}</div>
+      </div>
+      <div class="note-card-body">${(n.isi||'').replace(/</g,'&lt;')}</div>
+    </div>`;
+  }).join('');
+}
+
+window.simpanNote = () => {
+  const judul = document.getElementById('noteTitle').value.trim();
+  const isi   = document.getElementById('noteBody').value.trim();
+  if(!judul && !isi){ toast('Isi judul atau catatan dulu.','error'); return; }
+  push(ref(db,'notes'),{ judul, isi, timestamp:Date.now() });
+  document.getElementById('noteTitle').value='';
+  document.getElementById('noteBody').value='';
+  toast('Catatan tersimpan.','success');
+};
+
+window.hapusNote = (id) => {
+  if(!confirm('Hapus catatan ini?')) return;
+  remove(ref(db,`notes/${id}`));
+};
+
+// ── ADD HABIT ─────────────────────────────────────────
+window.tambahHabit = () => {
+  const inp = document.getElementById('inputHabit');
+  const nama = inp.value.trim();
+  if(!nama){ toast('Isi nama misi dulu.','error'); return; }
+  push(ref(db,'habits'),{ nama, createdAt:Date.now() });
+  inp.value='';
+  toast(`Misi "${nama}" ditambahkan.`,'success');
+};
+
+window.hapusHabit = (id) => {
+  if(!confirm('Hapus misi ini? Riwayat sesi tetap tersimpan.')) return;
+  set(ref(db,'habits'), daftarHabit.filter(h=>h.id!==id));
+  toast('Misi dihapus.','info');
+};
+
+// ── RENDER HABIT ──────────────────────────────────────
+window.renderHabit = () => {
+  const rak = document.getElementById('rakHabit');
+  if(!daftarHabit.length){
+    rak.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">⚔</div><p>Belum ada misi. Tambah misi pertamamu.</p></div>`;
+    return;
+  }
+  rak.innerHTML = daftarHabit.map(h=>{
+    const sesi = Object.values(window.logsGlobal).filter(l=>l.habitId===h.id).length;
+    const totalMntH = Object.values(window.logsGlobal).filter(l=>l.habitId===h.id).reduce((s,l)=>s+l.durasiMenit,0);
+    const jamH = Math.floor(totalMntH/60);
+    const mntH = totalMntH%60;
+    const safe = h.nama.replace(/'/g,"\\'").replace(/"/g,"&quot;");
+    return `
+    <div class="mission-card">
+      <button class="btn-hapus" onclick="hapusHabit('${h.id}')">✕</button>
+      <div class="mission-name">${h.nama}</div>
+      <div class="mission-meta">${sesi} sesi · ${jamH > 0 ? jamH+'j '+mntH+'m' : mntH+'m'} total</div>
+      <div class="mission-controls">
+        <button class="btn-mulai primary" onclick="mulaiTimer('${h.id}','${safe}',0)">▶ Mulai</button>
+      </div>
+      <div class="mission-time-presets">
+        <button class="mission-preset" onclick="mulaiTimer('${h.id}','${safe}',25*60)">25m</button>
+        <button class="mission-preset" onclick="mulaiTimer('${h.id}','${safe}',45*60)">45m</button>
+        <button class="mission-preset" onclick="mulaiTimer('${h.id}','${safe}',60*60)">60m</button>
+        <button class="mission-preset" onclick="mulaiTimer('${h.id}','${safe}',90*60)">90m</button>
+        <button class="mission-preset" onclick="mulaiCustomCountdown('${h.id}','${safe}')">…</button>
+      </div>
+    </div>`;
+  }).join('');
+};
+
+// ── PRESET SELECTOR (timer section) ──────────────────
+window.selectedPreset = 0;
+
+window.selectPreset = (detik) => {
+  window.selectedPreset = detik;
+  document.querySelectorAll('.btn-preset').forEach(b=>b.classList.remove('selected'));
+  event.target.classList.add('selected');
+
+  const label = document.getElementById('timerModeLabel');
+  if(detik === 0) label.textContent = 'Mode: Stopwatch Bebas';
+  else {
+    const m = Math.floor(detik/60);
+    label.textContent = `Mode: Hitung Mundur ${m} Menit`;
+  }
+  updateTimerActions();
+};
+
+window.selectCustomPreset = () => {
+  const input = prompt('Durasi hitung mundur (menit):', '30');
+  if(!input) return;
+  const mnt = parseInt(input);
+  if(isNaN(mnt)||mnt<=0||mnt>300){ toast('Masukkan 1–300 menit.','error'); return; }
+  window.selectedPreset = mnt*60;
+  document.querySelectorAll('.btn-preset').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('timerModeLabel').textContent = `Mode: Hitung Mundur ${mnt} Menit`;
+  updateTimerActions();
+};
+
+function updateTimerActions(){
+  const wrap = document.getElementById('timerActions');
+  if(!intervalId){
+    wrap.innerHTML = `
+      <input type="text" id="quickTaskInput" placeholder="Nama misi (opsional)…"
+        style="max-width:220px;text-align:center;background:var(--surface2);border-color:var(--border)"
+        value="${namaHabitAktif||''}">
+      <button class="btn btn-primary" onclick="mulaiQuickTimer()">▶ Mulai Sesi</button>
+    `;
+  } else {
+    wrap.innerHTML = `
+      <button class="btn btn-primary" onclick="stopTimer()">✓ Selesai & Simpan</button>
+      <button class="btn btn-ghost btn-sm" onclick="batalTimer()">Batal</button>
+    `;
+  }
+}
+
+window.mulaiQuickTimer = () => {
+  const inp  = document.getElementById('quickTaskInput');
+  const nama = inp ? inp.value.trim() : '';
+  mulaiTimer(null, nama||'Sesi Deep Work', window.selectedPreset||0);
+};
+
+// ── TIMER CORE ─────────────────────────────────────────
+window.mulaiTimer = (id, nama, durasi=0) => {
+  if(intervalId){ clearInterval(intervalId); intervalId=null; }
+
+  idHabitAktif   = id;
+  namaHabitAktif = nama;
+  waktuMulai     = Date.now();
+  targetDetik    = durasi;
+
+  localStorage.setItem('timer_start',  waktuMulai);
+  localStorage.setItem('timer_id',     id||'');
+  localStorage.setItem('timer_nama',   nama);
+  localStorage.setItem('timer_target', durasi);
+
+  // Update modal
+  document.getElementById('modalTaskName').textContent = nama;
+  document.getElementById('activeTaskName').textContent = nama;
+
+  const modeTag = document.getElementById('modalModeTag');
+  const ringWrap = document.getElementById('modalRingWrap');
+  const timerDisp = document.getElementById('timerDisplay');
+
+  if(durasi > 0){
+    modeTag.textContent = `⏳ ${Math.floor(durasi/60)} MENIT`;
+    ringWrap.classList.add('visible');
+    timerDisp.style.display = 'none';
+  } else {
+    modeTag.textContent = '⏱ STOPWATCH';
+    ringWrap.classList.remove('visible');
+    timerDisp.style.display = '';
+    timerDisp.textContent = '00:00:00';
+  }
+
+  // Inline ring
+  const inlineRing = document.getElementById('inlineRingWrap');
+  const inlineDisp = document.getElementById('inlineTimerDisplay');
+  if(durasi > 0){
+    inlineRing.classList.add('visible');
+    inlineDisp.style.display = 'none';
+  } else {
+    inlineRing.classList.remove('visible');
+    inlineDisp.style.display = '';
+  }
+
+  document.getElementById('timerModal').classList.add('active');
+  intervalId = setInterval(tickTimer, 1000);
+  tickTimer();
+  updateTimerActions();
+};
+
+function tickTimer(){
+  const detik = Math.floor((Date.now()-waktuMulai)/1000);
+
+  if(targetDetik > 0){
+    const remaining = Math.max(targetDetik - detik, 0);
+
+    // Format
+    const j = String(Math.floor(remaining/3600)).padStart(2,'0');
+    const m = String(Math.floor((remaining%3600)/60)).padStart(2,'0');
+    const s = String(remaining%60).padStart(2,'0');
+    const display = remaining >= 3600 ? `${j}:${m}:${s}` : `${m}:${s}`;
+
+    // Modal ring
+    const ringProg = document.getElementById('ringProgress');
+    const ringTime = document.getElementById('ringTimeDisplay');
+    if(ringProg){
+      const offset = RING_FULL * (remaining/targetDetik);
+      ringProg.style.strokeDashoffset = RING_FULL - offset;
+      if(remaining <= targetDetik*0.2){ ringProg.classList.add('warn'); ringTime.classList.add('warn'); }
+      else { ringProg.classList.remove('warn'); ringTime.classList.remove('warn'); }
+      ringTime.textContent = display;
+    }
+
+    // Inline ring
+    const inlineProg = document.getElementById('inlineRingProgress');
+    const inlineTime = document.getElementById('inlineRingTime');
+    if(inlineProg){
+      const offsetSm = RING_FULL_SM * (remaining/targetDetik);
+      inlineProg.style.strokeDashoffset = RING_FULL_SM - offsetSm;
+      if(remaining <= targetDetik*0.2) inlineProg.classList.add('warn');
+      else inlineProg.classList.remove('warn');
+      inlineTime.textContent = display;
+    }
+
+    // Auto-complete
+    if(remaining <= 0){
+      clearInterval(intervalId); intervalId=null;
+      if(navigator.vibrate) navigator.vibrate([300,100,300,100,500]);
+      toast('Waktu habis! Sesi disimpan.','success');
+      setTimeout(()=>stopTimer(true), 800);
+    }
+  } else {
+    // Stopwatch
+    const j = String(Math.floor(detik/3600)).padStart(2,'0');
+    const m = String(Math.floor((detik%3600)/60)).padStart(2,'0');
+    const s = String(detik%60).padStart(2,'0');
+    const fmt = `${j}:${m}:${s}`;
+    const modal = document.getElementById('timerDisplay');
+    const inline = document.getElementById('inlineTimerDisplay');
+    if(modal)  modal.textContent  = fmt;
+    if(inline) inline.textContent = fmt;
+  }
+}
+
+window.stopTimer = (auto=false) => {
+  if(intervalId){ clearInterval(intervalId); intervalId=null; }
+  const detik = Math.floor((Date.now()-waktuMulai)/1000);
+  const menit = Math.max(Math.floor(detik/60), detik>=10?1:0);
+
+  localStorage.removeItem('timer_start');
+  localStorage.removeItem('timer_id');
+  localStorage.removeItem('timer_nama');
+  localStorage.removeItem('timer_target');
+
+  if(detik < 10){
+    tutupModal();
+    updateTimerActions();
+    toast('Sesi terlalu singkat. Tidak disimpan.','error');
+    return;
+  }
+
+  const poin    = menit * 10;
+  const dateStr = new Date().toISOString().split('T')[0];
+
+  push(ref(db,'habitLogs'),{
+    habitId:    idHabitAktif,
+    habitNama:  namaHabitAktif,
+    durasiMenit:menit,
+    dateString: dateStr,
+    timestamp:  Date.now()
+  });
+  set(ref(db,'rpgStats/totalExp'), (totalPoin||0)+poin);
+
+  tutupModal();
+  updateTimerActions();
+  toast(`+${poin} poin · ${menit} menit deep work disimpan.`,'success');
+};
+
+window.batalTimer = () => {
+  if(!confirm('Batalkan sesi ini? Tidak akan disimpan.')) return;
+  clearInterval(intervalId); intervalId=null;
+  localStorage.removeItem('timer_start');
+  localStorage.removeItem('timer_id');
+  localStorage.removeItem('timer_nama');
+  localStorage.removeItem('timer_target');
+  tutupModal();
+  updateTimerActions();
+};
+
+window.mulaiCustomCountdown = (id, nama) => {
+  const input = prompt('Durasi hitung mundur (menit):', '30');
+  if(!input) return;
+  const mnt = parseInt(input);
+  if(isNaN(mnt)||mnt<=0||mnt>300){ toast('Masukkan 1–300 menit.','error'); return; }
+  mulaiTimer(id, nama, mnt*60);
+};
+
+function tutupModal(){
+  document.getElementById('timerModal').classList.remove('active');
+  document.getElementById('timerDisplay').textContent = '00:00:00';
+  document.getElementById('timerDisplay').style.display = '';
+  document.getElementById('modalRingWrap').classList.remove('visible');
+  document.getElementById('inlineRingWrap').classList.remove('visible');
+  document.getElementById('inlineTimerDisplay').style.display = '';
+  document.getElementById('inlineTimerDisplay').textContent = '00:00:00';
+  document.getElementById('activeTaskName').textContent = '—';
+  document.getElementById('timerModeLabel').textContent = 'Mode: Stopwatch Bebas';
+  targetDetik = 0;
+  namaHabitAktif = '';
+}
+
+// ── RESUME TIMER (survive refresh) ───────────────────
+(function resumeTimer(){
+  const ts   = localStorage.getItem('timer_start');
+  const tid  = localStorage.getItem('timer_id');
+  const tnm  = localStorage.getItem('timer_nama');
+  const tgt  = localStorage.getItem('timer_target');
+  if(!ts||!tnm) return;
+  waktuMulai     = parseInt(ts);
+  idHabitAktif   = tid||null;
+  namaHabitAktif = tnm;
+  targetDetik    = tgt ? parseInt(tgt) : 0;
+
+  document.getElementById('modalTaskName').textContent = tnm;
+  document.getElementById('activeTaskName').textContent = tnm;
+
+  if(targetDetik > 0){
+    document.getElementById('modalModeTag').textContent = `⏳ ${Math.floor(targetDetik/60)} MENIT`;
+    document.getElementById('modalRingWrap').classList.add('visible');
+    document.getElementById('timerDisplay').style.display = 'none';
+    document.getElementById('inlineRingWrap').classList.add('visible');
+    document.getElementById('inlineTimerDisplay').style.display = 'none';
+  }
+
+  document.getElementById('timerModal').classList.add('active');
+  intervalId = setInterval(tickTimer, 1000);
+  tickTimer();
+  updateTimerActions();
+})();
+
+// ── ESCAPE KEY ────────────────────────────────────────
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape' && intervalId){
+    if(confirm('Batalkan sesi Deep Work ini?')) batalTimer();
+  }
+});
+
+// ── GRAFIK 30 HARI ────────────────────────────────────
+function renderGrafik(logs){
+  const labels=[], data=[];
+  const vals = Object.values(logs);
+  for(let i=29;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const ds = d.toISOString().split('T')[0];
+    labels.push(d.toLocaleDateString('id-ID',{day:'numeric',month:'short'}));
+    data.push(vals.filter(l=>l.dateString===ds).reduce((s,l)=>s+l.durasiMenit,0));
+  }
+
+  const avg30  = data.reduce((a,b)=>a+b,0)/30;
+  const max30  = Math.max(...data,0);
+  const total7 = data.slice(-7).reduce((a,b)=>a+b,0);
+
+  document.getElementById('summaryStats').innerHTML = `
+    <div class="s-stat"><div class="s-stat-val">${Math.round(avg30)}</div><div class="s-stat-lbl">Rata-rata/hari (mnt)</div></div>
+    <div class="s-stat"><div class="s-stat-val">${max30}</div><div class="s-stat-lbl">Rekor harian (mnt)</div></div>
+    <div class="s-stat"><div class="s-stat-val">${total7}</div><div class="s-stat-lbl">Total 7 hari (mnt)</div></div>
+  `;
+
+  const ctx = document.getElementById('habitChart').getContext('2d');
+  if(chartInst) chartInst.destroy();
+  chartInst = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        label:'Menit Fokus',
+        data,
+        backgroundColor: data.map(v=>v>0?'rgba(200,151,74,0.55)':'rgba(255,255,255,0.04)'),
+        borderColor:     data.map(v=>v>0?'rgba(200,151,74,0.8)':'transparent'),
+        borderWidth:1,
+        borderRadius:4,
+        hoverBackgroundColor:'rgba(200,151,74,0.8)',
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor:'rgba(24,24,24,0.97)',
+        titleColor:'#c8974a',bodyColor:'#b8b4af',
+        borderColor:'rgba(255,255,255,0.1)',borderWidth:1,
+        padding:10,cornerRadius:8,
+      }},
+      scales:{
+        x:{
+          ticks:{color:'#5c5652',maxTicksLimit:10,font:{family:'Figtree',size:11}},
+          grid:{color:'rgba(255,255,255,0.03)'},
+          border:{color:'transparent'}
+        },
+        y:{
+          ticks:{color:'#5c5652',font:{family:'Figtree',size:11}},
+          grid:{color:'rgba(255,255,255,0.05)'},
+          beginAtZero:true,
+          border:{color:'transparent'}
+        }
+      }
+    }
+  });
+}
+
+// ── RIWAYAT ───────────────────────────────────────────
+window.renderRiwayat = () => {
+  const tbody = document.getElementById('riwayatBody');
+  const cari  = document.getElementById('filterNama').value.toLowerCase();
+  const sort  = document.getElementById('filterSort').value;
+  const logs  = window.logsGlobal;
+
+  const setahun = Date.now()-(365*24*3600*1000);
+  let arr = Object.values(logs).filter(l=>l.timestamp>=setahun);
+
+  if(cari) arr = arr.filter(l=>(l.habitNama||'').toLowerCase().includes(cari));
+  if(sort==='terbaru') arr.sort((a,b)=>b.timestamp-a.timestamp);
+  if(sort==='terlama') arr.sort((a,b)=>a.timestamp-b.timestamp);
+  if(sort==='durasi')  arr.sort((a,b)=>b.durasiMenit-a.durasiMenit);
+  if(sort==='exp')     arr.sort((a,b)=>(b.durasiMenit*10)-(a.durasiMenit*10));
+
+  if(!arr.length){
+    tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:28px;font-size:13px">Belum ada riwayat.</td></tr>`;
+    document.getElementById('paginasiRiwayat').innerHTML='';
+    return;
+  }
+
+  const total = Math.ceil(arr.length/perHal);
+  if(halRiwayat>total) halRiwayat=total;
+  const page = arr.slice((halRiwayat-1)*perHal, halRiwayat*perHal);
+
+  tbody.innerHTML = page.map(l=>{
+    const d   = new Date(l.timestamp);
+    const tgl = d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+    const jam = d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+    const poin = l.durasiMenit*10;
+    return `<tr>
+      <td style="color:var(--muted);white-space:nowrap;font-family:var(--mono);font-size:11px">${tgl} ${jam}</td>
+      <td style="font-weight:600;font-size:13px">${l.habitNama||'Sesi Dihapus'}</td>
+      <td style="font-family:var(--mono);font-size:12px">${l.durasiMenit} mnt</td>
+      <td class="exp-gain">+${poin}</td>
+    </tr>`;
+  }).join('');
+
+  renderPaginasi(total);
+};
+
+function renderPaginasi(total){
+  const k = document.getElementById('paginasiRiwayat');
+  if(total<=1){k.innerHTML='';return;}
+  let html=`<button class="page-btn" onclick="gHal(${halRiwayat-1})" ${halRiwayat===1?'disabled':''}>‹</button>`;
+  for(let i=1;i<=total;i++){
+    if(i===1||i===total||(i>=halRiwayat-2&&i<=halRiwayat+2)){
+      html+=`<button class="page-btn ${i===halRiwayat?'aktif':''}" onclick="gHal(${i})">${i}</button>`;
+    } else if(i===halRiwayat-3||i===halRiwayat+3){
+      html+=`<span style="color:var(--muted);align-self:center">…</span>`;
+    }
+  }
+  html+=`<button class="page-btn" onclick="gHal(${halRiwayat+1})" ${halRiwayat===total?'disabled':''}>›</button>`;
+  k.innerHTML=html;
+}
+
+window.gHal = n => {
+  halRiwayat = n;
+  renderRiwayat();
+  document.getElementById('panelRiwayat').scrollIntoView({behavior:'smooth'});
+};
+
+// ── EXPORT CSV ────────────────────────────────────────
+window.exportCSV = () => {
+  const logs = window.logsGlobal;
+  if(!Object.keys(logs).length) return toast('Belum ada data untuk diexport.','error');
+
+  const setahun = Date.now()-(365*24*3600*1000);
+  const rows = [['Tanggal','Jam','Nama Misi','Durasi (Menit)','Poin']];
+  Object.values(logs)
+    .filter(l=>l.timestamp>=setahun)
+    .sort((a,b)=>b.timestamp-a.timestamp)
+    .forEach(l=>{
+      const d = new Date(l.timestamp);
+      rows.push([
+        d.toLocaleDateString('id-ID'),
+        d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),
+        `"${(l.habitNama||'').replace(/"/g,'""')}"`,
+        l.durasiMenit,
+        l.durasiMenit*10
+      ]);
+    });
+
+  const csv  = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'),{href:url,download:'RiwayatFokus.csv'});
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast('File CSV berhasil diexport.','success');
+};
+
+// ── INIT TIMER ACTIONS ────────────────────────────────
+updateTimerActions();
+
+// Default preset: Bebas dipilih
+document.querySelector('.btn-preset').classList.add('selected');
+
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+</script>
+
+</body>
+</html>
