@@ -747,7 +747,7 @@
     <div class="bottom-nav-inner">
         <a href="index.html"     class="bnav-item active"><span>🎥</span><span>Video</span></a>
         <a href="course.html"    class="bnav-item"><span>📚</span><span>Course</span></a>
-        <a href="habit.html"    class="bnav-item"><span>📚</span><span>Habit</span></a>
+        <a href="habit.html"     class="bnav-item"><span>✅</span><span>Habit</span></a>
         <a href="web.html"       class="bnav-item"><span>🌐</span><span>Web</span></a>
         <a href="idol.html"      class="bnav-item"><span>🌸</span><span>Idol</span></a>
         <a href="indonesia.html" class="bnav-item"><span>🇮🇩</span><span>Indo</span></a>
@@ -772,7 +772,7 @@
         <nav class="nav-links">
             <a href="index.html"     class="nav-link active"  style="background:var(--blue);color:#fff;">🎥 Video</a>
             <a href="course.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Course</a>
-            <a href="habit.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Habit</a>
+            <a href="habit.html"     class="nav-link" style="background:#e4e6eb;color:#050505;">✅ Habit</a>
             <a href="web.html"       class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Web</a>
             <a href="idol.html"      class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
             <a href="indonesia.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🇮🇩 Indo</a>
@@ -1000,6 +1000,34 @@ function generateThumbnail(url, noembedThumb) {
     }
 }
 
+// ── CANONICAL KEY — normalisasi URL untuk cek duplikat ──
+function getCanonicalKey(url) {
+    // YouTube: gunakan video ID sebagai kunci (menangani youtu.be, shorts, live, watch?v=)
+    const ytId = getYtId(url);
+    if (ytId) return `yt:${ytId}`;
+
+    try {
+        const u = new URL(url);
+        // Hapus parameter tracking umum yang tidak mempengaruhi konten
+        const trackingParams = [
+            'utm_source','utm_medium','utm_campaign','utm_term','utm_content',
+            'ref','source','si','feature','fbclid','igshid','s','t',
+            'list','index','pp'
+        ];
+        trackingParams.forEach(p => u.searchParams.delete(p));
+
+        // Normalisasi: hilangkan trailing slash, lowercase hostname+pathname
+        const normalized = (u.origin + u.pathname.replace(/\/+$/, '')).toLowerCase();
+        // Untuk platform yang query-param penting (misal TikTok tidak)
+        const hasImportantParams = u.searchParams.toString().length > 0;
+        return hasImportantParams
+            ? normalized + '?' + u.searchParams.toString()
+            : normalized;
+    } catch {
+        return url.trim().toLowerCase();
+    }
+}
+
 // ── ON LINK INPUT — auto-detect & show hint ─────────
 window.onLinkInput = () => {
     const url = document.getElementById('linkVideo').value.trim();
@@ -1008,6 +1036,16 @@ window.onLinkInput = () => {
 
     try { new URL(url); } catch {
         hint.style.display = 'none';
+        return;
+    }
+
+    // Cek duplikat real-time
+    const canonicalBaru = getCanonicalKey(url);
+    const videoDuplikat = Object.values(window._dataVideoCache || {}).find(v => getCanonicalKey(v.link) === canonicalBaru);
+    if (videoDuplikat) {
+        hint.style.display = 'block';
+        hint.style.cssText = `display:block;font-size:12px;font-weight:700;margin-top:6px;padding:5px 10px;border-radius:6px;background:#fce8e8;color:#c00;`;
+        hint.textContent = `⚠️ Video ini sudah tersimpan: "${videoDuplikat.judul || 'Tanpa Judul'}"`;
         return;
     }
 
@@ -1112,6 +1150,7 @@ function muatDataDatabase() {
 
     onValue(ref(db, 'videos'), (snap) => {
         dataVideo = snap.val() || {};
+        window._dataVideoCache = dataVideo; // expose for real-time duplicate check
         renderRak();
         document.getElementById('loading-overlay').style.display = 'none';
     });
@@ -1189,9 +1228,11 @@ window.simpanVideo = async () => {
     // Validasi URL minimal
     try { new URL(url); } catch { return toast('URL tidak valid!', 'error'); }
 
-    // Cek duplikat
-    if (Object.values(dataVideo).some(v => v.link === url)) {
-        toast('Video ini sudah ada di rak!', 'error');
+    // Cek duplikat pakai canonical key — menangani variasi format URL yang sama
+    const canonicalBaru = getCanonicalKey(url);
+    const videoDuplikat = Object.values(dataVideo).find(v => getCanonicalKey(v.link) === canonicalBaru);
+    if (videoDuplikat) {
+        toast(`Video ini sudah ada: "${videoDuplikat.judul || 'Tanpa Judul'}"`, 'error');
         document.getElementById('linkVideo').value = '';
         return;
     }
