@@ -622,6 +622,41 @@ tbody tr:hover td{background:var(--surface);color:var(--text)}
   .stats-row{gap:8px}
   .stat-card{padding:14px 12px}
 }
+
+/* ─── ALARM OVERLAY ──────────────────────────────── */
+.alarm-banner{
+  display:none;
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(200,151,74,0.12);
+  border-top:1px solid rgba(200,151,74,0.3);
+  text-align:center;
+  padding:14px 20px;
+  font-size:13px;font-weight:700;
+  color:var(--accent);
+  letter-spacing:.3px;
+  animation:alarmPulse 1s ease infinite;
+}
+.alarm-banner.active{display:block}
+@keyframes alarmPulse{
+  0%,100%{background:rgba(200,151,74,0.08)}
+  50%{background:rgba(200,151,74,0.22)}
+}
+/* Modal berkedip saat alarm */
+.modal-overlay.alarm-active{
+  animation:modalAlarm 1s ease infinite;
+}
+@keyframes modalAlarm{
+  0%,100%{background:rgba(10,10,10,0.98)}
+  50%{background:rgba(30,20,5,0.98)}
+}
+/* Tombol stop alarm */
+.btn-stop-alarm{
+  background:var(--accent);color:#1a0e00;
+  border:none;padding:9px 20px;border-radius:var(--radius-sm);
+  font-family:var(--sans);font-size:13px;font-weight:700;
+  cursor:pointer;transition:background .15s;
+}
+.btn-stop-alarm:hover{background:#d4a356}
 </style>
 </head>
 <body>
@@ -659,9 +694,18 @@ tbody tr:hover td{background:var(--surface);color:var(--text)}
 
   <p class="modal-tip">Jauhkan HP. Tutup tab lain. Satu hal, satu sesi.</p>
 
-  <div class="modal-actions">
-    <button class="btn btn-primary" onclick="stopTimer()">✓ Selesai & Simpan</button>
+  <div class="modal-actions" id="modalActions">
+    <button class="btn btn-primary" onclick="stopTimer()">✓ Selesai &amp; Simpan</button>
     <button class="btn btn-ghost btn-sm" onclick="batalTimer()">Batal</button>
+  </div>
+
+  <!-- Banner muncul saat alarm berbunyi -->
+  <div class="alarm-banner" id="alarmBanner">
+    ⏰ Waktu habis! Klik Selesai untuk menyimpan sesimu.
+    &nbsp;·&nbsp;
+    <button class="btn-stop-alarm" onclick="stopTimer()">Selesai &amp; Simpan</button>
+    &nbsp;
+    <button style="background:transparent;border:1px solid rgba(200,151,74,0.4);color:var(--text2);padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer" onclick="hentikanAlarmUI()">🔇 Diam</button>
   </div>
 </div>
 
@@ -742,11 +786,11 @@ tbody tr:hover td{background:var(--surface);color:var(--text)}
 
     <div class="timer-presets">
       <span class="preset-label">Durasi:</span>
-      <button class="btn-preset" onclick="selectPreset(0)">Bebas</button>
-      <button class="btn-preset" onclick="selectPreset(25*60)">25m</button>
-      <button class="btn-preset" onclick="selectPreset(45*60)">45m</button>
-      <button class="btn-preset" onclick="selectPreset(60*60)">60m</button>
-      <button class="btn-preset" onclick="selectPreset(90*60)">90m</button>
+      <button class="btn-preset" onclick="selectPreset(0,this)">Bebas</button>
+      <button class="btn-preset" onclick="selectPreset(25*60,this)">25m</button>
+      <button class="btn-preset" onclick="selectPreset(45*60,this)">45m</button>
+      <button class="btn-preset" onclick="selectPreset(60*60,this)">60m</button>
+      <button class="btn-preset" onclick="selectPreset(90*60,this)">90m</button>
       <button class="btn-preset" onclick="selectCustomPreset()">Kustom</button>
     </div>
 
@@ -759,7 +803,8 @@ tbody tr:hover td{background:var(--surface);color:var(--text)}
   <div class="panel">
     <div class="panel-title">Tambah Misi</div>
     <div class="input-row">
-      <input type="text" id="inputHabit" placeholder="Nama misi, cth: Belajar Kanji JLPT N3…" style="flex:1">
+      <input type="text" id="inputHabit" placeholder="Nama misi, cth: Belajar Kanji JLPT N3…"
+        style="flex:1" onkeydown="if(event.key==='Enter') tambahHabit()">
       <button class="btn btn-primary btn-sm" onclick="tambahHabit()">+ Tambah</button>
     </div>
   </div>
@@ -863,10 +908,101 @@ let waktuMulai      = null;
 let idHabitAktif    = null;
 let namaHabitAktif  = '';
 let targetDetik     = 0;   // 0 = stopwatch
-let presetTerpilih  = 0;   // preset yang dipilih di timer section
+let alarmActive     = false;
+let alarmIntervalId = null;
 
 const RING_FULL     = 659.73;  // 2 * PI * 105 (modal ring)
 const RING_FULL_SM  = 502.65;  // 2 * PI * 80  (inline ring)
+
+// BUG 10 FIX: loading timeout fallback — jika Firebase tidak konek dalam 8 detik
+setTimeout(()=>{
+  const l = document.getElementById('loading');
+  if(l && l.style.display !== 'none') l.style.display = 'none';
+}, 8000);
+
+// ── ALARM SYSTEM (Web Audio API) ─────────────────────
+let audioCtx = null;
+
+function getAudioCtx(){
+  if(!audioCtx || audioCtx.state === 'closed'){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function bunyikanAlarm(){
+  if(alarmActive) return;
+  alarmActive = true;
+
+  // Notifikasi browser (jika diizinkan)
+  if(Notification.permission === 'granted'){
+    new Notification('⏰ Sesi Selesai!', {
+      body: `Deep work "${namaHabitAktif}" telah selesai. Klaim EXP-mu!`,
+      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⏰</text></svg>',
+      silent: false,
+    });
+  }
+
+  // Tampilkan alarm banner + efek kedip modal
+  const banner = document.getElementById('alarmBanner');
+  if(banner) banner.classList.add('active');
+  const modal = document.getElementById('timerModal');
+  if(modal) modal.classList.add('alarm-active');
+
+  // Mainkan alarm dengan Web Audio API
+  function playBeep(freq, startTime, duration, vol=0.5){
+    const ctx  = getAudioCtx();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, startTime);
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(vol, startTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    osc.start(startTime);
+    osc.stop(startTime + duration);
+  }
+
+  function playAlarmSequence(){
+    const ctx = getAudioCtx();
+    const now = ctx.currentTime;
+    // Pola alarm: beep-beep-beep panjang (3×)
+    const pattern = [880, 660, 880, 660, 880, 1100];
+    pattern.forEach((freq, i) => {
+      playBeep(freq, now + i * 0.25, 0.18, 0.45);
+    });
+  }
+
+  playAlarmSequence();
+  // Ulangi setiap 3 detik hingga user menutup modal
+  alarmIntervalId = setInterval(()=>{
+    if(!alarmActive) return;
+    playAlarmSequence();
+  }, 3000);
+}
+
+function hentikanAlarm(){
+  alarmActive = false;
+  if(alarmIntervalId){ clearInterval(alarmIntervalId); alarmIntervalId=null; }
+  const banner = document.getElementById('alarmBanner');
+  if(banner) banner.classList.remove('active');
+  const modal = document.getElementById('timerModal');
+  if(modal) modal.classList.remove('alarm-active');
+}
+
+// Tombol "Diam" — matikan suara tapi modal tetap buka
+window.hentikanAlarmUI = () => {
+  hentikanAlarm();
+  toast('Alarm dimatikan. Jangan lupa klik Selesai!','info');
+};
+
+// Minta izin notifikasi saat halaman dimuat
+if(typeof Notification !== 'undefined' && Notification.permission === 'default'){
+  Notification.requestPermission();
+}
 
 // ── TOAST ─────────────────────────────────────────────
 function toast(msg, type='info') {
@@ -975,6 +1111,16 @@ onValue(ref(db,'notes'), snap=>{
   renderNotes(notes);
 });
 
+// BUG 8 & 9 FIX: full HTML escaping helper
+function escHtml(s){
+  return String(s||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
 function renderNotes(notes){
   const wrap = document.getElementById('notesWrap');
   const arr  = Object.entries(notes).sort((a,b)=>b[1].timestamp-a[1].timestamp);
@@ -983,15 +1129,16 @@ function renderNotes(notes){
     return;
   }
   wrap.innerHTML = arr.map(([id,n])=>{
-    const d = new Date(n.timestamp);
+    const d   = new Date(n.timestamp);
     const tgl = d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+    // BUG 9 FIX: ID di-escape sebagai atribut data agar aman dari karakter khusus
     return `<div class="note-card">
-      <button class="btn-hapus-note" onclick="hapusNote('${id}')">✕</button>
+      <button class="btn-hapus-note" data-id="${escHtml(id)}" onclick="hapusNoteByBtn(this)">✕</button>
       <div class="note-card-header">
-        <div class="note-card-title">${n.judul||'Tanpa Judul'}</div>
+        <div class="note-card-title">${escHtml(n.judul||'Tanpa Judul')}</div>
         <div class="note-card-date">${tgl}</div>
       </div>
-      <div class="note-card-body">${(n.isi||'').replace(/</g,'&lt;')}</div>
+      <div class="note-card-body">${escHtml(n.isi)}</div>
     </div>`;
   }).join('');
 }
@@ -1006,6 +1153,14 @@ window.simpanNote = () => {
   toast('Catatan tersimpan.','success');
 };
 
+// BUG 9 FIX: baca ID dari data-attribute DOM, bukan dari string yang di-inject ke onclick
+window.hapusNoteByBtn = (btn) => {
+  const id = btn.dataset.id;
+  if(!id || !confirm('Hapus catatan ini?')) return;
+  remove(ref(db,`notes/${id}`));
+};
+
+// Tetap expose hapusNote untuk backward compat
 window.hapusNote = (id) => {
   if(!confirm('Hapus catatan ini?')) return;
   remove(ref(db,`notes/${id}`));
@@ -1023,7 +1178,8 @@ window.tambahHabit = () => {
 
 window.hapusHabit = (id) => {
   if(!confirm('Hapus misi ini? Riwayat sesi tetap tersimpan.')) return;
-  set(ref(db,'habits'), daftarHabit.filter(h=>h.id!==id));
+  // BUG 1 FIX: hapus hanya node spesifik, bukan overwrite seluruh habits dengan array
+  remove(ref(db,`habits/${id}`));
   toast('Misi dihapus.','info');
 };
 
@@ -1062,10 +1218,11 @@ window.renderHabit = () => {
 // ── PRESET SELECTOR (timer section) ──────────────────
 window.selectedPreset = 0;
 
-window.selectPreset = (detik) => {
+// BUG 2 FIX: pakai parameter 'btn' eksplisit, bukan implicit global 'event'
+window.selectPreset = (detik, btn) => {
   window.selectedPreset = detik;
   document.querySelectorAll('.btn-preset').forEach(b=>b.classList.remove('selected'));
-  event.target.classList.add('selected');
+  if(btn) btn.classList.add('selected');
 
   const label = document.getElementById('timerModeLabel');
   if(detik === 0) label.textContent = 'Mode: Stopwatch Bebas';
@@ -1090,15 +1247,20 @@ window.selectCustomPreset = () => {
 function updateTimerActions(){
   const wrap = document.getElementById('timerActions');
   if(!intervalId){
+    // BUG 4 FIX: Buat elemen secara DOM, bukan inject value ke innerHTML
     wrap.innerHTML = `
       <input type="text" id="quickTaskInput" placeholder="Nama misi (opsional)…"
-        style="max-width:220px;text-align:center;background:var(--surface2);border-color:var(--border)"
-        value="${namaHabitAktif||''}">
+        style="max-width:220px;text-align:center;background:var(--surface2);border-color:var(--border)">
       <button class="btn btn-primary" onclick="mulaiQuickTimer()">▶ Mulai Sesi</button>
     `;
+    // Set value lewat DOM property — aman dari karakter khusus apapun
+    const inp = document.getElementById('quickTaskInput');
+    if(inp && namaHabitAktif) inp.value = namaHabitAktif;
+    // Enter untuk langsung mulai
+    if(inp) inp.addEventListener('keydown', e=>{ if(e.key==='Enter') mulaiQuickTimer(); });
   } else {
     wrap.innerHTML = `
-      <button class="btn btn-primary" onclick="stopTimer()">✓ Selesai & Simpan</button>
+      <button class="btn btn-primary" onclick="stopTimer()">✓ Selesai &amp; Simpan</button>
       <button class="btn btn-ghost btn-sm" onclick="batalTimer()">Batal</button>
     `;
   }
@@ -1194,12 +1356,14 @@ function tickTimer(){
       inlineTime.textContent = display;
     }
 
-    // Auto-complete
+    // Auto-complete — BUG 7 FIX: tidak pakai setTimeout race condition
     if(remaining <= 0){
       clearInterval(intervalId); intervalId=null;
       if(navigator.vibrate) navigator.vibrate([300,100,300,100,500]);
-      toast('Waktu habis! Sesi disimpan.','success');
-      setTimeout(()=>stopTimer(true), 800);
+      bunyikanAlarm();  // ← alarm berbunyi di sini
+      toast('⏰ Waktu habis! Klik Selesai untuk menyimpan sesi.','gold');
+      // Tampilkan tombol stop di modal (jangan auto-close, biarkan user klaim)
+      updateTimerActions();
     }
   } else {
     // Stopwatch
@@ -1215,7 +1379,12 @@ function tickTimer(){
 }
 
 window.stopTimer = (auto=false) => {
+  // BUG 3 FIX: guard jika tidak ada sesi aktif
+  if(!waktuMulai) return;
+
   if(intervalId){ clearInterval(intervalId); intervalId=null; }
+  hentikanAlarm(); // matikan alarm jika masih bunyi
+
   const detik = Math.floor((Date.now()-waktuMulai)/1000);
   const menit = Math.max(Math.floor(detik/60), detik>=10?1:0);
 
@@ -1225,6 +1394,7 @@ window.stopTimer = (auto=false) => {
   localStorage.removeItem('timer_target');
 
   if(detik < 10){
+    waktuMulai = null;
     tutupModal();
     updateTimerActions();
     toast('Sesi terlalu singkat. Tidak disimpan.','error');
@@ -1243,6 +1413,7 @@ window.stopTimer = (auto=false) => {
   });
   set(ref(db,'rpgStats/totalExp'), (totalPoin||0)+poin);
 
+  waktuMulai = null;
   tutupModal();
   updateTimerActions();
   toast(`+${poin} poin · ${menit} menit deep work disimpan.`,'success');
@@ -1251,6 +1422,8 @@ window.stopTimer = (auto=false) => {
 window.batalTimer = () => {
   if(!confirm('Batalkan sesi ini? Tidak akan disimpan.')) return;
   clearInterval(intervalId); intervalId=null;
+  hentikanAlarm();
+  waktuMulai = null;
   localStorage.removeItem('timer_start');
   localStorage.removeItem('timer_id');
   localStorage.removeItem('timer_nama');
@@ -1268,6 +1441,7 @@ window.mulaiCustomCountdown = (id, nama) => {
 };
 
 function tutupModal(){
+  hentikanAlarm(); // pastikan alarm berhenti saat modal ditutup
   document.getElementById('timerModal').classList.remove('active');
   document.getElementById('timerDisplay').textContent = '00:00:00';
   document.getElementById('timerDisplay').style.display = '';
