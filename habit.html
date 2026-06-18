@@ -327,7 +327,36 @@ body {
   .logo { font-size: 13px; }
   .month-label { min-width: 90px; font-size: 12px; }
 }
-</style>
+
+        /* ── TIME TRACKER WIDGET ── */
+        .waktu-hari-ini {
+            display: flex; align-items: center; gap: 7px;
+            background: var(--accent-light, #ede9fe);
+            border: 1.5px solid #c4b5fd;
+            border-radius: 20px; padding: 5px 13px;
+            font-size: 12px; font-weight: 700; color: var(--accent, #6D28D9);
+            white-space: nowrap; cursor: default; user-select: none; flex-shrink: 0;
+        }
+        .waktu-hari-ini .dot-live {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #10b981; animation: blink-dot 1.4s ease-in-out infinite; flex-shrink: 0;
+        }
+        .waktu-hari-ini.paused .dot-live { background: #f59e0b; animation: none; }
+        @keyframes blink-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .waktu-wrap { position: relative; flex-shrink: 0; }
+        .waktu-tooltip {
+            display: none; position: absolute; top: calc(100% + 8px); right: 0;
+            background: #1c1c1e; color: #fff; font-size: 11px; font-weight: 600;
+            padding: 8px 12px; border-radius: 10px; white-space: nowrap;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 300;
+        }
+        .waktu-tooltip::before {
+            content:''; position:absolute; top:-5px; right:16px;
+            border-left:5px solid transparent; border-right:5px solid transparent;
+            border-bottom:5px solid #1c1c1e;
+        }
+        .waktu-wrap:hover .waktu-tooltip { display: block; }
+        </style>
 </head>
 <body>
 
@@ -335,6 +364,16 @@ body {
 <header class="topbar">
   <div class="topbar-inner">
     <div class="logo">⏳ Fokus Pro</div>
+        <div class="waktu-wrap">
+            <div class="waktu-hari-ini" id="waktuWidget">
+                <span class="dot-live"></span>
+                <span id="waktuTeks">00:00</span>
+            </div>
+            <div class="waktu-tooltip">
+                ⏱ Waktu di halaman ini hari ini<br>
+                <span id="waktuTooltipDetail" style="color:#aaa;font-weight:500;">Memuat...</span>
+            </div>
+        </div>
     <nav class="nav-links">
             <a href="index.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🎥 Video</a>
             <a href="course.html" class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Course</a>
@@ -343,6 +382,7 @@ body {
             <a href="idol.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
             <a href="indonesia.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🇮🇩 Indo</a>
             <a href="jepang.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🇯🇵 Jepang</a>
+            <a href="timer-dashboard.html" class="nav-link" style="background:#e4e6eb;color:#050505;">⏱ Timer</a>
     </nav>
     <span class="sync-label"><span class="sync-dot sync-pending" id="syncDot"></span><span id="syncText">Menghubungkan…</span></span>
   </div>
@@ -455,6 +495,7 @@ body {
         <a href="idol.html" class="bnav-item"><span>🌸</span><span>Idol</span></a>
         <a href="indonesia.html" class="bnav-item"><span>🇮🇩</span><span>Indo</span></a>
         <a href="jepang.html" class="bnav-item"><span>🇯🇵</span><span>Jepang</span></a>
+        <a href="timer-dashboard.html" class="bnav-item"><span>⏱</span><span>Timer</span></a>
   </div>
 </nav>
 
@@ -502,7 +543,7 @@ body {
 <!-- ── FIREBASE + APP SCRIPT ── -->
 <script type="module">
 import { initializeApp }                            from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+import { getDatabase, ref, push, onValue, remove, update, set, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
 /* ─── Firebase config ─── */
 const firebaseConfig = {
@@ -517,6 +558,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
+// ── Expose Firebase db & functions for timer sync ──
+window._fbTimerDb = db;
+window._fbRTDB = { ref, set, get, remove };
+
 const DBREF = ref(db, 'aktivitas');
 
 /* ─── Category colors ─── */
@@ -580,6 +625,37 @@ function isWithin1Year(dateStr) {
   oneY.setFullYear(now.getFullYear() - 1);
   return d >= oneY && d <= now;
 }
+
+
+/* ─── Auto-cleanup aktivitas > 1 tahun dari Firebase ─── */
+async function cleanupOldActivities() {
+  try {
+    const snap = await get(DBREF);
+    if (!snap.exists()) return;
+    const now   = new Date();
+    const oneYearAgo = new Date(now);
+    oneYearAgo.setFullYear(now.getFullYear() - 1);
+    const deletes = [];
+    snap.forEach(child => {
+      const v = child.val();
+      if (v.date) {
+        const d = new Date(v.date + 'T00:00:00');
+        if (d < oneYearAgo) {
+          deletes.push(remove(ref(db, 'aktivitas/' + child.key)));
+        }
+      }
+    });
+    if (deletes.length) {
+      await Promise.all(deletes);
+      console.log('[habit] Cleanup: ' + deletes.length + ' aktivitas lama dihapus dari Firebase.');
+    }
+  } catch(e) {
+    console.warn('[habit] Cleanup gagal:', e);
+  }
+}
+
+// Jalankan cleanup sekali saat halaman dibuka (delay 5 detik supaya tidak ganggu load awal)
+setTimeout(cleanupOldActivities, 5000);
 
 /* ─── Init ─── */
 document.getElementById('actDate').value = todayStr();
@@ -858,6 +934,144 @@ function renderAll() {
   renderPie();
   renderHistory();
 }
+</script>
+
+<script>
+// ── TIME TRACKER (Firebase-synced) ──────────────────────────
+(function() {
+    const PAGE_ID = 'habit';
+
+    const todayStr = () => {
+        const d = new Date();
+        return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    };
+    const LS_KEY = () => 'waktu_'+PAGE_ID+'_'+todayStr();
+    const FB_PATH = () => 'timer/'+todayStr()+'/'+PAGE_ID;
+
+    const fmt = (s) => {
+        const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
+        if(h>0)return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+        return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+    };
+    const fmtVerbose = (s) => {
+        if(s<60)return s+' detik';
+        const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
+        let str='';
+        if(h>0)str+=h+' jam ';
+        if(m>0)str+=m+' menit ';
+        if(sec>0&&h===0)str+=sec+' detik';
+        return str.trim();
+    };
+
+    let totalDetik=parseInt(localStorage.getItem(LS_KEY())||'0',10);
+    let startTime=null, intervalId=null, isActive=false, fbDb=null;
+
+    const updateUI = () => {
+        const el=document.getElementById('waktuTeks');
+        const widget=document.getElementById('waktuWidget');
+        const detail=document.getElementById('waktuTooltipDetail');
+        if(!el) return;
+        el.textContent=fmt(totalDetik);
+        if(detail){
+            const tglStr=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'});
+            detail.textContent=fmtVerbose(totalDetik)+' — '+tglStr;
+        }
+        if(widget){
+            if(totalDetik>=7200){widget.style.background='#fff7ed';widget.style.borderColor='#fed7aa';widget.style.color='#c2410c';}
+            else if(totalDetik>=3600){widget.style.background='#ecfdf5';widget.style.borderColor='#a7f3d0';widget.style.color='#065f46';}
+            else{widget.style.background='';widget.style.borderColor='';widget.style.color='';}
+        }
+    };
+
+    const saveToFirebase = (detik) => {
+        if(!fbDb||!window._fbRTDB) return;
+        try{ window._fbRTDB.set(window._fbRTDB.ref(fbDb, FB_PATH()), detik).catch(()=>{}); }catch(e){}
+    };
+
+    const loadFromFirebase = () => {
+        if(!fbDb||!window._fbRTDB) return;
+        try{
+            window._fbRTDB.get(window._fbRTDB.ref(fbDb, FB_PATH())).then(snap => {
+                if(snap.exists()){
+                    const remote=parseInt(snap.val(),10)||0;
+                    if(remote>totalDetik){
+                        totalDetik=remote;
+                        localStorage.setItem(LS_KEY(), String(totalDetik));
+                        if(isActive) startTime=Date.now();
+                        updateUI();
+                    }
+                }
+            }).catch(()=>{});
+        }catch(e){}
+    };
+
+    const cleanupOldData = () => {
+        if(!fbDb||!window._fbRTDB) return;
+        try{
+            window._fbRTDB.get(window._fbRTDB.ref(fbDb,'timer')).then(snap => {
+                if(!snap.exists()) return;
+                const cutoff = new Date();
+                cutoff.setDate(cutoff.getDate()-7);
+                const cutoffStr = cutoff.getFullYear()+'-'+String(cutoff.getMonth()+1).padStart(2,'0')+'-'+String(cutoff.getDate()).padStart(2,'0');
+                const deletes = [];
+                snap.forEach(child => {
+                    if(child.key < cutoffStr){
+                        deletes.push(window._fbRTDB.remove(window._fbRTDB.ref(fbDb,'timer/'+child.key)));
+                    }
+                });
+                if(deletes.length) Promise.all(deletes).catch(()=>{});
+            }).catch(()=>{});
+        }catch(e){}
+    };
+
+    const saveAll = (detik) => {
+        localStorage.setItem(LS_KEY(), String(detik));
+        saveToFirebase(detik);
+    };
+
+    const jeda = () => {
+        if(!isActive) return; isActive=false;
+        const elapsed=Math.floor((Date.now()-startTime)/1000);
+        totalDetik=parseInt(localStorage.getItem(LS_KEY())||'0',10)+elapsed;
+        saveAll(totalDetik); clearInterval(intervalId); startTime=null;
+        const w=document.getElementById('waktuWidget'); if(w) w.classList.add('paused');
+        updateUI();
+    };
+    const mulai = () => {
+        if(isActive) return; isActive=true; startTime=Date.now();
+        const w=document.getElementById('waktuWidget'); if(w) w.classList.remove('paused');
+        intervalId=setInterval(()=>{
+            const elapsed=Math.floor((Date.now()-startTime)/1000);
+            totalDetik=parseInt(localStorage.getItem(LS_KEY())||'0',10)+elapsed;
+            updateUI();
+        },1000);
+    };
+
+    const tryWireFirebase = () => {
+        if(window._fbTimerDb){
+            fbDb=window._fbTimerDb;
+            loadFromFirebase();
+            // Cleanup old data once per session (only on first page opened)
+            if(!window._timerCleanupDone){
+                window._timerCleanupDone=true;
+                setTimeout(cleanupOldData, 3000);
+            }
+        } else {
+            setTimeout(tryWireFirebase,300);
+        }
+    };
+
+    // Click widget to open dashboard
+    const widget=document.getElementById('waktuWidget');
+    if(widget){ widget.style.cursor='pointer'; widget.title='Klik untuk lihat riwayat'; widget.addEventListener('click',()=>{ if(window.bukaTimerDashboard) window.bukaTimerDashboard(); }); }
+
+    document.addEventListener('visibilitychange',()=>{ if(document.hidden) jeda(); else{ mulai(); if(fbDb) loadFromFirebase(); } });
+    window.addEventListener('beforeunload',jeda);
+    window.addEventListener('pagehide',jeda);
+    setInterval(()=>{ const s=parseInt(localStorage.getItem(LS_KEY())||'0',10); if(s===0&&totalDetik>60){totalDetik=0;updateUI();} },60000);
+
+    updateUI(); mulai(); tryWireFirebase();
+})();
 </script>
 </body>
 </html>
