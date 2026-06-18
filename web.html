@@ -711,7 +711,7 @@
 <!-- ===================== FIREBASE + LOGIC ===================== -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove, update, set }
+    import { getDatabase, ref, push, onValue, remove, update, set, get }
         from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
     const cfg = {
@@ -725,9 +725,9 @@
     };
     const app = initializeApp(cfg);
     const db  = getDatabase(app);
-// ── Expose Firebase db & functions for timer sync ──
-window._fbTimerDb = db;
-window._fbRTDB = { ref, set, get, remove };
+    // ── Expose Firebase db & functions for timer sync ──
+    window._fbTimerDb = db;
+    window._fbRTDB = { ref, set, get, remove };
 
 
     /* ── STATE ── */
@@ -1110,7 +1110,6 @@ window._fbRTDB = { ref, set, get, remove };
         <a href="idol.html" class="bnav-item"><span>🌸</span><span>Idol</span></a>
         <a href="indonesia.html" class="bnav-item"><span>🇮🇩</span><span>Indo</span></a>
         <a href="jepang.html" class="bnav-item"><span>🇯🇵</span><span>Jepang</span></a>
-        <a href="timer-dashboard.html" class="bnav-item"><span>⏱</span><span>Timer</span></a>
         <a href="timer-dashboard.html" class="bnav-item"><span>⏱</span><span>Timer</span></a>
     </div>
 </nav>
