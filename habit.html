@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
+<head><script>
+(function(){
+    const SESSION_KEY="fokuspro_auth";
+    const REDIRECT_KEY="fokuspro_redirect";
+    if(sessionStorage.getItem(SESSION_KEY)!=="ok"){
+        sessionStorage.setItem(REDIRECT_KEY, window.location.pathname.split("/").pop()||"index.html");
+        window.location.replace("login.html");
+    }
+})();
+</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -327,14 +336,13 @@ body {
   <div class="topbar-inner">
     <div class="logo">⏳ Fokus Pro</div>
     <nav class="nav-links">
-      <a href="index.html"     class="nav-link" style="background:#e4e6eb;color:#050505;">🎥 Video</a>
-      <a href="course.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Course</a>
-      <a href="web.html"       class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Web</a>
-      <a href="habit.html"     class="nav-link active">⏳ Fokus</a>
-      <a href="keuangan.html"  class="nav-link" style="background:#e4e6eb;color:#050505;">💰 Duit</a>
-      <a href="idol.html"      class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
-      <a href="indonesia.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🇮🇩 Indo</a>
-      <a href="jepang.html"    class="nav-link" style="background:#e4e6eb;color:#050505;">🇯🇵 Jepang</a>
+            <a href="index.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🎥 Video</a>
+            <a href="course.html" class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Course</a>
+            <a href="habit.html" class="nav-link active" style="background:var(--blue,#1877f2);color:#fff;">✅ Habit</a>
+            <a href="web.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Web</a>
+            <a href="idol.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
+            <a href="indonesia.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🇮🇩 Indo</a>
+            <a href="jepang.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🇯🇵 Jepang</a>
     </nav>
     <span class="sync-label"><span class="sync-dot sync-pending" id="syncDot"></span><span id="syncText">Menghubungkan…</span></span>
   </div>
@@ -440,14 +448,13 @@ body {
 <!-- ── BOTTOM NAV (mobile) ── -->
 <nav class="bottom-nav">
   <div class="bottom-nav-inner">
-    <a href="index.html"     class="bnav-item"><span>🎥</span><span>Video</span></a>
-    <a href="course.html"    class="bnav-item"><span>📚</span><span>Course</span></a>
-    <a href="web.html"       class="bnav-item"><span>🌐</span><span>Web</span></a>
-    <a href="habit.html"     class="bnav-item active"><span>⏳</span><span>Fokus</span></a>
-    <a href="keuangan.html"  class="bnav-item"><span>💰</span><span>Duit</span></a>
-    <a href="idol.html"      class="bnav-item"><span>🌸</span><span>Idol</span></a>
-    <a href="indonesia.html" class="bnav-item"><span>🇮🇩</span><span>Indo</span></a>
-    <a href="jepang.html"    class="bnav-item"><span>🇯🇵</span><span>Jepang</span></a>
+        <a href="index.html" class="bnav-item"><span>🎥</span><span>Video</span></a>
+        <a href="course.html" class="bnav-item"><span>📚</span><span>Course</span></a>
+        <a href="habit.html" class="bnav-item active"><span>✅</span><span>Habit</span></a>
+        <a href="web.html" class="bnav-item"><span>🌐</span><span>Web</span></a>
+        <a href="idol.html" class="bnav-item"><span>🌸</span><span>Idol</span></a>
+        <a href="indonesia.html" class="bnav-item"><span>🇮🇩</span><span>Indo</span></a>
+        <a href="jepang.html" class="bnav-item"><span>🇯🇵</span><span>Jepang</span></a>
   </div>
 </nav>
 

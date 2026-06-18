@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="id" data-theme="dark">
-<head>
+<head><script>
+(function(){
+    const SESSION_KEY="fokuspro_auth";
+    const REDIRECT_KEY="fokuspro_redirect";
+    if(sessionStorage.getItem(SESSION_KEY)!=="ok"){
+        sessionStorage.setItem(REDIRECT_KEY, window.location.pathname.split("/").pop()||"index.html");
+        window.location.replace("login.html");
+    }
+})();
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -563,12 +572,13 @@
 
         <!-- Nav -->
         <nav class="nav-tabs">
-            <a href="index.html"     class="nav-tab">🎥 Video</a>
-            <a href="course.html"    class="nav-tab">📚 Course</a>
-            <a href="web.html"       class="nav-tab active">🌐 Web</a>
-            <a href="idol.html"      class="nav-tab">🌸 Idol</a>
+            <a href="index.html" class="nav-tab">🎥 Video</a>
+            <a href="course.html" class="nav-tab">📚 Course</a>
+            <a href="habit.html" class="nav-tab">✅ Habit</a>
+            <a href="web.html" class="nav-tab active">🌐 Web</a>
+            <a href="idol.html" class="nav-tab">🌸 Idol</a>
             <a href="indonesia.html" class="nav-tab">🇮🇩 Indo</a>
-            <a href="jepang.html"    class="nav-tab">🇯🇵 Jepang</a>
+            <a href="jepang.html" class="nav-tab">🇯🇵 Jepang</a>
         </nav>
     </div>
 </header>
@@ -1051,6 +1061,7 @@
     <div class="bottom-nav-inner">
         <a href="index.html" class="bnav-item"><span>🎥</span><span>Video</span></a>
         <a href="course.html" class="bnav-item"><span>📚</span><span>Course</span></a>
+        <a href="habit.html" class="bnav-item"><span>✅</span><span>Habit</span></a>
         <a href="web.html" class="bnav-item active"><span>🌐</span><span>Web</span></a>
         <a href="idol.html" class="bnav-item"><span>🌸</span><span>Idol</span></a>
         <a href="indonesia.html" class="bnav-item"><span>🇮🇩</span><span>Indo</span></a>
