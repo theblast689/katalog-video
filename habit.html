@@ -830,7 +830,7 @@ window.addActivity = function() {
     return;
   }
 
-  const status = (addMode === 'todo' && !h && !m) ? 'todo' : 'done';
+  const status = addMode; // 'todo' atau 'done' langsung dari mode toggle
   const mins   = h * 60 + m;
 
   setSyncStatus('pending');
