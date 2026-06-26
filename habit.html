@@ -830,7 +830,7 @@ window.addActivity = function() {
     return;
   }
 
-  const status = addMode; // 'todo' atau 'done' langsung dari mode toggle
+  const status = (addMode === 'todo' && !h && !m) ? 'todo' : 'done';
   const mins   = h * 60 + m;
 
   setSyncStatus('pending');
@@ -907,10 +907,12 @@ function renderTodoList() {
 
   ul.innerHTML = items.map(([key, v]) => {
     const col = CAT_COLORS[v.cat] || '#999';
+    const durLabel = v.mins ? `<span class="today-dur">${formatDur(v.mins)}</span>` : '';
     return `<li class="todo-item">
       <span class="dot" style="background:${col}"></span>
       <span class="todo-name">${escHtml(v.name)}</span>
       <span class="todo-cat-chip" style="background:${col}1a;color:${col}">${escHtml(v.cat)}</span>
+      ${durLabel}
       <button class="btn-done" title="Tandai selesai" onclick="openCompleteModal('${key}')">✓</button>
       <button class="btn-todo-del" title="Hapus" onclick="delActivity('${key}')">✕</button>
     </li>`;
