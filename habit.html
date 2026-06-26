@@ -35,6 +35,7 @@
   --muted:        #9CA3AF;
   --danger:       #EF4444;
   --success:      #10B981;
+  --warning:      #F59E0B;
   --radius:       14px;
   --radius-sm:    8px;
   --shadow:       0 2px 12px rgba(109,40,217,0.07);
@@ -107,7 +108,7 @@ body {
 /* ── GRID LAYOUT ── */
 .grid-top {
   display: grid;
-  grid-template-columns: 340px 1fr;
+  grid-template-columns: 340px 1fr 1fr;
   gap: 18px;
   margin-bottom: 18px;
 }
@@ -138,6 +139,10 @@ body {
   display: block; font-size: 12px; font-weight: 600;
   color: #374151; margin-bottom: 5px;
 }
+.form-group label .optional-tag {
+  font-weight: 500; color: var(--muted); font-size: 10px;
+  margin-left: 4px; text-transform: none; letter-spacing: 0;
+}
 .form-group input,
 .form-group select {
   width: 100%; padding: 9px 12px;
@@ -152,6 +157,22 @@ body {
   box-shadow: 0 0 0 3px rgba(109,40,217,0.1);
 }
 .dur-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Mode toggle for add form */
+.mode-toggle {
+  display: flex; gap: 6px; margin-bottom: 14px;
+}
+.mode-btn {
+  flex: 1; padding: 7px 10px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: var(--bg);
+  font-family: inherit; font-size: 11.5px; font-weight: 700;
+  cursor: pointer; transition: all .15s; color: var(--muted);
+}
+.mode-btn.active {
+  border-color: var(--accent); background: var(--accent-light);
+  color: var(--accent);
+}
+
 .btn-add {
   width: 100%; padding: 11px;
   background: var(--accent); color: #fff;
@@ -162,8 +183,49 @@ body {
 }
 .btn-add:hover { background: var(--accent-dark); }
 .btn-add:active { transform: scale(0.98); }
+.btn-add.todo-mode { background: var(--warning); }
+.btn-add.todo-mode:hover { background: #d97706; }
 
-/* ── TODAY ── */
+/* ── TODO LIST ── */
+.todo-list { list-style: none; max-height: 280px; overflow-y: auto; }
+.todo-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  font-size: 12.5px;
+}
+.todo-item:last-child { border-bottom: none; }
+.todo-name { flex: 1; font-weight: 600; }
+.todo-cat-chip {
+  font-size: 10px; padding: 2px 7px;
+  border-radius: 20px; font-weight: 700;
+  white-space: nowrap;
+}
+.btn-done {
+  border: none; background: none; cursor: pointer;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: background .15s, transform .1s;
+  flex-shrink: 0; color: var(--success);
+}
+.btn-done:hover { background: #D1FAE5; transform: scale(1.1); }
+.btn-todo-del {
+  border: none; background: none; cursor: pointer;
+  font-size: 11px; padding: 3px 7px; border-radius: 6px;
+  font-family: inherit; font-weight: 700; color: var(--danger);
+  transition: background .1s; flex-shrink: 0;
+}
+.btn-todo-del:hover { background: #FEE2E2; }
+
+/* Todo count badge */
+.todo-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--warning); color: #fff;
+  font-size: 9px; font-weight: 800;
+  min-width: 16px; height: 16px; border-radius: 8px;
+  padding: 0 4px; margin-left: 6px; vertical-align: middle;
+}
+
+/* ── TODAY (done) ── */
 .today-total {
   font-size: 2rem; font-weight: 700;
   letter-spacing: -1px; line-height: 1;
@@ -275,7 +337,8 @@ body {
   padding: 24px; width: 100%; max-width: 380px;
   box-shadow: 0 12px 48px rgba(0,0,0,0.18);
 }
-.modal h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+.modal h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.modal .modal-subtitle { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
 .modal-actions { display: flex; gap: 10px; margin-top: 14px; }
 .btn-cancel {
   flex: 1; padding: 10px; background: var(--bg);
@@ -288,6 +351,8 @@ body {
   font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
 }
 .btn-save:hover { background: var(--accent-dark); }
+.btn-save.success-btn { background: var(--success); }
+.btn-save.success-btn:hover { background: #059669; }
 
 /* ── TOAST ── */
 .toast {
@@ -312,6 +377,10 @@ body {
 .sync-label { font-size: 11px; color: var(--muted); }
 
 /* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .grid-top { grid-template-columns: 340px 1fr; }
+  .grid-top .panel:last-child { grid-column: 1 / -1; }
+}
 @media (max-width: 768px) {
   .nav-links { display: none; }
   .bottom-nav { display: block; }
@@ -328,35 +397,35 @@ body {
   .month-label { min-width: 90px; font-size: 12px; }
 }
 
-        /* ── TIME TRACKER WIDGET ── */
-        .waktu-hari-ini {
-            display: flex; align-items: center; gap: 7px;
-            background: var(--accent-light, #ede9fe);
-            border: 1.5px solid #c4b5fd;
-            border-radius: 20px; padding: 5px 13px;
-            font-size: 12px; font-weight: 700; color: var(--accent, #6D28D9);
-            white-space: nowrap; cursor: default; user-select: none; flex-shrink: 0;
-        }
-        .waktu-hari-ini .dot-live {
-            width: 7px; height: 7px; border-radius: 50%;
-            background: #10b981; animation: blink-dot 1.4s ease-in-out infinite; flex-shrink: 0;
-        }
-        .waktu-hari-ini.paused .dot-live { background: #f59e0b; animation: none; }
-        @keyframes blink-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
-        .waktu-wrap { position: relative; flex-shrink: 0; }
-        .waktu-tooltip {
-            display: none; position: absolute; top: calc(100% + 8px); right: 0;
-            background: #1c1c1e; color: #fff; font-size: 11px; font-weight: 600;
-            padding: 8px 12px; border-radius: 10px; white-space: nowrap;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 300;
-        }
-        .waktu-tooltip::before {
-            content:''; position:absolute; top:-5px; right:16px;
-            border-left:5px solid transparent; border-right:5px solid transparent;
-            border-bottom:5px solid #1c1c1e;
-        }
-        .waktu-wrap:hover .waktu-tooltip { display: block; }
-        </style>
+/* ── TIME TRACKER WIDGET ── */
+.waktu-hari-ini {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--accent-light, #ede9fe);
+    border: 1.5px solid #c4b5fd;
+    border-radius: 20px; padding: 5px 13px;
+    font-size: 12px; font-weight: 700; color: var(--accent, #6D28D9);
+    white-space: nowrap; cursor: default; user-select: none; flex-shrink: 0;
+}
+.waktu-hari-ini .dot-live {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #10b981; animation: blink-dot 1.4s ease-in-out infinite; flex-shrink: 0;
+}
+.waktu-hari-ini.paused .dot-live { background: #f59e0b; animation: none; }
+@keyframes blink-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.waktu-wrap { position: relative; flex-shrink: 0; }
+.waktu-tooltip {
+    display: none; position: absolute; top: calc(100% + 8px); right: 0;
+    background: #1c1c1e; color: #fff; font-size: 11px; font-weight: 600;
+    padding: 8px 12px; border-radius: 10px; white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 300;
+}
+.waktu-tooltip::before {
+    content:''; position:absolute; top:-5px; right:16px;
+    border-left:5px solid transparent; border-right:5px solid transparent;
+    border-bottom:5px solid #1c1c1e;
+}
+.waktu-wrap:hover .waktu-tooltip { display: block; }
+</style>
 </head>
 <body>
 
@@ -364,25 +433,25 @@ body {
 <header class="topbar">
   <div class="topbar-inner">
     <div class="logo">⏳ Fokus Pro</div>
-        <div class="waktu-wrap">
-            <div class="waktu-hari-ini" id="waktuWidget">
-                <span class="dot-live"></span>
-                <span id="waktuTeks">00:00</span>
-            </div>
-            <div class="waktu-tooltip">
-                ⏱ Waktu di halaman ini hari ini<br>
-                <span id="waktuTooltipDetail" style="color:#aaa;font-weight:500;">Memuat...</span>
-            </div>
-        </div>
+    <div class="waktu-wrap">
+      <div class="waktu-hari-ini" id="waktuWidget">
+        <span class="dot-live"></span>
+        <span id="waktuTeks">00:00</span>
+      </div>
+      <div class="waktu-tooltip">
+        ⏱ Waktu di halaman ini hari ini<br>
+        <span id="waktuTooltipDetail" style="color:#aaa;font-weight:500;">Memuat...</span>
+      </div>
+    </div>
     <nav class="nav-links">
-            <a href="index.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🎥 Video</a>
-            <a href="course.html" class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Course</a>
-            <a href="habit.html" class="nav-link active" style="background:var(--blue,#1877f2);color:#fff;">✅ Habit</a>
-            <a href="web.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Web</a>
-            <a href="idol.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
-            <a href="indonesia.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🇮🇩 Indo</a>
-            <a href="jepang.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🇯🇵 Jepang</a>
-            <a href="timer-dashboard.html" class="nav-link" style="background:#e4e6eb;color:#050505;">⏱ Timer</a>
+      <a href="index.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🎥 Video</a>
+      <a href="course.html" class="nav-link" style="background:#e4e6eb;color:#050505;">📚 Course</a>
+      <a href="habit.html" class="nav-link active" style="background:var(--blue,#1877f2);color:#fff;">✅ Habit</a>
+      <a href="web.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🌐 Web</a>
+      <a href="idol.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🌸 Idol</a>
+      <a href="indonesia.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🇮🇩 Indo</a>
+      <a href="jepang.html" class="nav-link" style="background:#e4e6eb;color:#050505;">🇯🇵 Jepang</a>
+      <a href="timer-dashboard.html" class="nav-link" style="background:#e4e6eb;color:#050505;">⏱ Timer</a>
     </nav>
     <span class="sync-label"><span class="sync-dot sync-pending" id="syncDot"></span><span id="syncText">Menghubungkan…</span></span>
   </div>
@@ -391,12 +460,18 @@ body {
 <!-- ── MAIN ── -->
 <main class="main">
 
-  <!-- Top grid: form + today -->
+  <!-- Top grid: form + todo + today done -->
   <div class="grid-top">
 
     <!-- ADD FORM -->
     <div class="panel">
       <div class="panel-title">Tambah Aktivitas</div>
+
+      <!-- Mode toggle -->
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="modeTodoBtnTop" onclick="setAddMode('todo')">📋 Rencana (To-Do)</button>
+        <button class="mode-btn" id="modeDoneBtnTop" onclick="setAddMode('done')">✅ Langsung Selesai</button>
+      </div>
 
       <div class="form-group">
         <label>Nama Aktivitas</label>
@@ -415,8 +490,8 @@ body {
           <option value="Lainnya">🔘 Lainnya</option>
         </select>
       </div>
-      <div class="form-group">
-        <label>Durasi</label>
+      <div class="form-group" id="durGroup">
+        <label>Durasi <span class="optional-tag" id="durOptionalTag">(opsional — isi jika sudah selesai)</span></label>
         <div class="dur-row">
           <input type="number" id="actHour" placeholder="Jam" min="0" max="23" />
           <input type="number" id="actMin"  placeholder="Menit" min="0" max="59" />
@@ -426,16 +501,27 @@ body {
         <label>Tanggal</label>
         <input type="date" id="actDate" />
       </div>
-      <button class="btn-add" onclick="addActivity()">＋ Tambah Aktivitas</button>
+      <button class="btn-add todo-mode" id="btnAddActivity" onclick="addActivity()">📋 Tambah ke To-Do</button>
     </div>
 
-    <!-- TODAY SUMMARY -->
+    <!-- TODO LIST -->
     <div class="panel">
-      <div class="panel-title">Hari Ini</div>
+      <div class="panel-title">
+        To-Do Hari Ini
+        <span class="todo-badge" id="todoBadgeCount" style="display:none">0</span>
+      </div>
+      <ul class="todo-list" id="todoList">
+        <li class="empty-state">Belum ada rencana hari ini 🎯</li>
+      </ul>
+    </div>
+
+    <!-- TODAY DONE SUMMARY -->
+    <div class="panel">
+      <div class="panel-title">Aktivitas Selesai Hari Ini</div>
       <div class="today-total" id="totalToday">0 mnt</div>
       <div class="today-sub" id="todayBadge"></div>
       <ul class="today-list" id="todayList">
-        <li class="empty-state">Belum ada aktivitas hari ini</li>
+        <li class="empty-state">Belum ada aktivitas selesai hari ini</li>
       </ul>
     </div>
   </div>
@@ -452,10 +538,10 @@ body {
     </div>
   </div>
 
-  <!-- HISTORY -->
+  <!-- HISTORY (hanya item done) -->
   <div class="panel">
     <div class="history-header">
-      <div class="panel-title" style="margin-bottom:0">Riwayat Aktivitas</div>
+      <div class="panel-title" style="margin-bottom:0">Riwayat Aktivitas Selesai</div>
       <div class="month-nav">
         <button class="btn-nav" onclick="changeMonth(-1)">‹</button>
         <span class="month-label" id="monthLabel"></span>
@@ -488,18 +574,18 @@ body {
 <!-- ── BOTTOM NAV (mobile) ── -->
 <nav class="bottom-nav">
   <div class="bottom-nav-inner">
-        <a href="index.html" class="bnav-item"><span>🎥</span><span>Video</span></a>
-        <a href="course.html" class="bnav-item"><span>📚</span><span>Course</span></a>
-        <a href="habit.html" class="bnav-item active"><span>✅</span><span>Habit</span></a>
-        <a href="web.html" class="bnav-item"><span>🌐</span><span>Web</span></a>
-        <a href="idol.html" class="bnav-item"><span>🌸</span><span>Idol</span></a>
-        <a href="indonesia.html" class="bnav-item"><span>🇮🇩</span><span>Indo</span></a>
-        <a href="jepang.html" class="bnav-item"><span>🇯🇵</span><span>Jepang</span></a>
-        <a href="timer-dashboard.html" class="bnav-item"><span>⏱</span><span>Timer</span></a>
+    <a href="index.html" class="bnav-item"><span>🎥</span><span>Video</span></a>
+    <a href="course.html" class="bnav-item"><span>📚</span><span>Course</span></a>
+    <a href="habit.html" class="bnav-item active"><span>✅</span><span>Habit</span></a>
+    <a href="web.html" class="bnav-item"><span>🌐</span><span>Web</span></a>
+    <a href="idol.html" class="bnav-item"><span>🌸</span><span>Idol</span></a>
+    <a href="indonesia.html" class="bnav-item"><span>🇮🇩</span><span>Indo</span></a>
+    <a href="jepang.html" class="bnav-item"><span>🇯🇵</span><span>Jepang</span></a>
+    <a href="timer-dashboard.html" class="bnav-item"><span>⏱</span><span>Timer</span></a>
   </div>
 </nav>
 
-<!-- ── EDIT MODAL ── -->
+<!-- ── EDIT MODAL (for done items) ── -->
 <div class="modal-overlay" id="editModal">
   <div class="modal">
     <h3>✏️ Edit Aktivitas</h3>
@@ -534,6 +620,25 @@ body {
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">Batal</button>
       <button class="btn-save" onclick="saveEdit()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── COMPLETE TODO MODAL ── -->
+<div class="modal-overlay" id="completeModal">
+  <div class="modal">
+    <h3>✅ Tandai Selesai</h3>
+    <p class="modal-subtitle" id="completeModalSubtitle">Masukkan durasi aktual untuk aktivitas ini.</p>
+    <div class="form-group">
+      <label>Durasi Aktual <span class="optional-tag">(opsional)</span></label>
+      <div class="dur-row">
+        <input type="number" id="completeHour" placeholder="Jam" min="0" max="23" />
+        <input type="number" id="completeMin"  placeholder="Menit" min="0" max="59" />
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeCompleteModal()">Batal</button>
+      <button class="btn-save success-btn" onclick="saveTodoDone()">✅ Selesai</button>
     </div>
   </div>
 </div>
@@ -577,12 +682,14 @@ const CAT_COLORS = {
 };
 
 /* ─── State ─── */
-let allData     = {};   // { firebaseKey: { name, cat, mins, date } }
+let allData     = {};   // { firebaseKey: { name, cat, mins, date, status, ts } }
 let viewMonth   = new Date();
 let editKey     = null;
+let completeKey = null; // key for todo-to-done modal
 let barInst     = null;
 let pieInst     = null;
 let histPage    = 1;
+let addMode     = 'todo'; // 'todo' | 'done'
 const PAGE_SIZE = 20;
 
 /* ─── Sync indicator ─── */
@@ -600,7 +707,8 @@ function todayStr() {
 }
 
 function formatDur(mins) {
-  if (!mins) return '0 mnt';
+  if (!mins && mins !== 0) return '—';
+  if (mins === 0) return '0 mnt';
   const h = Math.floor(mins/60), m = mins%60;
   if (h && m) return `${h}j ${m}mnt`;
   return h ? `${h} jam` : `${m} mnt`;
@@ -626,6 +734,28 @@ function isWithin1Year(dateStr) {
   return d >= oneY && d <= now;
 }
 
+/* ─── Add mode toggle ─── */
+window.setAddMode = function(mode) {
+  addMode = mode;
+  const todoBtnTop  = document.getElementById('modeTodoBtnTop');
+  const doneBtnTop  = document.getElementById('modeDoneBtnTop');
+  const durOptTag   = document.getElementById('durOptionalTag');
+  const btnAdd      = document.getElementById('btnAddActivity');
+
+  if (mode === 'todo') {
+    todoBtnTop.classList.add('active');
+    doneBtnTop.classList.remove('active');
+    durOptTag.textContent  = '(opsional — isi jika sudah selesai)';
+    btnAdd.textContent = '📋 Tambah ke To-Do';
+    btnAdd.className = 'btn-add todo-mode';
+  } else {
+    doneBtnTop.classList.add('active');
+    todoBtnTop.classList.remove('active');
+    durOptTag.textContent  = '(wajib diisi)';
+    btnAdd.textContent = '✅ Tambah Aktivitas Selesai';
+    btnAdd.className = 'btn-add';
+  }
+};
 
 /* ─── Auto-cleanup aktivitas > 1 tahun dari Firebase ─── */
 async function cleanupOldActivities() {
@@ -654,7 +784,6 @@ async function cleanupOldActivities() {
   }
 }
 
-// Jalankan cleanup sekali saat halaman dibuka (delay 5 detik supaya tidak ganggu load awal)
 setTimeout(cleanupOldActivities, 5000);
 
 /* ─── Init ─── */
@@ -670,8 +799,9 @@ onValue(DBREF, (snap) => {
   if (snap.exists()) {
     snap.forEach(child => {
       const v = child.val();
-      // Only keep entries within 1 year
       if (v.date && isWithin1Year(v.date)) {
+        // Backward compat: entries without status field are treated as 'done'
+        if (!v.status) v.status = 'done';
         allData[child.key] = v;
       }
     });
@@ -692,35 +822,116 @@ window.addActivity = function() {
   const m    = parseInt(document.getElementById('actMin').value)  || 0;
   const date = document.getElementById('actDate').value;
 
-  if (!name)        { showToast('Isi nama aktivitas!'); return; }
-  if (!date)        { showToast('Pilih tanggal!'); return; }
-  if (!h && !m)     { showToast('Isi durasi!'); return; }
+  if (!name) { showToast('Isi nama aktivitas!'); return; }
+  if (!date) { showToast('Pilih tanggal!');       return; }
+
+  if (addMode === 'done' && !h && !m) {
+    showToast('Mode "Selesai": isi durasi terlebih dahulu!');
+    return;
+  }
+
+  const status = (addMode === 'todo' && !h && !m) ? 'todo' : 'done';
+  const mins   = h * 60 + m;
 
   setSyncStatus('pending');
-  push(DBREF, { name, cat, mins: h*60+m, date, ts: Date.now() })
+  push(DBREF, { name, cat, mins, date, status, ts: Date.now() })
     .then(() => {
       document.getElementById('actName').value = '';
       document.getElementById('actHour').value = '';
       document.getElementById('actMin').value  = '';
       document.getElementById('actDate').value = todayStr();
-      showToast('Aktivitas ditambahkan ✓');
+      if (status === 'todo') {
+        showToast('Ditambahkan ke To-Do ✓');
+      } else {
+        showToast('Aktivitas ditambahkan ✓');
+      }
     })
     .catch(() => { setSyncStatus('err'); showToast('Gagal menyimpan!'); });
 };
 
-/* ─── Today ─── */
+/* ─── Complete Todo Modal ─── */
+window.openCompleteModal = function(key) {
+  const v = allData[key];
+  if (!v) return;
+  completeKey = key;
+  document.getElementById('completeModalSubtitle').textContent =
+    `"${v.name}" — berapa lama dikerjakan?`;
+  document.getElementById('completeHour').value = '';
+  document.getElementById('completeMin').value  = '';
+  document.getElementById('completeModal').classList.add('open');
+};
+
+window.closeCompleteModal = function() {
+  document.getElementById('completeModal').classList.remove('open');
+  completeKey = null;
+};
+
+window.saveTodoDone = function() {
+  if (!completeKey) return;
+  const h    = parseInt(document.getElementById('completeHour').value) || 0;
+  const m    = parseInt(document.getElementById('completeMin').value)  || 0;
+  const mins = h * 60 + m;
+
+  setSyncStatus('pending');
+  // Use update() on same key — no duplication
+  update(ref(db, `aktivitas/${completeKey}`), { status: 'done', mins, ts: Date.now() })
+    .then(() => {
+      showToast('Aktivitas selesai ✓');
+      closeCompleteModal();
+    })
+    .catch(() => { setSyncStatus('err'); showToast('Gagal menyimpan!'); });
+};
+
+document.getElementById('completeModal').addEventListener('click', function(e) {
+  if (e.target === this) closeCompleteModal();
+});
+
+/* ─── Render Today (todo items) ─── */
+function renderTodoList() {
+  const today = todayStr();
+  const items = Object.entries(allData)
+    .filter(([,v]) => v.date === today && v.status === 'todo')
+    .sort(([,a],[,b]) => (a.ts||0)-(b.ts||0));
+
+  const ul = document.getElementById('todoList');
+  const badge = document.getElementById('todoBadgeCount');
+
+  if (!items.length) {
+    ul.innerHTML = '<li class="empty-state">Belum ada rencana hari ini 🎯</li>';
+    badge.style.display = 'none';
+    return;
+  }
+
+  badge.textContent = items.length;
+  badge.style.display = 'inline-flex';
+
+  ul.innerHTML = items.map(([key, v]) => {
+    const col = CAT_COLORS[v.cat] || '#999';
+    return `<li class="todo-item">
+      <span class="dot" style="background:${col}"></span>
+      <span class="todo-name">${escHtml(v.name)}</span>
+      <span class="todo-cat-chip" style="background:${col}1a;color:${col}">${escHtml(v.cat)}</span>
+      <button class="btn-done" title="Tandai selesai" onclick="openCompleteModal('${key}')">✓</button>
+      <button class="btn-todo-del" title="Hapus" onclick="delActivity('${key}')">✕</button>
+    </li>`;
+  }).join('');
+}
+
+/* ─── Render Today Done ─── */
 function renderToday() {
   const today = todayStr();
   const items = Object.entries(allData)
-    .filter(([,v]) => v.date === today)
+    .filter(([,v]) => v.date === today && v.status === 'done')
     .sort(([,a],[,b]) => (b.ts||0)-(a.ts||0));
+
   const total = items.reduce((s,[,v]) => s + (v.mins||0), 0);
   const h = Math.floor(total/60), m = total%60;
   document.getElementById('totalToday').textContent =
     h ? `${h}j ${m}mnt` : `${m} mnt`;
+
   const ul = document.getElementById('todayList');
   if (!items.length) {
-    ul.innerHTML = '<li class="empty-state">Belum ada aktivitas hari ini</li>';
+    ul.innerHTML = '<li class="empty-state">Belum ada aktivitas selesai hari ini</li>';
     return;
   }
   ul.innerHTML = items.map(([,v]) => {
@@ -728,20 +939,20 @@ function renderToday() {
     return `<li class="today-item">
       <span class="dot" style="background:${col}"></span>
       <span class="today-name">${escHtml(v.name)}</span>
-      <span class="chip" style="background:${col}1a;color:${col}">${v.cat}</span>
+      <span class="chip" style="background:${col}1a;color:${col}">${escHtml(v.cat)}</span>
       <span class="today-dur">${formatDur(v.mins)}</span>
     </li>`;
   }).join('');
 }
 
-/* ─── Bar chart ─── */
+/* ─── Bar chart (only done) ─── */
 function renderBar() {
   const yr = viewMonth.getFullYear(), mo = viewMonth.getMonth();
   const days = new Date(yr, mo+1, 0).getDate();
   const data = Array.from({length:days}, (_,i) => {
     const ds = `${yr}-${String(mo+1).padStart(2,'0')}-${String(i+1).padStart(2,'0')}`;
     const mins = Object.values(allData)
-      .filter(v => v.date === ds)
+      .filter(v => v.date === ds && v.status === 'done')
       .reduce((s,v) => s+(v.mins||0), 0);
     return +(mins/60).toFixed(2);
   });
@@ -765,12 +976,12 @@ function renderBar() {
   });
 }
 
-/* ─── Pie chart ─── */
+/* ─── Pie chart (only done) ─── */
 function renderPie() {
   const yr = viewMonth.getFullYear(), mo = viewMonth.getMonth();
   const items = Object.values(allData).filter(v => {
     const d = new Date(v.date+'T00:00:00');
-    return d.getFullYear()===yr && d.getMonth()===mo;
+    return d.getFullYear()===yr && d.getMonth()===mo && v.status === 'done';
   });
   const catMap = {};
   items.forEach(v => { catMap[v.cat] = (catMap[v.cat]||0) + (v.mins||0); });
@@ -804,7 +1015,7 @@ function renderPie() {
   });
 }
 
-/* ─── History + Pagination ─── */
+/* ─── History + Pagination (only done) ─── */
 function renderHistory() {
   const yr = viewMonth.getFullYear(), mo = viewMonth.getMonth();
   document.getElementById('monthLabel').textContent =
@@ -813,7 +1024,7 @@ function renderHistory() {
   const items = Object.entries(allData)
     .filter(([,v]) => {
       const d = new Date(v.date+'T00:00:00');
-      return d.getFullYear()===yr && d.getMonth()===mo;
+      return d.getFullYear()===yr && d.getMonth()===mo && v.status === 'done';
     })
     .sort(([,a],[,b]) => b.date.localeCompare(a.date) || (b.ts||0)-(a.ts||0));
 
@@ -825,7 +1036,7 @@ function renderHistory() {
   const tbody  = document.getElementById('historyBody');
 
   if (!total) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="padding:24px;text-align:center;color:#9CA3AF">Tidak ada aktivitas di bulan ini</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="padding:24px;text-align:center;color:#9CA3AF">Tidak ada aktivitas selesai di bulan ini</td></tr>`;
     document.getElementById('paginationWrap').innerHTML = '';
     return;
   }
@@ -837,7 +1048,7 @@ function renderHistory() {
     return `<tr>
       <td style="color:#6B7280;font-size:11px;white-space:nowrap">${dl}</td>
       <td style="font-weight:600">${escHtml(v.name)}</td>
-      <td><span class="chip" style="background:${col}1a;color:${col}">${v.cat}</span></td>
+      <td><span class="chip" style="background:${col}1a;color:${col}">${escHtml(v.cat)}</span></td>
       <td style="color:#6B7280;font-size:11px;white-space:nowrap">${formatDur(v.mins)}</td>
       <td style="white-space:nowrap">
         <button class="btn-edit" onclick="openEdit('${key}')">Edit</button>
@@ -850,7 +1061,6 @@ function renderHistory() {
   let pHtml = `<span class="page-info">${total} aktivitas · hal ${histPage}/${pages}</span>`;
   pHtml += `<button class="btn-page" onclick="gotoPage(${histPage-1})" ${histPage<=1?'disabled':''}>‹</button>`;
 
-  // Show limited page numbers around current
   const start = Math.max(1, histPage-2);
   const end   = Math.min(pages, histPage+2);
   if (start > 1) pHtml += `<button class="btn-page" onclick="gotoPage(1)">1</button>${start>2?'<span style="color:var(--muted);font-size:12px">…</span>':''}`;
@@ -866,7 +1076,8 @@ function renderHistory() {
 window.gotoPage = function(p) {
   const yr = viewMonth.getFullYear(), mo = viewMonth.getMonth();
   const total = Object.values(allData).filter(v=>{
-    const d=new Date(v.date+'T00:00:00'); return d.getFullYear()===yr&&d.getMonth()===mo;
+    const d=new Date(v.date+'T00:00:00');
+    return d.getFullYear()===yr && d.getMonth()===mo && v.status==='done';
   }).length;
   const pages = Math.max(1, Math.ceil(total/PAGE_SIZE));
   histPage = Math.max(1, Math.min(pages, p));
@@ -922,13 +1133,14 @@ window.delActivity = function(key) {
     .catch(() => { setSyncStatus('err'); showToast('Gagal menghapus!'); });
 };
 
-/* ─── Close modal on overlay click ─── */
+/* ─── Close modals on overlay click ─── */
 document.getElementById('editModal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
 /* ─── Render all ─── */
 function renderAll() {
+  renderTodoList();
   renderToday();
   renderBar();
   renderPie();
@@ -1051,7 +1263,6 @@ function renderAll() {
         if(window._fbTimerDb){
             fbDb=window._fbTimerDb;
             loadFromFirebase();
-            // Cleanup old data once per session (only on first page opened)
             if(!window._timerCleanupDone){
                 window._timerCleanupDone=true;
                 setTimeout(cleanupOldData, 3000);
@@ -1061,7 +1272,6 @@ function renderAll() {
         }
     };
 
-    // Click widget to open dashboard
     const widget=document.getElementById('waktuWidget');
     if(widget){ widget.style.cursor='pointer'; widget.title='Klik untuk lihat riwayat'; widget.addEventListener('click',()=>{ if(window.bukaTimerDashboard) window.bukaTimerDashboard(); }); }
 
